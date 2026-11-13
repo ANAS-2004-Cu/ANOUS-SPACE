@@ -2,11 +2,11 @@
 
 ## Overview
 
-Number Guess is a quick range-finding deduction game built around binary-search intuition: you have 10 attempts to lock onto a hidden integer between `0` and `99`. Each guess returns directional feedback, triggers a close-range proximity alert when you land within 10 units of the target, and logs a directional chip in your attempt history.
+**Number Guess** turns binary-search deduction into an interactive **Dynamic Temperature Radar**: you have 10 sweeps to lock onto a hidden integer between `0` and `99`. Every coordinate you enter physically shifts the full-page atmosphere—from deep ocean slate (`#0C1624`) when your signal is cold (`> 25`), to warm amber (`#1F1712`) within 25 units, to fiery terracotta (`#241313`) when you close within 10 units, and rich emerald (`#0D211A`) on target lock.
 
 ## Files
 
-- `GuessGamePage.tsx`: Implements target generation, 2-digit numeric input sanitization, proximity evaluation (`<= 10`), color-coded remaining attempts progress bar, and chronological guess history chips.
+- `GuessGamePage.tsx`: Implements the proximity-reactive full-viewport background radar, large target readout display, 2-digit coordinate input sanitization, remaining sweeps progress bar, and color-coded directional telemetry pills.
 - `README.md`: Module documentation for the Number Guess workspace.
 
 ## Routes & Endpoints

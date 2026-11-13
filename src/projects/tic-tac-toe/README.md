@@ -2,11 +2,11 @@
 
 ## Overview
 
-Standard Tic-Tac-Toe often ends in a predictable draw once both players know the basics. This workspace pairs the **Classic 3x3** game with a tactical **3-Marker FIFO variant**—where each player can hold at most three markers on the grid and placing a fourth evicts their oldest marker, eliminating draws entirely.
+Standard Tic-Tac-Toe almost always grinds to a stalemate once both players know the opening traps. Set inside a warm charcoal-slate Tabletop Arena (`#13141B`) with recessed game cells and bold Sky-Blue `X` (`#38BDF8`) vs. Coral-Orange `O` (`#FB923C`) markers, this workspace pairs **Classic 3x3** with a fast-paced **3-Marker Queue** variant—where each player can hold at most three markers on the board and placing a fourth evicts their oldest piece, making draws impossible.
 
 ## Files
 
-- `TicTacToePage.tsx`: Implements the segmented variant switcher (`Classic 3x3` | `3-Marker`), independent `1 Player` and `2 Players` board snapshots for Classic mode, the FIFO 3-marker eviction queue (`xPositions` / `oPositions`), and AI move heuristics.
+- `TicTacToePage.tsx`: Implements the raised tabletop arena (`#1C1F2B`), segmented variant switcher (`Classic 3x3` | `3-Marker Queue`), independent `1 Player` and `2 Players` board snapshots for Classic mode, the FIFO 3-marker eviction queue with dashed `FADING` warning cues on the oldest marker, pop-in marker scale animations, emerald winning-line highlights, and AI move heuristics.
 - `README.md`: Module documentation for the Tic-Tac-Toe workspace.
 
 ## Routes & Endpoints

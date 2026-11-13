@@ -4,6 +4,7 @@ import { FiRotateCcw, FiCpu, FiUsers } from 'react-icons/fi';
 import { AppHeader } from '../../shared/ui/AppHeader';
 import { Button } from '../../shared/ui/Button';
 import { useAlert } from '../../shared/context/AlertContext';
+import { useTheme } from '../../shared/context/ThemeContext';
 import { recordRecentProject } from '../../shared/utils/recentTools';
 
 type GameVariant = 'classic' | '3-marker';
@@ -18,6 +19,10 @@ const WINNING_LINES = [
   [0, 4, 8],
   [2, 4, 6],
 ];
+
+const COLOR_X = '#38BDF8'; // Sky-Blue X
+const COLOR_O = '#FB923C'; // Warm Coral-Orange O
+const COLOR_WIN = '#10B981'; // Emerald Winning Line
 
 function calculateWinner(squares: (string | null)[]): string | null {
   for (let i = 0; i < WINNING_LINES.length; i++) {
@@ -40,6 +45,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
   const [activeVariant, setActiveVariant] = useState<GameVariant>(initialVariant);
 
   const { showAlert } = useAlert();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   useEffect(() => {
     recordRecentProject('tic-tac-toe');
@@ -360,376 +367,503 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
     return false;
   };
 
-  return (
-    <div className="workspace-shell">
-      <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="Tic-Tac-Toe" />
+  const canvasBg = isLight ? '#F4F4F7' : '#13141B';
+  const tabletopBg = isLight ? '#FFFFFF' : '#1C1F2B';
+  const tabletopBorder = isLight ? '#DCE0EC' : '#2C3144';
+  const recessedWellBg = isLight ? '#E6E9F2' : '#0E1017';
+  const cellBg = isLight ? '#F7F8FC' : '#151822';
+  const cellBorder = isLight ? '#D5DAE8' : '#252A3A';
+  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
+  const textSecondary = isLight ? '#475569' : '#9CA3AF';
+  const textMuted = isLight ? '#64748B' : '#6B7280';
 
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-          maxWidth: 540,
-          width: '100%',
-          margin: '0 auto',
-          paddingBottom: 40,
-        }}
-      >
-        {/* Segmented Variant Tabs (Classic 3x3 | 3-Marker) */}
-        <div
+  return (
+    <div
+      className="route-theme-canvas"
+      style={{
+        backgroundColor: canvasBg,
+        backgroundImage: isLight
+          ? 'radial-gradient(circle at 25% 10%, rgba(56, 189, 248, 0.1), transparent 45%), radial-gradient(circle at 75% 15%, rgba(251, 146, 60, 0.1), transparent 45%)'
+          : 'radial-gradient(circle at 25% 10%, rgba(56, 189, 248, 0.12), transparent 48%), radial-gradient(circle at 75% 15%, rgba(251, 146, 60, 0.11), transparent 48%)',
+      }}
+    >
+      <div className="workspace-shell">
+        <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="Tic-Tac-Toe Arena" />
+
+        <main
           style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 6,
-            padding: 5,
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 9,
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+            maxWidth: 540,
+            width: '100%',
+            margin: '0 auto',
+            paddingBottom: 40,
           }}
         >
-          <button
-            type="button"
-            onClick={() => handleVariantSwitch('classic')}
+          {/* Segmented Variant Tabs (Classic 3x3 | 3-Marker) */}
+          <div
             style={{
-              padding: '9px 12px',
-              borderRadius: 6,
-              fontSize: 13,
-              fontWeight: 500,
-              backgroundColor: activeVariant === 'classic' ? '#3B82F6' : 'transparent',
-              color: activeVariant === 'classic' ? 'var(--text-primary)' : 'var(--text-secondary)',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 6,
+              padding: 5,
+              backgroundColor: tabletopBg,
+              border: `1px solid ${tabletopBorder}`,
+              borderRadius: 11,
+              boxShadow: isLight
+                ? '0 4px 14px rgba(15, 23, 42, 0.04)'
+                : '0 10px 26px rgba(0, 0, 0, 0.35)',
             }}
           >
-            Classic 3x3
-          </button>
-          <button
-            type="button"
-            onClick={() => handleVariantSwitch('3-marker')}
-            style={{
-              padding: '9px 12px',
-              borderRadius: 6,
-              fontSize: 13,
-              fontWeight: 500,
-              backgroundColor: activeVariant === '3-marker' ? '#3B82F6' : 'transparent',
-              color: activeVariant === '3-marker' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            }}
-          >
-            3-Marker
-          </button>
-        </div>
-
-        {activeVariant === 'classic' ? (
-          <section
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 10,
-              padding: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 18,
-            }}
-          >
-            {/* Mode Switcher */}
-            <div
+            <button
+              type="button"
+              onClick={() => handleVariantSwitch('classic')}
               style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 10,
-                flexWrap: 'wrap',
-              }}
-            >
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                Classic 3x3 Grid
-              </span>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <Button
-                  size="sm"
-                  variant={typeBoard === 1 ? 'primary' : 'secondary'}
-                  onClick={() => switchClassicMode(1)}
-                >
-                  <FiCpu size={13} />
-                  <span>1 Player</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant={typeBoard === 2 ? 'primary' : 'secondary'}
-                  onClick={() => switchClassicMode(2)}
-                >
-                  <FiUsers size={13} />
-                  <span>2 Players</span>
-                </Button>
-              </div>
-            </div>
-
-            {/* Status Banner */}
-            <div
-              className="mono"
-              style={{
-                width: '100%',
-                padding: '10px 14px',
-                backgroundColor: 'var(--bg-app)',
-                border: '1px solid var(--border-subtle)',
+                padding: '10px 12px',
                 borderRadius: 8,
-                textAlign: 'center',
                 fontSize: 13,
-                fontWeight: 500,
-                color: winner ? '#10B981' : isClassicDraw ? 'var(--text-secondary)' : 'var(--text-primary)',
+                fontWeight: 600,
+                backgroundColor:
+                  activeVariant === 'classic' ? 'rgba(56, 189, 248, 0.16)' : 'transparent',
+                color: activeVariant === 'classic' ? COLOR_X : textSecondary,
+                border:
+                  activeVariant === 'classic'
+                    ? '1px solid rgba(56, 189, 248, 0.45)'
+                    : '1px solid transparent',
               }}
             >
-              {winner
-                ? `Winner: Player ${winner}`
-                : isClassicDraw
-                ? 'Draw — No moves remaining'
-                : typeBoard === 1 && currentPlayer === 'O'
-                ? 'Computer thinking...'
-                : `Player ${currentPlayer}'s turn`}
-            </div>
+              Classic 3x3
+            </button>
+            <button
+              type="button"
+              onClick={() => handleVariantSwitch('3-marker')}
+              style={{
+                padding: '10px 12px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                backgroundColor:
+                  activeVariant === '3-marker' ? 'rgba(251, 146, 60, 0.16)' : 'transparent',
+                color: activeVariant === '3-marker' ? COLOR_O : textSecondary,
+                border:
+                  activeVariant === '3-marker'
+                    ? '1px solid rgba(251, 146, 60, 0.45)'
+                    : '1px solid transparent',
+              }}
+            >
+              3-Marker Queue
+            </button>
+          </div>
 
-            {/* 3x3 Board */}
-            <div
+          {activeVariant === 'classic' ? (
+            <section
               style={{
-                width: 'clamp(250px, 76vw, 320px)',
-                aspectRatio: '1 / 1',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gridTemplateRows: 'repeat(3, 1fr)',
-                gap: 8,
-                padding: 10,
-                backgroundColor: 'var(--bg-app)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 10,
-              }}
-            >
-              {board.map((cell, idx) => {
-                const isWinningSquare = Boolean(winner && isPartOfClassicWinningLine(idx));
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleClassicSquareClick(idx)}
-                    className="mono"
-                    style={{
-                      backgroundColor: isWinningSquare
-                        ? 'rgba(59, 130, 246, 0.16)'
-                        : 'var(--bg-surface)',
-                      border: isWinningSquare
-                        ? '1px solid #3B82F6'
-                        : '1px solid var(--border-subtle)',
-                      borderRadius: 8,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 'clamp(30px, 9vw, 42px)',
-                      fontWeight: 600,
-                      color: cell === 'X' ? '#3B82F6' : 'var(--text-primary)',
-                    }}
-                  >
-                    {cell}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div
-              style={{
-                width: '100%',
+                backgroundColor: tabletopBg,
+                border: `1px solid ${tabletopBorder}`,
+                borderRadius: 14,
+                padding: 22,
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: 6,
-                borderTop: '1px solid var(--border-subtle)',
+                gap: 18,
+                boxShadow: isLight
+                  ? '0 14px 32px rgba(15, 23, 42, 0.06)'
+                  : '0 22px 48px rgba(0, 0, 0, 0.48)',
               }}
             >
-              <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                Mode state preserved across switches
-              </span>
-              <Button variant="secondary" size="sm" onClick={resetClassicGame}>
-                <FiRotateCcw size={13} />
-                <span>Reset Game</span>
-              </Button>
-            </div>
-          </section>
-        ) : (
-          <section
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 10,
-              padding: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 16,
-            }}
-          >
-            {/* Header & Mode Switcher */}
-            <div
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 10,
-                flexWrap: 'wrap',
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  Three-Marker Variant (FIFO Queue)
+              {/* Mode Switcher */}
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
+                    Classic 3x3 Tabletop
+                  </span>
+                  <div className="mono" style={{ display: 'flex', gap: 6, fontSize: 11 }}>
+                    <span style={{ color: COLOR_X, fontWeight: 700 }}>X</span>
+                    <span style={{ color: textMuted }}>vs</span>
+                    <span style={{ color: COLOR_O, fontWeight: 700 }}>O</span>
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                  Max 3 markers per player; placing a 4th removes the oldest marker.
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <Button
+                    size="sm"
+                    variant={typeBoard === 1 ? 'primary' : 'secondary'}
+                    onClick={() => switchClassicMode(1)}
+                  >
+                    <FiCpu size={13} />
+                    <span>1 Player</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={typeBoard === 2 ? 'primary' : 'secondary'}
+                    onClick={() => switchClassicMode(2)}
+                  >
+                    <FiUsers size={13} />
+                    <span>2 Players</span>
+                  </Button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <Button
-                  size="sm"
-                  variant={tmMode === 'vs-computer' ? 'primary' : 'secondary'}
-                  onClick={() => handleTmModeSelect('vs-computer')}
-                >
-                  <FiCpu size={13} />
-                  <span>vs Computer</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant={tmMode === '2-player' ? 'primary' : 'secondary'}
-                  onClick={() => handleTmModeSelect('2-player')}
-                >
-                  <FiUsers size={13} />
-                  <span>2 Players</span>
+
+              {/* Status Banner */}
+              <div
+                className="mono"
+                style={{
+                  width: '100%',
+                  padding: '11px 14px',
+                  backgroundColor: recessedWellBg,
+                  border: `1px solid ${
+                    winner
+                      ? 'rgba(16, 185, 129, 0.5)'
+                      : currentPlayer === 'X'
+                      ? 'rgba(56, 189, 248, 0.35)'
+                      : 'rgba(251, 146, 60, 0.35)'
+                  }`,
+                  borderRadius: 10,
+                  textAlign: 'center',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: winner
+                    ? COLOR_WIN
+                    : isClassicDraw
+                    ? textSecondary
+                    : currentPlayer === 'X'
+                    ? COLOR_X
+                    : COLOR_O,
+                }}
+              >
+                {winner
+                  ? `Winner: Player ${winner}`
+                  : isClassicDraw
+                  ? 'Draw — No moves remaining'
+                  : typeBoard === 1 && currentPlayer === 'O'
+                  ? 'Computer thinking...'
+                  : `Player ${currentPlayer}'s turn`}
+              </div>
+
+              {/* 3x3 Raised & Recessed Board */}
+              <div
+                style={{
+                  width: 'clamp(260px, 78vw, 332px)',
+                  aspectRatio: '1 / 1',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gridTemplateRows: 'repeat(3, 1fr)',
+                  gap: 10,
+                  padding: 12,
+                  backgroundColor: recessedWellBg,
+                  border: `1px solid ${tabletopBorder}`,
+                  borderRadius: 14,
+                  boxShadow: isLight
+                    ? 'inset 0 2px 6px rgba(15, 23, 42, 0.08)'
+                    : 'inset 0 3px 10px rgba(0, 0, 0, 0.55)',
+                }}
+              >
+                {board.map((cell, idx) => {
+                  const isWinningSquare = Boolean(winner && isPartOfClassicWinningLine(idx));
+                  const markerColor = isWinningSquare
+                    ? COLOR_WIN
+                    : cell === 'X'
+                    ? COLOR_X
+                    : COLOR_O;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleClassicSquareClick(idx)}
+                      className="mono"
+                      style={{
+                        backgroundColor: isWinningSquare
+                          ? 'rgba(16, 185, 129, 0.16)'
+                          : cellBg,
+                        border: isWinningSquare
+                          ? `2px solid ${COLOR_WIN}`
+                          : `1px solid ${cellBorder}`,
+                        borderRadius: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 'clamp(32px, 9vw, 44px)',
+                        fontWeight: 700,
+                        color: markerColor,
+                        boxShadow: isLight
+                          ? '0 2px 5px rgba(15, 23, 42, 0.05)'
+                          : '0 4px 10px rgba(0, 0, 0, 0.35)',
+                        transition: 'border-color 0.15s ease, background-color 0.15s ease',
+                      }}
+                    >
+                      {cell && (
+                        <span key={`${idx}-${cell}`} className="marker-pop">
+                          {cell}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingTop: 8,
+                  borderTop: `1px solid ${tabletopBorder}`,
+                }}
+              >
+                <span className="mono" style={{ fontSize: 12, color: textMuted }}>
+                  Mode state preserved across switches
+                </span>
+                <Button variant="secondary" size="sm" onClick={resetClassicGame}>
+                  <FiRotateCcw size={13} />
+                  <span>Reset Board</span>
                 </Button>
               </div>
-            </div>
-
-            {/* Status Banner */}
-            <div
-              className="mono"
+            </section>
+          ) : (
+            <section
               style={{
-                width: '100%',
-                padding: '10px 14px',
-                backgroundColor: 'var(--bg-app)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 8,
-                textAlign: 'center',
-                fontSize: 13,
-                fontWeight: 500,
-                color: tmStatus.includes('wins') ? '#10B981' : 'var(--text-primary)',
+                backgroundColor: tabletopBg,
+                border: `1px solid ${tabletopBorder}`,
+                borderRadius: 14,
+                padding: 22,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 16,
+                boxShadow: isLight
+                  ? '0 14px 32px rgba(15, 23, 42, 0.06)'
+                  : '0 22px 48px rgba(0, 0, 0, 0.48)',
               }}
             >
-              {tmStatus}
-            </div>
+              {/* Header & Mode Switcher */}
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
+                    Three-Marker Variant (FIFO Queue)
+                  </div>
+                  <div style={{ fontSize: 12, color: textSecondary }}>
+                    Max 3 markers per player — placing a 4th evicts the oldest marker.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <Button
+                    size="sm"
+                    variant={tmMode === 'vs-computer' ? 'primary' : 'secondary'}
+                    onClick={() => handleTmModeSelect('vs-computer')}
+                  >
+                    <FiCpu size={13} />
+                    <span>vs Computer</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={tmMode === '2-player' ? 'primary' : 'secondary'}
+                    onClick={() => handleTmModeSelect('2-player')}
+                  >
+                    <FiUsers size={13} />
+                    <span>2 Players</span>
+                  </Button>
+                </div>
+              </div>
 
-            {/* 3x3 Board */}
-            <div
-              style={{
-                width: 'clamp(250px, 76vw, 320px)',
-                aspectRatio: '1 / 1',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gridTemplateRows: 'repeat(3, 1fr)',
-                gap: 8,
-                padding: 10,
-                backgroundColor: 'var(--bg-app)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 10,
-              }}
-            >
-              {tmBoard.map((cell, idx) => {
-                const isWinningSquare = isPartOfTmWinningLine(idx);
-                const isOldestX =
-                  xPositions.length === 3 && xPositions[0] === idx && tmIsXNext && !tmStatus.includes('wins');
-                const isOldestO =
-                  oPositions.length === 3 && oPositions[0] === idx && !tmIsXNext && !tmStatus.includes('wins');
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleTmSquareClick(idx)}
+              {/* Status Banner */}
+              <div
+                className="mono"
+                style={{
+                  width: '100%',
+                  padding: '11px 14px',
+                  backgroundColor: recessedWellBg,
+                  border: `1px solid ${
+                    tmStatus.includes('wins')
+                      ? 'rgba(16, 185, 129, 0.5)'
+                      : tmIsXNext
+                      ? 'rgba(56, 189, 248, 0.35)'
+                      : 'rgba(251, 146, 60, 0.35)'
+                  }`,
+                  borderRadius: 10,
+                  textAlign: 'center',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: tmStatus.includes('wins')
+                    ? COLOR_WIN
+                    : tmIsXNext
+                    ? COLOR_X
+                    : COLOR_O,
+                }}
+              >
+                {tmStatus}
+              </div>
+
+              {/* 3x3 Raised & Recessed Board */}
+              <div
+                style={{
+                  width: 'clamp(260px, 78vw, 332px)',
+                  aspectRatio: '1 / 1',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gridTemplateRows: 'repeat(3, 1fr)',
+                  gap: 10,
+                  padding: 12,
+                  backgroundColor: recessedWellBg,
+                  border: `1px solid ${tabletopBorder}`,
+                  borderRadius: 14,
+                  boxShadow: isLight
+                    ? 'inset 0 2px 6px rgba(15, 23, 42, 0.08)'
+                    : 'inset 0 3px 10px rgba(0, 0, 0, 0.55)',
+                }}
+              >
+                {tmBoard.map((cell, idx) => {
+                  const isWinningSquare = isPartOfTmWinningLine(idx);
+                  const isOldestX =
+                    xPositions.length === 3 &&
+                    xPositions[0] === idx &&
+                    tmIsXNext &&
+                    !tmStatus.includes('wins');
+                  const isOldestO =
+                    oPositions.length === 3 &&
+                    oPositions[0] === idx &&
+                    !tmIsXNext &&
+                    !tmStatus.includes('wins');
+                  const isEvicting = isOldestX || isOldestO;
+                  const markerColor = isWinningSquare
+                    ? COLOR_WIN
+                    : cell === 'X'
+                    ? COLOR_X
+                    : COLOR_O;
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleTmSquareClick(idx)}
+                      className="mono"
+                      style={{
+                        position: 'relative',
+                        backgroundColor: isWinningSquare
+                          ? 'rgba(16, 185, 129, 0.16)'
+                          : cellBg,
+                        border: isWinningSquare
+                          ? `2px solid ${COLOR_WIN}`
+                          : isOldestX
+                          ? `1.5px dashed ${COLOR_X}`
+                          : isOldestO
+                          ? `1.5px dashed ${COLOR_O}`
+                          : `1px solid ${cellBorder}`,
+                        borderRadius: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 'clamp(32px, 9vw, 44px)',
+                        fontWeight: 700,
+                        color: markerColor,
+                        opacity: isEvicting ? 0.55 : 1,
+                        boxShadow: isLight
+                          ? '0 2px 5px rgba(15, 23, 42, 0.05)'
+                          : '0 4px 10px rgba(0, 0, 0, 0.35)',
+                        transition: 'all 0.15s ease',
+                      }}
+                      title={
+                        isEvicting
+                          ? 'Oldest active marker (will vanish on this turn)'
+                          : undefined
+                      }
+                    >
+                      {cell && (
+                        <span key={`${idx}-${cell}`} className="marker-pop">
+                          {cell}
+                        </span>
+                      )}
+                      {isEvicting && (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            bottom: 4,
+                            fontSize: 9,
+                            letterSpacing: '0.06em',
+                            color: isOldestX ? COLOR_X : COLOR_O,
+                            fontWeight: 600,
+                          }}
+                        >
+                          FADING
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Live Marker Counters & Reset */}
+              <div
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  paddingTop: 10,
+                  borderTop: `1px solid ${tabletopBorder}`,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span
                     className="mono"
                     style={{
-                      backgroundColor: isWinningSquare
-                        ? 'rgba(59, 130, 246, 0.16)'
-                        : 'var(--bg-surface)',
-                      border: isWinningSquare
-                        ? '1px solid #3B82F6'
-                        : isOldestX || isOldestO
-                        ? '1px dashed var(--text-muted)'
-                        : '1px solid var(--border-subtle)',
-                      borderRadius: 8,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 'clamp(30px, 9vw, 42px)',
+                      fontSize: 12,
                       fontWeight: 600,
-                      color: cell === 'X' ? '#3B82F6' : 'var(--text-primary)',
-                      opacity: isOldestX || isOldestO ? 0.65 : 1,
+                      color: COLOR_X,
+                      backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                      borderRadius: 7,
+                      padding: '4px 10px',
                     }}
-                    title={
-                      isOldestX || isOldestO
-                        ? 'Oldest active marker (will be removed on next move)'
-                        : undefined
-                    }
                   >
-                    {cell}
-                  </button>
-                );
-              })}
-            </div>
+                    {tmMode === 'vs-computer' ? 'You (X)' : 'Player X'}: {xPositions.length}/3
+                  </span>
+                  <span
+                    className="mono"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: COLOR_O,
+                      backgroundColor: 'rgba(251, 146, 60, 0.12)',
+                      border: '1px solid rgba(251, 146, 60, 0.35)',
+                      borderRadius: 7,
+                      padding: '4px 10px',
+                    }}
+                  >
+                    {tmMode === 'vs-computer' ? 'Computer (O)' : 'Player O'}: {oPositions.length}/3
+                  </span>
+                </div>
 
-            {/* Live Marker Counters & Reset */}
-            <div
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 10,
-                paddingTop: 8,
-                borderTop: '1px solid var(--border-subtle)',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 12,
-                    color: '#3B82F6',
-                    backgroundColor: 'var(--bg-app)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 6,
-                    padding: '4px 10px',
-                  }}
-                >
-                  {tmMode === 'vs-computer' ? 'You (X)' : 'Player X'}: {xPositions.length}/3
-                </span>
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 12,
-                    color: 'var(--text-primary)',
-                    backgroundColor: 'var(--bg-app)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 6,
-                    padding: '4px 10px',
-                  }}
-                >
-                  {tmMode === 'vs-computer' ? 'Computer (O)' : 'Player O'}: {oPositions.length}/3
-                </span>
+                <Button variant="secondary" size="sm" onClick={() => resetTmGame()}>
+                  <FiRotateCcw size={13} />
+                  <span>Reset Board</span>
+                </Button>
               </div>
-
-              <Button variant="secondary" size="sm" onClick={() => resetTmGame()}>
-                <FiRotateCcw size={13} />
-                <span>Reset Game</span>
-              </Button>
-            </div>
-          </section>
-        )}
-      </main>
+            </section>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

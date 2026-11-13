@@ -141,9 +141,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
               gap: 6,
               padding: '6px 10px',
               borderRadius: 7,
-              backgroundColor: 'var(--accent-subtle)',
-              border: '1px solid rgba(59, 130, 246, 0.35)',
-              color: 'var(--accent)',
+              backgroundColor: 'rgba(244, 63, 94, 0.14)',
+              border: '1px solid rgba(244, 63, 94, 0.38)',
+              color: '#F43F5E',
               fontSize: 11,
             }}
             title="Private Vault unlocked"

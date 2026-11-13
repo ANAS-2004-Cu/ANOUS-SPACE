@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FiArrowLeft,
   FiRefreshCw,
-  FiMail,
   FiAlertTriangle,
   FiPaperclip,
   FiTrash2,
@@ -12,11 +11,26 @@ import {
 import { AppHeader } from '../../shared/ui/AppHeader';
 import { Button } from '../../shared/ui/Button';
 import { useAlert } from '../../shared/context/AlertContext';
+import { useTheme } from '../../shared/context/ThemeContext';
 import * as SecureStore from '../../shared/utils/storage';
 import * as GuerrillaAPI from './tempMailService';
 import { GuerrillaEmailResponse, GuerrillaAddressData } from './tempMailService';
 
 const CACHED_EMAILS_SESSION_KEY = 'guerrilla_cached_emails';
+
+const AVATAR_PALETTE = [
+  { color: '#6366F1', bg: 'rgba(99, 102, 241, 0.15)', border: 'rgba(99, 102, 241, 0.4)' },
+  { color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.4)' },
+  { color: '#F43F5E', bg: 'rgba(244, 63, 94, 0.15)', border: 'rgba(244, 63, 94, 0.4)' },
+  { color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)' },
+  { color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.15)', border: 'rgba(14, 165, 233, 0.4)' },
+  { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.4)' },
+];
+
+const getAvatarStyle = (seed: string) => {
+  const code = (seed || 'U').charCodeAt(0);
+  return AVATAR_PALETTE[code % AVATAR_PALETTE.length];
+};
 
 export interface GuerrillaInboxPageProps {
   onOpenCommandPalette: () => void;
@@ -29,6 +43,8 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
   const [searchParams] = useSearchParams();
   const initialEmailsParam = searchParams.get('initialEmails');
   const { showAlert } = useAlert();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -363,296 +379,333 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
     navigate('/temp-mail');
   };
 
-  return (
-    <div className="workspace-shell">
-      <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="GuerrillaMail Inbox" />
+  const canvasBg = isLight ? '#F2F4FB' : '#0F1322';
+  const cardBg = isLight ? '#FFFFFF' : '#171D33';
+  const cardBorder = isLight ? '#DCE2F2' : '#263052';
+  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
+  const textSecondary = isLight ? '#475569' : '#94A3B8';
+  const textMuted = isLight ? '#64748B' : '#64748B';
 
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 14,
-          maxWidth: 760,
-          width: '100%',
-          margin: '0 auto',
-          paddingBottom: 40,
-        }}
-      >
-        {/* Toolbar */}
-        <div
+  return (
+    <div
+      className="route-theme-canvas"
+      style={{
+        backgroundColor: canvasBg,
+        backgroundImage: isLight
+          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(16, 185, 129, 0.08), transparent 70%)'
+          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(16, 185, 129, 0.14), transparent 70%)',
+      }}
+    >
+      <div className="workspace-shell">
+        <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="GuerrillaMail Inbox" />
+
+        <main
           style={{
+            flex: 1,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 10,
-            padding: '12px 16px',
-            flexWrap: 'wrap',
+            flexDirection: 'column',
+            gap: 14,
+            maxWidth: 760,
+            width: '100%',
+            margin: '0 auto',
+            paddingBottom: 40,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleBackToTempMail}
-              aria-label="Back to Temp-Mail"
-            >
-              <FiArrowLeft size={13} />
-              <span>Providers</span>
-            </Button>
+          {/* Toolbar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              backgroundColor: cardBg,
+              border: `1px solid ${cardBorder}`,
+              borderRadius: 12,
+              padding: '12px 16px',
+              flexWrap: 'wrap',
+              boxShadow: isLight
+                ? '0 8px 24px rgba(15, 23, 42, 0.04)'
+                : '0 14px 34px rgba(0, 0, 0, 0.32)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleBackToTempMail}
+                aria-label="Back to Temp-Mail"
+              >
+                <FiArrowLeft size={13} />
+                <span>Providers</span>
+              </Button>
 
-            {emailData?.email_addr && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                <FiMail size={14} color="#3B82F6" style={{ flexShrink: 0 }} />
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 13,
-                    color: 'var(--text-primary)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {emailData.email_addr}
-                </span>
-                {sessionError && (
+              <span
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: '#10B981',
+                  backgroundColor: 'rgba(16, 185, 129, 0.14)',
+                  border: '1px solid rgba(16, 185, 129, 0.42)',
+                  borderRadius: 999,
+                  padding: '2px 8px',
+                  fontWeight: 600,
+                  flexShrink: 0,
+                }}
+              >
+                GuerrillaMail
+              </span>
+
+              {emailData?.email_addr && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                  <span className="live-pulse-dot" />
                   <span
                     className="mono"
                     style={{
-                      fontSize: 11,
-                      color: '#EF4444',
-                      backgroundColor: 'rgba(239, 68, 68, 0.12)',
-                      border: '1px solid rgba(239, 68, 68, 0.35)',
-                      borderRadius: 4,
-                      padding: '2px 6px',
+                      fontSize: 13,
+                      color: textPrimary,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                     }}
                   >
-                    Session Error
+                    {emailData.email_addr}
                   </span>
-                )}
+                  {sessionError && (
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 11,
+                        color: '#F43F5E',
+                        backgroundColor: 'rgba(244, 63, 94, 0.12)',
+                        border: '1px solid rgba(244, 63, 94, 0.35)',
+                        borderRadius: 4,
+                        padding: '2px 6px',
+                      }}
+                    >
+                      Session Error
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onRefresh}
+              disabled={refreshing}
+              aria-label="Refresh Inbox"
+            >
+              <FiRefreshCw
+                size={13}
+                style={refreshing ? { animation: 'spin 0.8s linear infinite' } : undefined}
+              />
+              <span>Refresh</span>
+            </Button>
+          </div>
+
+          {/* Session Error Banner */}
+          {sessionError && !loading && (
+            <button
+              type="button"
+              onClick={resetEmailAddress}
+              style={{
+                width: '100%',
+                backgroundColor: 'rgba(244, 63, 94, 0.12)',
+                border: '1px solid rgba(244, 63, 94, 0.35)',
+                borderRadius: 9,
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                color: '#F43F5E',
+                fontSize: 13,
+                textAlign: 'left',
+              }}
+            >
+              <FiAlertTriangle size={15} style={{ flexShrink: 0 }} />
+              <span>Session error detected. Click here to reset your GuerrillaMail session.</span>
+            </button>
+          )}
+
+          {/* Email list */}
+          {loading && !refreshing ? (
+            <div
+              style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 12,
+                padding: '60px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+              }}
+            >
+              <div className="spinner" style={{ width: 22, height: 22 }} />
+              <span style={{ fontSize: 13, color: textSecondary }}>Loading emails...</span>
+            </div>
+          ) : emails.length === 0 ? (
+            <div
+              style={{
+                backgroundColor: cardBg,
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 12,
+                padding: '60px 24px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+                textAlign: 'center',
+              }}
+            >
+              <FiInbox size={32} color="#10B981" />
+              <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
+                {sessionError ? 'Session Error' : 'Inbox is ready and listening'}
               </div>
-            )}
-          </div>
-
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onRefresh}
-            disabled={refreshing}
-            aria-label="Refresh Inbox"
-          >
-            <FiRefreshCw
-              size={13}
-              style={refreshing ? { animation: 'spin 0.8s linear infinite' } : undefined}
-            />
-            <span>Refresh</span>
-          </Button>
-        </div>
-
-        {/* Session Error Banner */}
-        {sessionError && !loading && (
-          <button
-            type="button"
-            onClick={resetEmailAddress}
-            style={{
-              width: '100%',
-              backgroundColor: 'rgba(239, 68, 68, 0.12)',
-              border: '1px solid rgba(239, 68, 68, 0.35)',
-              borderRadius: 8,
-              padding: '10px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              color: '#EF4444',
-              fontSize: 13,
-              textAlign: 'left',
-            }}
-          >
-            <FiAlertTriangle size={15} style={{ flexShrink: 0 }} />
-            <span>Session error detected. Click here to reset your GuerrillaMail session.</span>
-          </button>
-        )}
-
-        {/* Email list */}
-        {loading && !refreshing ? (
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 10,
-              padding: '60px 20px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
-            }}
-          >
-            <div className="spinner" style={{ width: 22, height: 22 }} />
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Loading emails...</span>
-          </div>
-        ) : emails.length === 0 ? (
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 10,
-              padding: '60px 24px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
-              textAlign: 'center',
-            }}
-          >
-            <FiInbox size={32} color="var(--text-muted)" />
-            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-              {sessionError ? 'Session Error' : 'No emails yet'}
+              <div style={{ fontSize: 13, color: textSecondary, maxWidth: 380 }}>
+                {sessionError
+                  ? 'Your session may have expired. Reset your session to obtain a fresh inbox.'
+                  : 'New emails will appear here. Click Refresh to check for incoming mail.'}
+              </div>
+              {sessionError && (
+                <Button variant="primary" size="sm" onClick={resetEmailAddress}>
+                  Reset Session
+                </Button>
+              )}
             </div>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 380 }}>
-              {sessionError
-                ? 'Your session may have expired. Reset your session to obtain a fresh inbox.'
-                : 'New emails will appear here. Click Refresh to check for incoming mail.'}
-            </div>
-            {sessionError && (
-              <Button variant="primary" size="sm" onClick={resetEmailAddress}>
-                Reset Session
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {emails.map((item) => {
-              let displayName = item.mail_from || '';
-              const matches = displayName.match(/(.*)\s<(.*)>/);
-              if (matches && matches.length > 1) {
-                displayName = matches[1];
-              }
-              const firstLetter = displayName.charAt(0).toUpperCase();
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {emails.map((item) => {
+                let displayName = item.mail_from || '';
+                const matches = displayName.match(/(.*)\s<(.*)>/);
+                if (matches && matches.length > 1) {
+                  displayName = matches[1];
+                }
+                const firstLetter = (displayName.charAt(0) || 'U').toUpperCase();
+                const avatar = getAvatarStyle(firstLetter);
 
-              return (
-                <div
-                  key={item.mail_id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => viewEmailDetails(item.mail_id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      viewEmailDetails(item.mail_id);
-                    }
-                  }}
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 9,
-                    padding: '14px 16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    cursor: 'pointer',
-                  }}
-                >
+                return (
                   <div
-                    className="mono"
+                    key={item.mail_id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => viewEmailDetails(item.mail_id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        viewEmailDetails(item.mail_id);
+                      }
+                    }}
                     style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 8,
-                      backgroundColor: 'rgba(59, 130, 246, 0.12)',
-                      border: '1px solid rgba(59, 130, 246, 0.35)',
+                      backgroundColor: cardBg,
+                      border: `1px solid ${cardBorder}`,
+                      borderRadius: 11,
+                      padding: '14px 16px',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: '#3B82F6',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {firstLetter || 'U'}
-                  </div>
-
-                  <div
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 2,
+                      gap: 14,
+                      cursor: 'pointer',
                     }}
                   >
                     <div
+                      className="mono"
                       style={{
-                        fontSize: 13,
+                        width: 38,
+                        height: 38,
+                        borderRadius: '50%',
+                        backgroundColor: avatar.bg,
+                        border: `1px solid ${avatar.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 14,
                         fontWeight: 600,
-                        color: 'var(--text-primary)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
+                        color: avatar.color,
+                        flexShrink: 0,
                       }}
                     >
-                      {displayName}
+                      {firstLetter}
                     </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: '#3B82F6',
-                        fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {item.mail_subject || '(No subject)'}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: 'var(--text-secondary)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {item.mail_excerpt || '(No content)'}
-                    </div>
-                  </div>
 
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-end',
-                      gap: 8,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                      {formatDate(item.mail_timestamp)}
-                    </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {item.att > 0 && <FiPaperclip size={13} color="var(--text-secondary)" />}
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteEmail(item.mail_id, e)}
-                        aria-label="Delete Email"
-                        style={{ color: '#EF4444', padding: 4, display: 'inline-flex' }}
+                    <div
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: textPrimary,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
                       >
-                        <FiTrash2 size={15} />
-                      </button>
+                        {displayName}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: '#10B981',
+                          fontWeight: 500,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {item.mail_subject || '(No subject)'}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: textSecondary,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {item.mail_excerpt || '(No content)'}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                        gap: 8,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span className="mono" style={{ fontSize: 11, color: textMuted }}>
+                        {formatDate(item.mail_timestamp)}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {item.att > 0 && <FiPaperclip size={13} color={textSecondary} />}
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteEmail(item.mail_id, e)}
+                          aria-label="Delete Email"
+                          style={{ color: '#F43F5E', padding: 4, display: 'inline-flex' }}
+                        >
+                          <FiTrash2 size={15} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </main>
+                );
+              })}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

@@ -7,10 +7,12 @@ import {
   FiCheckCircle,
   FiAlertCircle,
   FiCode,
+  FiFileText,
 } from 'react-icons/fi';
 import { AppHeader } from '../../shared/ui/AppHeader';
 import { Button } from '../../shared/ui/Button';
 import { useAlert } from '../../shared/context/AlertContext';
+import { useTheme } from '../../shared/context/ThemeContext';
 import { copyToClipboard } from '../../shared/utils/clipboard';
 import { recordRecentProject } from '../../shared/utils/recentTools';
 
@@ -36,7 +38,12 @@ export interface ScratchpadPageProps {
 
 export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPalette }) => {
   const { showAlert } = useAlert();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const gutterRef = useRef<HTMLDivElement>(null);
 
   const [content, setContent] = useState<string>(() => {
     try {
@@ -69,6 +76,19 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
     type: 'valid' | 'invalid';
     message: string;
   } | null>(null);
+
+  // IDE theme palette (GitHub-dark obsidian #0D1117 / #161B22 in dark mode; crisp studio paper in light mode)
+  const idePalette = {
+    canvasBg: isLight ? '#F6F8FA' : '#0D1117',
+    windowBg: isLight ? '#FFFFFF' : '#161B22',
+    toolbarBg: isLight ? '#F0F3F6' : '#0D1117',
+    editorBg: isLight ? '#FFFFFF' : '#0D1117',
+    gutterBg: isLight ? '#F8FAFC' : '#11161D',
+    border: isLight ? '#D0D7DE' : '#30363D',
+    gutterText: isLight ? '#8C959F' : '#484F58',
+    textPrimary: isLight ? '#1F2328' : '#E6EDF3',
+    textSecondary: isLight ? '#59636E' : '#8B949E',
+  };
 
   useEffect(() => {
     recordRecentProject('scratchpad');
@@ -118,18 +138,35 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
     return { chars, lines, words, bytes };
   }, [content]);
 
-  const effectiveExtension = useMemo(() => {
+  const lineNumbers = useMemo(() => {
+    const count = Math.max(1, stats.lines);
+    return Array.from({ length: count }, (_, i) => i + 1);
+  }, [stats.lines]);
+
+  const resolvedExtension = useMemo(() => {
     if (selectedExt !== 'custom') return selectedExt;
     const cleaned = customExt.trim();
     if (!cleaned) return '.txt';
     return cleaned.startsWith('.') ? cleaned : `.${cleaned}`;
   }, [selectedExt, customExt]);
 
+  const resolvedFullFilename = useMemo(() => {
+    const base = filename.trim() || 'untitled';
+    if (base.endsWith(resolvedExtension)) return base;
+    return `${base}${resolvedExtension}`;
+  }, [filename, resolvedExtension]);
+
+  const handleScrollSync = () => {
+    if (textareaRef.current && gutterRef.current) {
+      gutterRef.current.scrollTop = textareaRef.current.scrollTop;
+    }
+  };
+
   const handleCopy = async () => {
     if (!content) return;
     await copyToClipboard(content);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
+    setTimeout(() => setCopied(false), 1600);
   };
 
   const handleClear = () => {
@@ -147,11 +184,11 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
     ]);
   };
 
-  const importFileObject = (file: File) => {
+  const readImportedFile = (file: File) => {
     const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
-      setContent(result);
+    reader.onload = (ev) => {
+      const text = typeof ev.target?.result === 'string' ? ev.target.result : '';
+      setContent(text);
       setJsonStatus(null);
 
       const dotIndex = file.name.lastIndexOf('.');
@@ -165,20 +202,9 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
           setSelectedExt('custom');
           setCustomExt(ext);
         }
-      } else if (file.name.startsWith('.')) {
-        setFilename('config');
-        if ((PRESET_EXTENSIONS as readonly string[]).includes(file.name.toLowerCase())) {
-          setSelectedExt(file.name.toLowerCase());
-        } else {
-          setSelectedExt('custom');
-          setCustomExt(file.name);
-        }
       } else {
         setFilename(file.name);
       }
-    };
-    reader.onerror = () => {
-      showAlert('Import Error', 'Failed to read the selected file.');
     };
     reader.readAsText(file);
   };
@@ -186,93 +212,88 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      importFileObject(file);
+      readImportedFile(file);
     }
     e.target.value = '';
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isDragging) setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      importFileObject(file);
+      readImportedFile(file);
     }
   };
 
-  const handleDownload = () => {
-    const baseName = filename.trim() || 'untitled';
-    const fullFilename =
-      effectiveExtension === '.env' && baseName === 'untitled'
-        ? '.env'
-        : baseName.endsWith(effectiveExtension)
-        ? baseName
-        : `${baseName}${effectiveExtension}`;
-
-    const mimeMap: Record<string, string> = {
-      '.json': 'application/json;charset=utf-8',
-      '.js': 'text/javascript;charset=utf-8',
-      '.ts': 'text/typescript;charset=utf-8',
-      '.html': 'text/html;charset=utf-8',
-      '.css': 'text/css;charset=utf-8',
-      '.md': 'text/markdown;charset=utf-8',
-    };
-    const mimeType = mimeMap[effectiveExtension] || 'text/plain;charset=utf-8';
-
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = fullFilename;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
+  const parseJsonWithDiagnostic = (
+    raw: string
+  ): { ok: true; data: unknown } | { ok: false; error: string } => {
+    try {
+      const parsed = JSON.parse(raw);
+      return { ok: true, data: parsed };
+    } catch (err: any) {
+      const msg = err instanceof Error ? err.message : 'Invalid JSON syntax';
+      const posMatch = msg.match(/position\s+(\d+)/i);
+      if (posMatch) {
+        const pos = Number(posMatch[1]);
+        const upToError = raw.slice(0, pos);
+        const lines = upToError.split(/\r\n|\r|\n/);
+        const line = lines.length;
+        const col = lines[lines.length - 1].length + 1;
+        return { ok: false, error: `${msg} (Line ${line}, Column ${col})` };
+      }
+      return { ok: false, error: msg };
+    }
   };
 
   const handleFormatJson = () => {
-    try {
-      const parsed = JSON.parse(content);
-      const formatted = JSON.stringify(parsed, null, 2);
-      setContent(formatted);
-      setJsonStatus({
-        type: 'valid',
-        message: 'Valid JSON formatted with 2-space indentation.',
-      });
-    } catch (err: any) {
-      setJsonStatus({
-        type: 'invalid',
-        message: err?.message || 'Invalid JSON syntax.',
-      });
+    if (!content.trim()) return;
+    const res = parseJsonWithDiagnostic(content);
+    if (res.ok) {
+      setContent(JSON.stringify(res.data, null, 2));
+      setSelectedExt('.json');
+      setJsonStatus({ type: 'valid', message: 'Formatted valid JSON (2-space indent).' });
+    } else {
+      setJsonStatus({ type: 'invalid', message: res.error });
+    }
+  };
+
+  const handleMinifyJson = () => {
+    if (!content.trim()) return;
+    const res = parseJsonWithDiagnostic(content);
+    if (res.ok) {
+      setContent(JSON.stringify(res.data));
+      setSelectedExt('.json');
+      setJsonStatus({ type: 'valid', message: 'Minified valid JSON.' });
+    } else {
+      setJsonStatus({ type: 'invalid', message: res.error });
     }
   };
 
   const handleValidateJson = () => {
-    try {
-      JSON.parse(content);
-      setJsonStatus({
-        type: 'valid',
-        message: 'JSON syntax is valid.',
-      });
-    } catch (err: any) {
-      setJsonStatus({
-        type: 'invalid',
-        message: err?.message || 'Invalid JSON syntax.',
-      });
+    if (!content.trim()) {
+      setJsonStatus({ type: 'invalid', message: 'Buffer is empty.' });
+      return;
     }
+    const res = parseJsonWithDiagnostic(content);
+    if (res.ok) {
+      setJsonStatus({ type: 'valid', message: 'Valid JSON syntax confirmed.' });
+    } else {
+      setJsonStatus({ type: 'invalid', message: res.error });
+    }
+  };
+
+  const handleDownloadFile = () => {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', resolvedFullFilename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -281,8 +302,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
       const target = e.currentTarget;
       const start = target.selectionStart;
       const end = target.selectionEnd;
-      const updated = content.substring(0, start) + '  ' + content.substring(end);
-      setContent(updated);
+      const nextValue = content.substring(0, start) + '  ' + content.substring(end);
+      setContent(nextValue);
       requestAnimationFrame(() => {
         target.selectionStart = target.selectionEnd = start + 2;
       });
@@ -290,305 +311,450 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
   };
 
   return (
-    <div className="workspace-shell">
-      <AppHeader
-        onOpenCommandPalette={onOpenCommandPalette}
-        subtitle="Quick Scratchpad & File Maker"
-      />
+    <div
+      className="route-theme-canvas"
+      style={{
+        backgroundColor: idePalette.canvasBg,
+        backgroundImage: isLight
+          ? 'radial-gradient(ellipse 70% 340px at 50% -80px, rgba(59, 130, 246, 0.06), transparent 70%)'
+          : 'radial-gradient(ellipse 70% 340px at 50% -80px, rgba(56, 189, 248, 0.07), transparent 70%)',
+      }}
+    >
+      <div className="workspace-shell">
+        <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="Code Studio / Scratchpad" />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 32 }}>
-        {/* Top Action & File Export Bar */}
-        <section
+        <main
           style={{
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 10,
-            padding: 14,
+            flex: 1,
             display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
+            flexDirection: 'column',
+            gap: 16,
+            paddingBottom: 40,
           }}
         >
-          {/* Left actions: Copy, Import, Clear */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <Button variant="secondary" size="sm" onClick={handleCopy} disabled={!content}>
-              <FiCopy size={13} />
-              <span>{copied ? 'Copied' : 'Copy'}</span>
-            </Button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <FiUpload size={13} />
-              <span>Import File</span>
-            </Button>
-
-            <Button variant="danger" size="sm" onClick={handleClear} disabled={!content}>
-              <FiTrash2 size={13} />
-              <span>Clear</span>
-            </Button>
-          </div>
-
-          {/* Right actions: Instant File Downloader */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {/* Main IDE Editor Window Container (#161B22) */}
+          <section
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            style={{
+              backgroundColor: idePalette.windowBg,
+              border: `1px solid ${isDragging ? '#3B82F6' : idePalette.border}`,
+              borderRadius: 12,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: isLight
+                ? '0 10px 30px -10px rgba(15, 23, 42, 0.08)'
+                : '0 16px 38px -12px rgba(0, 0, 0, 0.65)',
+            }}
+          >
+            {/* IDE Window Top Toolbar Bar */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                backgroundColor: 'var(--bg-input)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 7,
-                overflow: 'hidden',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                backgroundColor: idePalette.toolbarBg,
+                borderBottom: `1px solid ${idePalette.border}`,
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
+              {/* Left: Window Dots + Active Buffer Tab */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      backgroundColor: '#F43F5E',
+                      opacity: 0.75,
+                    }}
+                  />
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      backgroundColor: '#F59E0B',
+                      opacity: 0.75,
+                    }}
+                  />
+                  <span
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      backgroundColor: '#10B981',
+                      opacity: 0.75,
+                    }}
+                  />
+                </div>
+
+                <div
+                  className="mono"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    backgroundColor: idePalette.windowBg,
+                    border: `1px solid ${idePalette.border}`,
+                    fontSize: 12,
+                    color: idePalette.textPrimary,
+                    fontWeight: 500,
+                  }}
+                >
+                  <FiFileText size={12} color="#3B82F6" />
+                  <span>{resolvedFullFilename}</span>
+                </div>
+              </div>
+
+              {/* Right: Editor Action Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <FiUpload size={13} />
+                  <span>Import File</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCopy}
+                  disabled={!content}
+                >
+                  <FiCopy size={13} />
+                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="sm"
+                  onClick={handleClear}
+                  disabled={!content}
+                >
+                  <FiTrash2 size={13} />
+                  <span>Clear</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Smart JSON Helper Bar (Always accessible when JSON is detected or .json selected) */}
+            {looksLikeJson && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  padding: '8px 14px',
+                  backgroundColor: isLight
+                    ? 'rgba(59, 130, 246, 0.05)'
+                    : 'rgba(56, 189, 248, 0.06)',
+                  borderBottom: `1px solid ${idePalette.border}`,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <span
+                    className="mono"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: '#38BDF8',
+                    }}
+                  >
+                    <FiCode size={13} />
+                    <span>JSON STUDIO</span>
+                  </span>
+
+                  {jsonStatus && (
+                    <span
+                      className="mono"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '3px 9px',
+                        borderRadius: 999,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        backgroundColor:
+                          jsonStatus.type === 'valid'
+                            ? 'rgba(16, 185, 129, 0.16)'
+                            : 'rgba(244, 63, 94, 0.16)',
+                        border:
+                          jsonStatus.type === 'valid'
+                            ? '1px solid rgba(16, 185, 129, 0.45)'
+                            : '1px solid rgba(244, 63, 94, 0.45)',
+                        color: jsonStatus.type === 'valid' ? '#10B981' : '#F43F5E',
+                      }}
+                    >
+                      {jsonStatus.type === 'valid' ? (
+                        <FiCheckCircle size={12} />
+                      ) : (
+                        <FiAlertCircle size={12} />
+                      )}
+                      <span>{jsonStatus.message}</span>
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Button type="button" variant="secondary" size="sm" onClick={handleFormatJson}>
+                    Format
+                  </Button>
+                  <Button type="button" variant="secondary" size="sm" onClick={handleMinifyJson}>
+                    Minify
+                  </Button>
+                  <Button type="button" variant="primary" size="sm" onClick={handleValidateJson}>
+                    Validate JSON
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Editor Surface with Synchronized Line-Number Gutter */}
+            <div
+              style={{
+                display: 'flex',
+                position: 'relative',
+                minHeight: 400,
+                maxHeight: '62vh',
+                backgroundColor: idePalette.editorBg,
+              }}
+            >
+              {/* Line-Number Gutter */}
+              <div
+                ref={gutterRef}
+                aria-hidden="true"
+                className="mono"
+                style={{
+                  width: 52,
+                  padding: '16px 10px 16px 6px',
+                  backgroundColor: idePalette.gutterBg,
+                  borderRight: `1px solid ${idePalette.border}`,
+                  color: idePalette.gutterText,
+                  fontSize: 13,
+                  lineHeight: '22px',
+                  textAlign: 'right',
+                  userSelect: 'none',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                }}
+              >
+                {lineNumbers.map((n) => (
+                  <div key={n}>{n}</div>
+                ))}
+              </div>
+
+              {/* Code / Textarea */}
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  if (jsonStatus) setJsonStatus(null);
+                }}
+                onScroll={handleScrollSync}
+                onKeyDown={handleEditorKeyDown}
+                placeholder="Paste code, JSON payloads, .env variables, or markdown notes here... (or drag & drop a file)"
+                spellCheck={false}
+                className="mono"
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  minHeight: 400,
+                  padding: '16px',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: idePalette.textPrimary,
+                  fontSize: 13,
+                  lineHeight: '22px',
+                  resize: 'vertical',
+                  overflowY: 'auto',
+                  whiteSpace: 'pre',
+                }}
+              />
+            </div>
+
+            {/* Bottom IDE Status Bar */}
+            <div
+              className="mono"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '7px 14px',
+                backgroundColor: idePalette.toolbarBg,
+                borderTop: `1px solid ${idePalette.border}`,
+                fontSize: 11,
+                color: idePalette.textSecondary,
+                flexWrap: 'wrap',
+                gap: 10,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span>Ln {stats.lines}</span>
+                <span>Words {stats.words}</span>
+                <span>Chars {stats.chars}</span>
+                <span>{stats.bytes} B</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <span>UTF-8</span>
+                <span>Spaces: 2</span>
+                <span style={{ color: '#10B981' }}>Auto-Saved</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Instant File Maker & Extension Selector Dock */}
+          <section
+            style={{
+              backgroundColor: idePalette.windowBg,
+              border: `1px solid ${idePalette.border}`,
+              borderRadius: 12,
+              padding: 18,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: idePalette.textPrimary }}>
+                  Instant File Exporter
+                </h2>
+                <p style={{ fontSize: 12, color: idePalette.textSecondary }}>
+                  Choose a target extension and export the buffer directly as a local file.
+                </p>
+              </div>
+              <span
+                className="mono"
+                style={{
+                  fontSize: 12,
+                  color: '#38BDF8',
+                  backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  borderRadius: 6,
+                  padding: '3px 9px',
+                }}
+              >
+                {resolvedFullFilename}
+              </span>
+            </div>
+
+            {/* Extension Selector Pills */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {PRESET_EXTENSIONS.map((ext) => {
+                const active = selectedExt === ext;
+                return (
+                  <button
+                    key={ext}
+                    type="button"
+                    onClick={() => setSelectedExt(ext)}
+                    className="mono"
+                    style={{
+                      padding: '5px 11px',
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      backgroundColor: active ? '#3B82F6' : idePalette.toolbarBg,
+                      color: active ? '#FFFFFF' : idePalette.textSecondary,
+                      border: active ? '1px solid #3B82F6' : `1px solid ${idePalette.border}`,
+                    }}
+                  >
+                    {ext === 'custom' ? 'Custom...' : ext}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Filename + Custom Ext + Download Button */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                flexWrap: 'wrap',
               }}
             >
               <input
                 type="text"
                 value={filename}
                 onChange={(e) => setFilename(e.target.value)}
-                placeholder="filename"
+                placeholder="Filename (e.g. config)"
                 className="mono"
-                aria-label="File name"
                 style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  padding: '6px 10px',
-                  fontSize: 12,
-                  color: 'var(--text-primary)',
-                  width: 135,
+                  flex: 1,
+                  minWidth: 180,
+                  backgroundColor: idePalette.toolbarBg,
+                  border: `1px solid ${idePalette.border}`,
+                  borderRadius: 8,
+                  padding: '9px 12px',
+                  fontSize: 13,
+                  color: idePalette.textPrimary,
                 }}
               />
-              <select
-                value={selectedExt}
-                onChange={(e) => setSelectedExt(e.target.value)}
-                className="mono"
-                aria-label="File extension"
-                style={{
-                  backgroundColor: 'var(--bg-surface)',
-                  border: 'none',
-                  borderLeft: '1px solid var(--border-subtle)',
-                  padding: '6px 8px',
-                  fontSize: 12,
-                  color: 'var(--text-secondary)',
-                  cursor: 'pointer',
-                }}
-              >
-                {PRESET_EXTENSIONS.map((ext) => (
-                  <option key={ext} value={ext}>
-                    {ext === 'custom' ? 'Custom...' : ext}
-                  </option>
-                ))}
-              </select>
+
               {selectedExt === 'custom' && (
                 <input
                   type="text"
                   value={customExt}
                   onChange={(e) => setCustomExt(e.target.value)}
-                  placeholder=".ext"
+                  placeholder=".yaml"
                   className="mono"
-                  aria-label="Custom extension"
                   style={{
-                    backgroundColor: 'var(--bg-input)',
-                    border: 'none',
-                    borderLeft: '1px solid var(--border-subtle)',
-                    padding: '6px 8px',
-                    fontSize: 12,
-                    color: 'var(--text-primary)',
-                    width: 68,
+                    width: 110,
+                    backgroundColor: idePalette.toolbarBg,
+                    border: `1px solid ${idePalette.border}`,
+                    borderRadius: 8,
+                    padding: '9px 12px',
+                    fontSize: 13,
+                    color: idePalette.textPrimary,
                   }}
                 />
               )}
-            </div>
 
-            <Button variant="primary" size="sm" onClick={handleDownload}>
-              <FiDownload size={13} />
-              <span>Download {effectiveExtension}</span>
-            </Button>
-          </div>
-        </section>
-
-        {/* Smart JSON Helper Bar (shown automatically when content looks like JSON or .json is selected) */}
-        {looksLikeJson && (
-          <section
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 10,
-              padding: '10px 14px',
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FiCode size={14} color="#3B82F6" />
-              <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>
-                Smart JSON Helper
-              </span>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                JSON structure detected
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Button variant="secondary" size="sm" onClick={handleFormatJson}>
-                Format (Prettify)
-              </Button>
-              <Button variant="secondary" size="sm" onClick={handleValidateJson}>
-                Validate
+              <Button type="button" variant="primary" size="md" onClick={handleDownloadFile}>
+                <FiDownload size={14} />
+                <span>Download {resolvedFullFilename}</span>
               </Button>
             </div>
           </section>
-        )}
-
-        {/* JSON Validation Feedback */}
-        {jsonStatus && (
-          <div
-            className="mono"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
-              padding: '10px 14px',
-              borderRadius: 8,
-              fontSize: 12,
-              backgroundColor:
-                jsonStatus.type === 'valid'
-                  ? 'rgba(16, 185, 129, 0.1)'
-                  : 'rgba(239, 68, 68, 0.1)',
-              border: `1px solid ${
-                jsonStatus.type === 'valid'
-                  ? 'rgba(16, 185, 129, 0.35)'
-                  : 'rgba(239, 68, 68, 0.35)'
-              }`,
-              color: jsonStatus.type === 'valid' ? '#10B981' : '#EF4444',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {jsonStatus.type === 'valid' ? (
-                <FiCheckCircle size={14} />
-              ) : (
-                <FiAlertCircle size={14} />
-              )}
-              <span>{jsonStatus.message}</span>
-            </div>
-            <button
-              onClick={() => setJsonStatus(null)}
-              style={{ fontSize: 11, color: 'var(--text-secondary)' }}
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        {/* Editor Surface with Drag & Drop */}
-        <section
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: 'var(--bg-surface)',
-            border: `1px solid ${isDragging ? '#3B82F6' : 'var(--border-subtle)'}`,
-            borderRadius: 10,
-            overflow: 'hidden',
-            minHeight: 420,
-            position: 'relative',
-          }}
-        >
-          {isDragging && (
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundColor: 'rgba(14, 16, 21, 0.85)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-                pointerEvents: 'none',
-              }}
-            >
-              <div
-                style={{
-                  padding: '16px 24px',
-                  borderRadius: 8,
-                  backgroundColor: 'var(--bg-surface)',
-                  border: '1px solid #3B82F6',
-                  color: 'var(--text-primary)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                }}
-              >
-                Drop file to load content into editor
-              </div>
-            </div>
-          )}
-
-          <textarea
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              if (jsonStatus) setJsonStatus(null);
-            }}
-            onKeyDown={handleEditorKeyDown}
-            placeholder="Paste or type notes, code, .env variables, or JSON payloads here. Drag and drop any text file to import..."
-            className="mono"
-            spellCheck={false}
-            style={{
-              flex: 1,
-              width: '100%',
-              minHeight: 380,
-              backgroundColor: 'transparent',
-              border: 'none',
-              padding: 16,
-              fontSize: 13,
-              lineHeight: 1.6,
-              color: 'var(--text-primary)',
-              resize: 'vertical',
-            }}
-          />
-
-          {/* Status Footer */}
-          <div
-            className="mono"
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-              padding: '8px 14px',
-              borderTop: '1px solid var(--border-subtle)',
-              backgroundColor: 'var(--bg-input)',
-              fontSize: 11,
-              color: 'var(--text-muted)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <span>Lines: {stats.lines}</span>
-              <span>Words: {stats.words}</span>
-              <span>Chars: {stats.chars}</span>
-              <span>Size: {stats.bytes} B</span>
-            </div>
-            <div>Auto-saved to local storage</div>
-          </div>
-        </section>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

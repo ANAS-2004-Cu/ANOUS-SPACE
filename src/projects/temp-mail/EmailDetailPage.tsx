@@ -29,6 +29,20 @@ import {
 } from './tempMailService';
 import * as GuerrillaAPI from './tempMailService';
 
+const AVATAR_PALETTE = [
+  { color: '#6366F1', bg: 'rgba(99, 102, 241, 0.15)', border: 'rgba(99, 102, 241, 0.4)' },
+  { color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.4)' },
+  { color: '#F43F5E', bg: 'rgba(244, 63, 94, 0.15)', border: 'rgba(244, 63, 94, 0.4)' },
+  { color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)' },
+  { color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.15)', border: 'rgba(14, 165, 233, 0.4)' },
+  { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.4)' },
+];
+
+const getAvatarStyle = (seed: string) => {
+  const code = (seed || 'U').charCodeAt(0);
+  return AVATAR_PALETTE[code % AVATAR_PALETTE.length];
+};
+
 export interface EmailDetailPageProps {
   onOpenCommandPalette: () => void;
 }
@@ -41,6 +55,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
   const provider = rawProvider === 'mailgw' ? TempMailProvider.MailTM : rawProvider;
   const { showAlert } = useAlert();
   const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<any>(null);
@@ -216,9 +231,17 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       : email.mail_subject
     : 'Message Detail';
 
-  const iframeText = theme === 'light' ? '#0F172A' : '#F3F4F6';
-  const iframeBg = theme === 'light' ? '#FFFFFF' : '#0E1015';
-  const iframeBorder = theme === 'light' ? '#E2E8F0' : '#252A37';
+  const canvasBg = isLight ? '#F2F4FB' : '#0F1322';
+  const cardBg = isLight ? '#FFFFFF' : '#171D33';
+  const cardBorder = isLight ? '#DCE2F2' : '#263052';
+  const wellBg = isLight ? '#F7F9FE' : '#0B0E1A';
+  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
+  const textSecondary = isLight ? '#475569' : '#94A3B8';
+  const textMuted = isLight ? '#64748B' : '#64748B';
+
+  const iframeText = isLight ? '#0F172A' : '#F3F4F6';
+  const iframeBg = isLight ? '#FFFFFF' : '#0B0E1A';
+  const iframeBorder = isLight ? '#E2E8F0' : '#263052';
 
   const htmlWrapper = `<!doctype html>
 <html>
@@ -231,13 +254,13 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
         color: ${iframeText};
         background-color: ${iframeBg};
-        padding: 16px;
+        padding: 18px;
         margin: 0;
         font-size: 14px;
         line-height: 1.6;
         word-break: break-word;
       }
-      a { color: #3B82F6; }
+      a { color: #6366F1; }
       img { max-width: 100%; height: auto; }
       table { width: 100%; border-collapse: collapse; }
       th, td { border: 1px solid ${iframeBorder}; padding: 8px; }
@@ -250,331 +273,351 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
 </html>`;
 
   return (
-    <div className="workspace-shell">
-      <AppHeader
-        onOpenCommandPalette={onOpenCommandPalette}
-        subtitle={emailSubject || '(No subject)'}
-      />
+    <div
+      className="route-theme-canvas"
+      style={{
+        backgroundColor: canvasBg,
+        backgroundImage: isLight
+          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(99, 102, 241, 0.1), transparent 70%)'
+          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(99, 102, 241, 0.16), transparent 70%)',
+      }}
+    >
+      <div className="workspace-shell">
+        <AppHeader
+          onOpenCommandPalette={onOpenCommandPalette}
+          subtitle={emailSubject || '(No subject)'}
+        />
 
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 14,
-          maxWidth: 780,
-          width: '100%',
-          margin: '0 auto',
-          paddingBottom: 40,
-        }}
-      >
-        {/* Top Action Bar */}
-        <div
+        <main
           style={{
+            flex: 1,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 10,
-            flexWrap: 'wrap',
+            flexDirection: 'column',
+            gap: 14,
+            maxWidth: 780,
+            width: '100%',
+            margin: '0 auto',
+            paddingBottom: 40,
           }}
         >
-          <Button variant="secondary" size="sm" onClick={handleBack}>
-            <FiArrowLeft size={13} />
-            <span>Back to Inbox</span>
-          </Button>
-
-          {email && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowHtml(!showHtml)}
-              >
-                {showHtml ? <FiFileText size={13} /> : <FiCode size={13} />}
-                <span>View {showHtml ? 'Plain Text' : 'HTML'}</span>
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => copyToClipboard(plainTextContent)}
-              >
-                <FiCopy size={13} />
-                <span>Copy Content</span>
-              </Button>
-              <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
-                <FiTrash2 size={13} />
-                <span>Delete</span>
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {loading ? (
+          {/* Top Action Bar */}
           <div
             style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 10,
-              padding: '60px 20px',
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
+              justifyContent: 'space-between',
+              gap: 10,
+              flexWrap: 'wrap',
             }}
           >
-            <div className="spinner" style={{ width: 22, height: 22 }} />
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Loading email content...</span>
-          </div>
-        ) : !email ? (
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 10,
-              padding: '60px 24px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
-              textAlign: 'center',
-            }}
-          >
-            <FiAlertCircle size={32} color="#EF4444" />
-            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-              Failed to load email
-            </div>
-            <Button variant="primary" size="sm" onClick={fetchEmailDetails}>
-              Try Again
+            <Button variant="secondary" size="sm" onClick={handleBack}>
+              <FiArrowLeft size={13} />
+              <span>Back to Inbox</span>
             </Button>
+
+            {email && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowHtml(!showHtml)}
+                >
+                  {showHtml ? <FiFileText size={13} /> : <FiCode size={13} />}
+                  <span>View {showHtml ? 'Plain Text' : 'HTML'}</span>
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => copyToClipboard(plainTextContent)}
+                >
+                  <FiCopy size={13} />
+                  <span>Copy Content</span>
+                </Button>
+                <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
+                  <FiTrash2 size={13} />
+                  <span>Delete</span>
+                </Button>
+              </div>
+            )}
           </div>
-        ) : (
-          <>
-            {/* Metadata Panel */}
-            <section
+
+          {loading ? (
+            <div
               style={{
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 10,
-                padding: 18,
+                backgroundColor: cardBg,
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 12,
+                padding: '60px 20px',
                 display: 'flex',
                 flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
                 gap: 12,
               }}
             >
-              <h1 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
-                {emailSubject || '(No subject)'}
-              </h1>
-
-              {(() => {
-                const fromName = isStandardEmailModel
-                  ? email.from?.name || 'Unknown'
-                  : email.mail_from?.match(/(.*)\s<(.*)>/)
-                  ? email.mail_from.match(/(.*)\s<(.*)>/)[1]
-                  : email.mail_from;
-                const fromEmail = isStandardEmailModel
-                  ? email.from?.address
-                  : email.mail_from?.match(/(.*)\s<(.*)>/)
-                  ? email.mail_from.match(/(.*)\s<(.*)>/)[2]
-                  : email.mail_from;
-                const dateDisplay = formatDate(
-                  isStandardEmailModel ? email.createdAt : email.mail_timestamp
-                );
-
-                return (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      flexWrap: 'wrap',
-                      paddingTop: 10,
-                      borderTop: '1px solid var(--border-subtle)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                      <div
-                        className="mono"
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 8,
-                          backgroundColor: 'rgba(59, 130, 246, 0.12)',
-                          border: '1px solid rgba(59, 130, 246, 0.35)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: '#3B82F6',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {(fromName?.charAt(0) || '?').toUpperCase()}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {fromName || 'Unknown'}
-                        </div>
-                        <div
-                          className="mono"
-                          style={{ fontSize: 12, color: 'var(--text-secondary)', wordBreak: 'break-all' }}
-                        >
-                          {fromEmail || ''}
-                        </div>
-                      </div>
-                    </div>
-
-                    <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                      {dateDisplay}
-                    </span>
-                  </div>
-                );
-              })()}
-
-              {isStandardEmailModel && email.to && (
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>To: </span>
-                  <span className="mono">
-                    {Array.isArray(email.to)
-                      ? email.to.map((recipient: any) => recipient.address).join(', ')
-                      : ''}
-                  </span>
-                </div>
-              )}
-            </section>
-
-            {/* Message Body Viewer */}
-            <section
+              <div className="spinner" style={{ width: 22, height: 22 }} />
+              <span style={{ fontSize: 13, color: textSecondary }}>Loading email content...</span>
+            </div>
+          ) : !email ? (
+            <div
               style={{
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 10,
-                overflow: 'hidden',
-                minHeight: 320,
+                backgroundColor: cardBg,
+                border: `1px solid ${cardBorder}`,
+                borderRadius: 12,
+                padding: '60px 24px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+                textAlign: 'center',
               }}
             >
-              {showHtml ? (
-                <iframe
-                  title="Email Content"
-                  style={{
-                    width: '100%',
-                    height: 380,
-                    border: 'none',
-                    backgroundColor: 'var(--bg-app)',
-                    display: 'block',
-                  }}
-                  srcDoc={htmlWrapper}
-                  sandbox="allow-popups allow-popups-to-escape-sandbox"
-                />
-              ) : (
-                <div
-                  className="mono"
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    copyToClipboard(plainTextContent);
-                  }}
-                  style={{
-                    padding: 18,
-                    color: 'var(--text-primary)',
-                    fontSize: 13,
-                    lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    userSelect: 'text',
-                  }}
-                >
-                  {plainTextContent || 'No content available'}
-                </div>
-              )}
-            </section>
+              <FiAlertCircle size={32} color="#F43F5E" />
+              <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
+                Failed to load email
+              </div>
+              <Button variant="primary" size="sm" onClick={fetchEmailDetails}>
+                Try Again
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Metadata Panel */}
+              <section
+                style={{
+                  backgroundColor: cardBg,
+                  border: `1px solid ${cardBorder}`,
+                  borderRadius: 12,
+                  padding: 20,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  boxShadow: isLight
+                    ? '0 8px 24px rgba(15, 23, 42, 0.04)'
+                    : '0 14px 34px rgba(0, 0, 0, 0.32)',
+                }}
+              >
+                <h1 style={{ fontSize: 16, fontWeight: 600, color: textPrimary }}>
+                  {emailSubject || '(No subject)'}
+                </h1>
 
-            {/* Attachments */}
-            {isMailTm &&
-              email.hasAttachments &&
-              Array.isArray(email.attachments) &&
-              email.attachments.length > 0 && (
-                <section
-                  style={{
-                    backgroundColor: 'var(--bg-surface)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 10,
-                    padding: 18,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                    Attachments ({email.attachments.length})
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {email.attachments.map((attachment: any, index: number) => (
-                      <button
-                        key={attachment.id || index}
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await downloadMailTmAttachment(
-                              attachment.downloadUrl,
-                              attachment.filename || 'attachment'
-                            );
-                          } catch {
-                            showAlert('Error', 'Failed to download attachment.');
-                          }
-                        }}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 12,
-                          padding: '10px 14px',
-                          backgroundColor: 'var(--bg-app)',
-                          border: '1px solid var(--border-subtle)',
-                          borderRadius: 8,
-                          textAlign: 'left',
-                        }}
-                      >
+                {(() => {
+                  const fromName = isStandardEmailModel
+                    ? email.from?.name || 'Unknown'
+                    : email.mail_from?.match(/(.*)\s<(.*)>/)
+                    ? email.mail_from.match(/(.*)\s<(.*)>/)[1]
+                    : email.mail_from;
+                  const fromEmail = isStandardEmailModel
+                    ? email.from?.address
+                    : email.mail_from?.match(/(.*)\s<(.*)>/)
+                    ? email.mail_from.match(/(.*)\s<(.*)>/)[2]
+                    : email.mail_from;
+                  const dateDisplay = formatDate(
+                    isStandardEmailModel ? email.createdAt : email.mail_timestamp
+                  );
+                  const initial = (fromName?.charAt(0) || '?').toUpperCase();
+                  const avatar = getAvatarStyle(initial);
+
+                  return (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        flexWrap: 'wrap',
+                        paddingTop: 12,
+                        borderTop: `1px solid ${cardBorder}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                         <div
+                          className="mono"
                           style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: '50%',
+                            backgroundColor: avatar.bg,
+                            border: `1px solid ${avatar.border}`,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 10,
-                            minWidth: 0,
+                            justifyContent: 'center',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: avatar.color,
+                            flexShrink: 0,
                           }}
                         >
-                          <FiPaperclip size={14} color="#3B82F6" style={{ flexShrink: 0 }} />
-                          <div style={{ minWidth: 0 }}>
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: 'var(--text-primary)',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                            >
-                              {attachment.filename || 'Attachment'}
-                            </div>
-                            <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                              {attachment.size
-                                ? `${(attachment.size / 1024).toFixed(0)} KB`
-                                : ''}
-                            </div>
+                          {initial}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
+                            {fromName || 'Unknown'}
+                          </div>
+                          <div
+                            className="mono"
+                            style={{ fontSize: 12, color: textSecondary, wordBreak: 'break-all' }}
+                          >
+                            {fromEmail || ''}
                           </div>
                         </div>
-                        <FiDownload size={14} color="#3B82F6" style={{ flexShrink: 0 }} />
-                      </button>
-                    ))}
+                      </div>
+
+                      <span className="mono" style={{ fontSize: 11, color: textMuted }}>
+                        {dateDisplay}
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {isStandardEmailModel && email.to && (
+                  <div style={{ fontSize: 12, color: textSecondary }}>
+                    <span style={{ color: textMuted }}>To: </span>
+                    <span className="mono">
+                      {Array.isArray(email.to)
+                        ? email.to.map((recipient: any) => recipient.address).join(', ')
+                        : ''}
+                    </span>
                   </div>
-                </section>
-              )}
-          </>
-        )}
-      </main>
+                )}
+              </section>
+
+              {/* Message Body Viewer */}
+              <section
+                style={{
+                  backgroundColor: cardBg,
+                  border: `1px solid ${cardBorder}`,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  minHeight: 320,
+                  boxShadow: isLight
+                    ? '0 8px 24px rgba(15, 23, 42, 0.04)'
+                    : '0 14px 34px rgba(0, 0, 0, 0.32)',
+                }}
+              >
+                {showHtml ? (
+                  <iframe
+                    title="Email Content"
+                    style={{
+                      width: '100%',
+                      height: 400,
+                      border: 'none',
+                      backgroundColor: wellBg,
+                      display: 'block',
+                    }}
+                    srcDoc={htmlWrapper}
+                    sandbox="allow-popups allow-popups-to-escape-sandbox"
+                  />
+                ) : (
+                  <div
+                    className="mono"
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      copyToClipboard(plainTextContent);
+                    }}
+                    style={{
+                      padding: 20,
+                      color: textPrimary,
+                      fontSize: 13,
+                      lineHeight: 1.65,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      userSelect: 'text',
+                      backgroundColor: wellBg,
+                      minHeight: 320,
+                    }}
+                  >
+                    {plainTextContent || 'No content available'}
+                  </div>
+                )}
+              </section>
+
+              {/* Attachments */}
+              {isMailTm &&
+                email.hasAttachments &&
+                Array.isArray(email.attachments) &&
+                email.attachments.length > 0 && (
+                  <section
+                    style={{
+                      backgroundColor: cardBg,
+                      border: `1px solid ${cardBorder}`,
+                      borderRadius: 12,
+                      padding: 20,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
+                      Attachments ({email.attachments.length})
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {email.attachments.map((attachment: any, index: number) => (
+                        <button
+                          key={attachment.id || index}
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await downloadMailTmAttachment(
+                                attachment.downloadUrl,
+                                attachment.filename || 'attachment'
+                              );
+                            } catch {
+                              showAlert('Error', 'Failed to download attachment.');
+                            }
+                          }}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            padding: '10px 14px',
+                            backgroundColor: wellBg,
+                            border: `1px solid ${cardBorder}`,
+                            borderRadius: 8,
+                            textAlign: 'left',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 10,
+                              minWidth: 0,
+                            }}
+                          >
+                            <FiPaperclip size={14} color="#6366F1" style={{ flexShrink: 0 }} />
+                            <div style={{ minWidth: 0 }}>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  color: textPrimary,
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
+                                {attachment.filename || 'Attachment'}
+                              </div>
+                              <div className="mono" style={{ fontSize: 11, color: textMuted }}>
+                                {attachment.size
+                                  ? `${(attachment.size / 1024).toFixed(0)} KB`
+                                  : ''}
+                              </div>
+                            </div>
+                          </div>
+                          <FiDownload size={14} color="#6366F1" style={{ flexShrink: 0 }} />
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

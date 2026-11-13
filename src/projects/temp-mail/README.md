@@ -2,13 +2,13 @@
 
 ## Overview
 
-Testing sign-up flows, OTP verification emails, or gated downloads shouldn't require exposing your personal inbox or relying on a single flaky disposable mail provider. Temp-Mail Client unifies four independent providers (`Mail.TM`, `GuerrillaMail`, `TempMail.lol`, and `Maildrop.cc`) into one workspace with persistent sessions, sandboxed HTML rendering, and attachment downloads.
+Testing sign-up flows, OTP verification emails, or gated downloads shouldn't require exposing your personal inbox or gambling on a single disposable mail service that might be rate-limited. Styled with a deep indigo-slate communication atmosphere (`#0F1322`), **Temp-Mail Client** unifies four independent disposable providers (`Mail.TM`, `GuerrillaMail`, `TempMail.lol`, and `Maildrop.cc`) under one roof—complete with provider brand pills, a live green pulse indicator on active addresses, colorful sender-initial avatars, and sandboxed HTML message rendering.
 
 ## Files
 
-- `TempMailHubPage.tsx`: 4-provider switcher, active account quick-bar, random username generator, domain picker trigger, and address creation form.
-- `TempMailInboxPage.tsx`: Unified inbox view for `Mail.TM`, `TempMail.lol`, and `Maildrop.cc` with manual refresh and message deletion.
-- `GuerrillaInboxPage.tsx`: Session-aware inbox view for `GuerrillaMail` with automatic `sid_token` recovery and session reset controls.
+- `TempMailHubPage.tsx`: 4-provider switcher with distinct brand accent pills (`HYDRA REST`, `MULTI-DOMAIN`, `LOCAL CACHE`, `GRAPHQL`), active inbox banner with live pulse indicator, random alias generator, and address provisioning form.
+- `TempMailInboxPage.tsx`: Unified inbox view for `Mail.TM`, `TempMail.lol`, and `Maildrop.cc` with deterministic sender-initial avatar circles, manual refresh, and message deletion.
+- `GuerrillaInboxPage.tsx`: Session-aware inbox view for `GuerrillaMail` with automatic `sid_token` recovery, session reset controls, and colorful sender avatars.
 - `EmailDetailPage.tsx`: Full message reader featuring a sandboxed HTML `<iframe>` vs. Plain Text toggle, one-click content copy, deletion, and authenticated `Mail.TM` attachment downloads.
 - `DomainSelectModal.tsx`: Accessible modal dialog for switching domains on `Mail.TM` and `GuerrillaMail`.
 - `tempMailService.ts`: Multi-provider client handling REST/GraphQL calls, automatic Bearer token hydration, and local inbox caching.

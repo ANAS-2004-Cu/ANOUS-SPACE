@@ -29,23 +29,23 @@ const CATEGORY_ACCENT: Record<
 > = {
   Tools: {
     color: '#3B82F6',
-    subtleBg: 'rgba(59, 130, 246, 0.12)',
-    borderTint: 'rgba(59, 130, 246, 0.3)',
+    subtleBg: 'rgba(59, 130, 246, 0.14)',
+    borderTint: 'rgba(59, 130, 246, 0.35)',
   },
   Games: {
     color: '#10B981',
-    subtleBg: 'rgba(16, 185, 129, 0.12)',
-    borderTint: 'rgba(16, 185, 129, 0.3)',
+    subtleBg: 'rgba(16, 185, 129, 0.14)',
+    borderTint: 'rgba(16, 185, 129, 0.35)',
   },
   Projects: {
     color: '#8B5CF6',
-    subtleBg: 'rgba(139, 92, 246, 0.12)',
-    borderTint: 'rgba(139, 92, 246, 0.3)',
+    subtleBg: 'rgba(139, 92, 246, 0.14)',
+    borderTint: 'rgba(139, 92, 246, 0.35)',
   },
   Private: {
-    color: '#3B82F6',
-    subtleBg: 'rgba(59, 130, 246, 0.12)',
-    borderTint: 'rgba(59, 130, 246, 0.3)',
+    color: '#F43F5E',
+    subtleBg: 'rgba(244, 63, 94, 0.14)',
+    borderTint: 'rgba(244, 63, 94, 0.35)',
   },
 };
 
@@ -73,7 +73,6 @@ function renderProjectIcon(item: ProjectItem, color: string) {
 function renderCardArtwork(id: string) {
   switch (id) {
     case 'scratchpad':
-      // Geometric { } brackets line-art
       return (
         <svg
           className="card-artwork"
@@ -90,7 +89,6 @@ function renderCardArtwork(id: string) {
         </svg>
       );
     case 'temp-mail':
-      // Geometric envelope lines
       return (
         <svg
           className="card-artwork"
@@ -108,7 +106,6 @@ function renderCardArtwork(id: string) {
         </svg>
       );
     case 'tic-tac-toe':
-      // 3x3 grid line-art
       return (
         <svg
           className="card-artwork"
@@ -127,7 +124,6 @@ function renderCardArtwork(id: string) {
         </svg>
       );
     case 'guess-game':
-      // Graduated scale / telemetry lines
       return (
         <svg
           className="card-artwork"
@@ -147,7 +143,6 @@ function renderCardArtwork(id: string) {
         </svg>
       );
     default:
-      // Layered architecture window geometry
       return (
         <svg
           className="card-artwork"
@@ -259,86 +254,28 @@ export const HubHome: React.FC<HubHomeProps> = ({
       <AppHeader onOpenCommandPalette={onOpenCommandPalette} />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* Hero Intro Strip */}
-        <section
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 12,
-            paddingBottom: 6,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span
-              className="mono"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 7,
-                fontSize: 11,
-                fontWeight: 500,
-                color: 'var(--text-secondary)',
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border-subtle)',
-                boxShadow: 'var(--card-top-highlight)',
-                borderRadius: 999,
-                padding: '4px 10px',
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  backgroundColor: '#10B981',
-                  display: 'inline-block',
-                }}
-              />
-              <span>Building &amp; Shipping · Cairo</span>
-            </span>
-          </div>
-
-          <div style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <h1
-              style={{
-                fontSize: 'clamp(18px, 2.5vw, 22px)',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                letterSpacing: '-0.015em',
-              }}
-            >
-              Personal Engineering Workspace &amp; Micro-Tools
-            </h1>
-            <p
-              style={{
-                fontSize: 13.5,
-                color: 'var(--text-secondary)',
-                lineHeight: 1.6,
-              }}
-            >
-              A fast, zero-clutter command deck for daily developer utilities, interactive game
-              prototypes, and production architecture showcases.
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            {['React 18', 'TypeScript', 'Vite', 'Serverless Edge'].map((tag) => (
-              <span
-                key={tag}
-                className="mono"
-                style={{
-                  fontSize: 11,
-                  color: 'var(--text-muted)',
-                  backgroundColor: 'var(--bg-surface)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 5,
-                  padding: '2px 8px',
-                }}
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+        {/* Clean Hero Section: Bold Title + Single Punchy Subtitle */}
+        <section style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <h1
+            style={{
+              fontSize: 'clamp(20px, 2.8vw, 26px)',
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Personal Engineering Workspace &amp; Micro-Tools
+          </h1>
+          <p
+            style={{
+              fontSize: 14,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.55,
+            }}
+          >
+            Self-contained developer utilities, tactical game prototypes, and production showcases
+            in one keyboard-first command deck.
+          </p>
         </section>
 
         {/* Recent Bar (Up to 3 recently opened internal tools) */}
@@ -450,6 +387,16 @@ export const HubHome: React.FC<HubHomeProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {tabs.map((tab) => {
               const active = activeTab === tab;
+              const tabColor =
+                tab === 'Private'
+                  ? '#F43F5E'
+                  : tab === 'Tools'
+                  ? '#3B82F6'
+                  : tab === 'Games'
+                  ? '#10B981'
+                  : tab === 'Projects'
+                  ? '#8B5CF6'
+                  : 'var(--accent)';
               return (
                 <button
                   key={tab}
@@ -459,9 +406,9 @@ export const HubHome: React.FC<HubHomeProps> = ({
                     borderRadius: 6,
                     fontSize: 13,
                     fontWeight: 500,
-                    backgroundColor: active ? 'var(--accent)' : 'transparent',
+                    backgroundColor: active ? tabColor : 'transparent',
                     color: active ? '#FFFFFF' : 'var(--text-secondary)',
-                    border: active ? '1px solid var(--accent)' : '1px solid transparent',
+                    border: active ? `1px solid ${tabColor}` : '1px solid transparent',
                   }}
                 >
                   {tab}
@@ -509,7 +456,6 @@ export const HubHome: React.FC<HubHomeProps> = ({
                     } as React.CSSProperties
                   }
                 >
-                  {/* Subtle bottom-right monochrome SVG line-art */}
                   {renderCardArtwork(item.id)}
 
                   <div
@@ -522,7 +468,6 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       width: '100%',
                     }}
                   >
-                    {/* Visual Header Frame for 2-Column Showcase Cards */}
                     {isShowcaseSpan && (
                       <div
                         style={{
@@ -569,7 +514,6 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       </div>
                     )}
 
-                    {/* Top Row: Category Icon Badge + Tag + Shortcut Key */}
                     <div
                       style={{
                         display: 'flex',
