@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiArrowUpRight, FiCornerDownLeft, FiLock } from 'react-icons/fi';
-import { PUBLIC_PROJECTS, ProjectItem, ProjectCategory } from '../../data/projects';
+import { PUBLIC_PROJECTS, ProjectItem } from '../../data/projects';
 import { useVault } from '../context/VaultContext';
 import { recordRecentProject } from '../utils/recentTools';
 
@@ -9,32 +9,6 @@ export interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
 }
-
-const CATEGORY_BADGE_STYLE: Record<
-  ProjectCategory,
-  { color: string; bg: string; border: string }
-> = {
-  Tools: {
-    color: 'var(--accent-tools)',
-    bg: 'var(--accent-tools-subtle)',
-    border: 'var(--accent-tools-border)',
-  },
-  Games: {
-    color: 'var(--accent-games)',
-    bg: 'var(--accent-games-subtle)',
-    border: 'var(--accent-games-border)',
-  },
-  Projects: {
-    color: 'var(--accent-projects)',
-    bg: 'var(--accent-projects-subtle)',
-    border: 'var(--accent-projects-border)',
-  },
-  Private: {
-    color: 'var(--accent-vault)',
-    bg: 'var(--accent-vault-subtle)',
-    border: 'var(--accent-vault-border)',
-  },
-};
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose }) => {
   const navigate = useNavigate();
@@ -154,22 +128,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
           backgroundColor: 'var(--bg-surface)',
           border: '1px solid var(--border-subtle)',
           boxShadow: 'var(--card-top-highlight), var(--card-shadow-hover)',
-          borderRadius: 12,
+          borderRadius: 10,
           overflow: 'hidden',
         }}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
-        {/* Layer 3 Recessed Search Input Well */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            padding: '14px 16px',
+            padding: '12px 14px',
             borderBottom: '1px solid var(--border-subtle)',
-            backgroundColor: 'var(--bg-well)',
-            boxShadow: 'var(--well-inner-shadow)',
+            backgroundColor: 'var(--bg-input)',
           }}
         >
           <FiSearch size={15} strokeWidth={1.5} color="var(--text-muted)" />
@@ -183,14 +155,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
               flex: 1,
               backgroundColor: 'transparent',
               border: 'none',
-              fontSize: 13.5,
+              fontSize: 13,
               color: 'var(--text-primary)',
             }}
           />
           <span className="kbd-badge">ESC</span>
         </div>
 
-        <div style={{ maxHeight: 350, overflowY: 'auto', padding: 8 }}>
+        <div style={{ maxHeight: 340, overflowY: 'auto', padding: 6 }}>
           {isVaultTrigger && (
             <button
               onClick={handleTriggerVault}
@@ -199,16 +171,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '11px 14px',
-                borderRadius: 8,
-                backgroundColor: 'var(--accent-vault-subtle)',
-                border: '1px solid var(--accent-vault-border)',
+                padding: '10px 12px',
+                borderRadius: 7,
+                backgroundColor: 'var(--accent-subtle)',
+                border: '1px solid var(--accent-border)',
                 marginBottom: 6,
                 textAlign: 'left',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <FiLock size={14} strokeWidth={1.5} color="var(--accent-vault)" />
+                <FiLock size={14} strokeWidth={1.5} color="var(--accent)" />
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
                     {isUnlocked ? 'Manage Private Vault' : 'Unlock Private Vault'}
@@ -218,14 +190,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                   </div>
                 </div>
               </div>
-              <FiCornerDownLeft size={13} strokeWidth={1.5} color="var(--accent-vault)" />
+              <FiCornerDownLeft size={13} strokeWidth={1.5} color="var(--accent)" />
             </button>
           )}
 
           {filteredItems.length === 0 && !isVaultTrigger ? (
             <div
               style={{
-                padding: '32px 16px',
+                padding: '28px 16px',
                 textAlign: 'center',
                 color: 'var(--text-muted)',
                 fontSize: 13,
@@ -236,7 +208,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
           ) : (
             filteredItems.map((item, idx) => {
               const active = idx === selectedIndex;
-              const catBadge = CATEGORY_BADGE_STYLE[item.category];
               return (
                 <button
                   key={item.id}
@@ -248,10 +219,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 12,
-                    padding: '11px 14px',
-                    borderRadius: 8,
-                    backgroundColor: active ? 'var(--bg-control)' : 'transparent',
-                    border: active ? '1px solid var(--border-subtle)' : '1px solid transparent',
+                    padding: '10px 12px',
+                    borderRadius: 7,
+                    backgroundColor: active ? 'var(--bg-elevated)' : 'transparent',
                     textAlign: 'left',
                   }}
                 >
@@ -273,12 +243,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                         className="mono"
                         style={{
                           fontSize: 10,
-                          color: catBadge.color,
-                          backgroundColor: catBadge.bg,
-                          border: `1px solid ${catBadge.border}`,
+                          color: 'var(--text-secondary)',
+                          backgroundColor: 'var(--bg-app)',
+                          border: '1px solid var(--border-subtle)',
                           borderRadius: 4,
                           padding: '1px 6px',
-                          fontWeight: 500,
                         }}
                       >
                         {item.category}
@@ -298,12 +267,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                     </div>
                   </div>
                   {item.type === 'external' ? (
-                    <FiArrowUpRight size={14} strokeWidth={1.5} color="var(--text-muted)" />
+                    <FiArrowUpRight size={14} color="var(--text-muted)" />
                   ) : (
                     <FiCornerDownLeft
                       size={13}
-                      strokeWidth={1.5}
-                      color={active ? catBadge.color : 'var(--text-muted)'}
+                      color={active ? 'var(--accent)' : 'var(--text-muted)'}
                     />
                   )}
                 </button>
@@ -317,9 +285,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '9px 16px',
+            padding: '8px 14px',
             borderTop: '1px solid var(--border-subtle)',
-            backgroundColor: 'var(--bg-well)',
+            backgroundColor: 'var(--bg-input)',
             fontSize: 11,
             color: 'var(--text-muted)',
           }}

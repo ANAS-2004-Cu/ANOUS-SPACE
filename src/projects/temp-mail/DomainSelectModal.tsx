@@ -23,7 +23,7 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'var(--bg-backdrop)',
+        backgroundColor: 'rgba(9, 10, 14, 0.78)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -38,8 +38,7 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
         style={{
           backgroundColor: 'var(--bg-surface)',
           border: '1px solid var(--border-subtle)',
-          boxShadow: 'var(--card-top-highlight), var(--card-shadow-hover)',
-          borderRadius: 12,
+          borderRadius: 10,
           width: '100%',
           maxWidth: 420,
           maxHeight: '72vh',
@@ -54,9 +53,8 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '16px 20px',
+            padding: '14px 16px',
             borderBottom: '1px solid var(--border-subtle)',
-            backgroundColor: 'var(--bg-well)',
           }}
         >
           <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
@@ -68,11 +66,11 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
             style={{ color: 'var(--text-secondary)', display: 'inline-flex', padding: 4 }}
             aria-label="Close modal"
           >
-            <FiX size={16} strokeWidth={1.5} />
+            <FiX size={16} />
           </button>
         </div>
 
-        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: 8 }}>
+        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', padding: 6 }}>
           {domains.map((item, index) => {
             const isSelected = selectedDomain === item;
             return (
@@ -86,10 +84,9 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '10px 14px',
-                  borderRadius: 7,
+                  padding: '10px 12px',
+                  borderRadius: 6,
                   backgroundColor: isSelected ? 'var(--accent-subtle)' : 'transparent',
-                  border: isSelected ? '1px solid var(--accent-border)' : '1px solid transparent',
                   color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
                   fontSize: 13,
                   textAlign: 'left',

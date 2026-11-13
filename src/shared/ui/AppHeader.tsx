@@ -57,9 +57,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '20px 0',
+        padding: '18px 0',
         borderBottom: '1px solid var(--border-subtle)',
-        marginBottom: 28,
+        marginBottom: 24,
         gap: 12,
       }}
     >
@@ -71,12 +71,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 32,
-              height: 32,
-              borderRadius: 7,
+              width: 30,
+              height: 30,
+              borderRadius: 6,
               backgroundColor: 'var(--bg-surface)',
               border: '1px solid var(--border-subtle)',
-              boxShadow: 'var(--card-top-highlight)',
               color: 'var(--text-secondary)',
               flexShrink: 0,
             }}
@@ -101,7 +100,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
             gap: 8,
             fontSize: 14,
             fontWeight: 600,
-            letterSpacing: '0.07em',
+            letterSpacing: '0.06em',
             color: pressing ? 'var(--accent)' : 'var(--text-primary)',
             userSelect: 'none',
             WebkitUserSelect: 'none',
@@ -113,7 +112,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
 
         {subtitle && (
           <>
-            <span style={{ color: 'var(--border-hover)', fontSize: 14 }}>/</span>
+            <span style={{ color: 'var(--border-subtle)', fontSize: 14 }}>/</span>
             <span
               style={{
                 fontSize: 13,
@@ -140,13 +139,12 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              padding: '6px 11px',
+              padding: '6px 10px',
               borderRadius: 7,
               backgroundColor: 'var(--accent-vault-subtle)',
-              border: '1px solid var(--accent-vault-border)',
+              border: '1px solid rgba(186, 94, 78, 0.36)',
               color: 'var(--accent-vault)',
               fontSize: 11,
-              fontWeight: 500,
             }}
             title="Private Vault unlocked"
           >
@@ -162,8 +160,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 34,
-            height: 34,
+            width: 32,
+            height: 32,
             borderRadius: 7,
             backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border-subtle)',
@@ -173,11 +171,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
-          {theme === 'dark' ? (
-            <FiSun size={14} strokeWidth={1.5} />
-          ) : (
-            <FiMoon size={14} strokeWidth={1.5} />
-          )}
+          {theme === 'dark' ? <FiSun size={14} strokeWidth={1.5} /> : <FiMoon size={14} strokeWidth={1.5} />}
         </button>
 
         <button
@@ -187,7 +181,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
             display: 'inline-flex',
             alignItems: 'center',
             gap: 10,
-            padding: '6px 11px',
+            padding: '6px 10px',
             borderRadius: 7,
             backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border-subtle)',

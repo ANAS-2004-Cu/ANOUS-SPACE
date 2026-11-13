@@ -18,14 +18,13 @@ import { GuerrillaEmailResponse, GuerrillaAddressData } from './tempMailService'
 
 const CACHED_EMAILS_SESSION_KEY = 'guerrilla_cached_emails';
 
-// Strictly Muted Organic Avatar Palette (Saturation 25%–50%, zero neon/violet/cyan)
 const AVATAR_PALETTE = [
-  { color: '#5B82B8', bg: 'rgba(91, 130, 184, 0.14)', border: 'rgba(91, 130, 184, 0.36)' },
-  { color: '#51A37D', bg: 'rgba(81, 163, 125, 0.14)', border: 'rgba(81, 163, 125, 0.36)' },
-  { color: '#C5954E', bg: 'rgba(197, 149, 78, 0.14)', border: 'rgba(197, 149, 78, 0.36)' },
-  { color: '#C26A58', bg: 'rgba(194, 106, 88, 0.14)', border: 'rgba(194, 106, 88, 0.36)' },
-  { color: '#9E8566', bg: 'rgba(158, 133, 102, 0.14)', border: 'rgba(158, 133, 102, 0.36)' },
-  { color: '#A35C6A', bg: 'rgba(163, 92, 106, 0.14)', border: 'rgba(163, 92, 106, 0.36)' },
+  { color: '#5278A8', bg: 'rgba(82, 120, 168, 0.14)', border: 'rgba(82, 120, 168, 0.36)' },
+  { color: '#4D8B6E', bg: 'rgba(77, 139, 110, 0.14)', border: 'rgba(77, 139, 110, 0.36)' },
+  { color: '#BA5E4E', bg: 'rgba(186, 94, 78, 0.14)', border: 'rgba(186, 94, 78, 0.36)' },
+  { color: '#BD883E', bg: 'rgba(189, 136, 62, 0.14)', border: 'rgba(189, 136, 62, 0.36)' },
+  { color: '#9E5262', bg: 'rgba(158, 82, 98, 0.14)', border: 'rgba(158, 82, 98, 0.36)' },
+  { color: '#A68B60', bg: 'rgba(166, 139, 96, 0.14)', border: 'rgba(166, 139, 96, 0.36)' },
 ];
 
 const getAvatarStyle = (seed: string) => {
@@ -380,15 +379,12 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
     navigate('/temp-mail');
   };
 
-  const canvasBg = isLight ? '#F6F6F4' : '#121418';
-  const cardBg = isLight ? '#FFFFFF' : '#191C22';
-  const cardBorder = isLight ? '#E3E4E8' : '#282C35';
-  const wellBg = isLight ? '#EFEFED' : '#101216';
-  const textPrimary = isLight ? '#18191C' : '#ECEEEF';
-  const textSecondary = isLight ? '#525660' : '#9EA4B0';
-  const textMuted = isLight ? '#787D87' : '#6C727F';
-  const sageAccent = isLight ? '#3F8765' : '#51A37D';
-  const terracottaDanger = isLight ? '#AA5240' : '#C26A58';
+  const canvasBg = isLight ? '#F8F7F4' : '#141311';
+  const cardBg = isLight ? '#FFFFFF' : '#1C1A17';
+  const cardBorder = isLight ? '#E5E1D8' : '#2E2A25';
+  const textPrimary = isLight ? '#18191C' : '#F2F3F5';
+  const textSecondary = isLight ? '#52555E' : '#A1A6B3';
+  const textMuted = isLight ? '#7C808B' : '#6E7482';
 
   return (
     <div
@@ -396,9 +392,8 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
       style={{
         backgroundColor: canvasBg,
         backgroundImage: isLight
-          ? 'radial-gradient(ellipse 75% 360px at 50% -90px, rgba(63, 135, 101, 0.05), transparent 70%), radial-gradient(rgba(24, 25, 28, 0.035) 1px, transparent 1px)'
-          : 'radial-gradient(ellipse 75% 360px at 50% -90px, rgba(81, 163, 125, 0.06), transparent 70%), radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px)',
-        backgroundSize: '100% 100%, 24px 24px',
+          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(77, 139, 110, 0.045), transparent 70%)'
+          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(77, 139, 110, 0.045), transparent 70%)',
       }}
     >
       <div className="workspace-shell">
@@ -409,14 +404,14 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 16,
+            gap: 14,
             maxWidth: 760,
             width: '100%',
             margin: '0 auto',
-            paddingBottom: 44,
+            paddingBottom: 40,
           }}
         >
-          {/* Layer 2 — Inbox Toolbar */}
+          {/* Toolbar */}
           <div
             style={{
               display: 'flex',
@@ -425,10 +420,12 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
               gap: 12,
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
-              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 12,
-              padding: '14px 20px',
+              padding: '12px 16px',
               flexWrap: 'wrap',
+              boxShadow: isLight
+                ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
+                : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -446,12 +443,12 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                 className="mono"
                 style={{
                   fontSize: 11,
-                  color: sageAccent,
-                  backgroundColor: 'rgba(81, 163, 125, 0.14)',
-                  border: '1px solid rgba(81, 163, 125, 0.38)',
+                  color: '#4D8B6E',
+                  backgroundColor: 'rgba(77, 139, 110, 0.14)',
+                  border: '1px solid rgba(77, 139, 110, 0.36)',
                   borderRadius: 999,
-                  padding: '2px 9px',
-                  fontWeight: 500,
+                  padding: '2px 8px',
+                  fontWeight: 600,
                   flexShrink: 0,
                 }}
               >
@@ -459,23 +456,12 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
               </span>
 
               {emailData?.email_addr && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '4px 10px',
-                    borderRadius: 6,
-                    backgroundColor: wellBg,
-                    border: `1px solid ${cardBorder}`,
-                    minWidth: 0,
-                  }}
-                >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                   <span className="live-pulse-dot" />
                   <span
                     className="mono"
                     style={{
-                      fontSize: 12.5,
+                      fontSize: 13,
                       color: textPrimary,
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
@@ -489,9 +475,9 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                       className="mono"
                       style={{
                         fontSize: 11,
-                        color: terracottaDanger,
-                        backgroundColor: 'rgba(194, 106, 88, 0.14)',
-                        border: '1px solid rgba(194, 106, 88, 0.36)',
+                        color: '#BA5E4E',
+                        backgroundColor: 'rgba(186, 94, 78, 0.12)',
+                        border: '1px solid rgba(186, 94, 78, 0.35)',
                         borderRadius: 4,
                         padding: '2px 6px',
                       }}
@@ -526,14 +512,14 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
               onClick={resetEmailAddress}
               style={{
                 width: '100%',
-                backgroundColor: 'rgba(194, 106, 88, 0.14)',
-                border: '1px solid rgba(194, 106, 88, 0.38)',
+                backgroundColor: 'rgba(186, 94, 78, 0.12)',
+                border: '1px solid rgba(186, 94, 78, 0.35)',
                 borderRadius: 9,
-                padding: '12px 16px',
+                padding: '10px 14px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
-                color: terracottaDanger,
+                color: '#BA5E4E',
                 fontSize: 13,
                 textAlign: 'left',
               }}
@@ -549,9 +535,8 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
-                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 12,
-                padding: '64px 24px',
+                padding: '60px 20px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -567,9 +552,8 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
-                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 12,
-                padding: '64px 24px',
+                padding: '60px 24px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -578,7 +562,7 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                 textAlign: 'center',
               }}
             >
-              <FiInbox size={30} strokeWidth={1.5} color={sageAccent} />
+              <FiInbox size={32} strokeWidth={1.5} color="#4D8B6E" />
               <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
                 {sessionError ? 'Session Error' : 'Inbox is ready and listening'}
               </div>
@@ -618,9 +602,8 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                     style={{
                       backgroundColor: cardBg,
                       border: `1px solid ${cardBorder}`,
-                      boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
-                      borderRadius: 12,
-                      padding: '16px 20px',
+                      borderRadius: 11,
+                      padding: '14px 16px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 14,
@@ -630,8 +613,8 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                     <div
                       className="mono"
                       style={{
-                        width: 40,
-                        height: 40,
+                        width: 38,
+                        height: 38,
                         borderRadius: '50%',
                         backgroundColor: avatar.bg,
                         border: `1px solid ${avatar.border}`,
@@ -658,7 +641,7 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                     >
                       <div
                         style={{
-                          fontSize: 13.5,
+                          fontSize: 13,
                           fontWeight: 600,
                           color: textPrimary,
                           whiteSpace: 'nowrap',
@@ -671,7 +654,7 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                       <div
                         style={{
                           fontSize: 13,
-                          color: sageAccent,
+                          color: '#4D8B6E',
                           fontWeight: 500,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
@@ -682,7 +665,7 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                       </div>
                       <div
                         style={{
-                          fontSize: 12.5,
+                          fontSize: 12,
                           color: textSecondary,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
@@ -706,14 +689,12 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                         {formatDate(item.mail_timestamp)}
                       </span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {item.att > 0 && (
-                          <FiPaperclip size={13} strokeWidth={1.5} color={textSecondary} />
-                        )}
+                        {item.att > 0 && <FiPaperclip size={13} strokeWidth={1.5} color={textSecondary} />}
                         <button
                           type="button"
                           onClick={(e) => handleDeleteEmail(item.mail_id, e)}
                           aria-label="Delete Email"
-                          style={{ color: terracottaDanger, padding: 4, display: 'inline-flex' }}
+                          style={{ color: '#BA5E4E', padding: 4, display: 'inline-flex' }}
                         >
                           <FiTrash2 size={15} strokeWidth={1.5} />
                         </button>

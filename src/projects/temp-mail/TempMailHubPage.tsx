@@ -32,30 +32,30 @@ const PROVIDER_META: Record<
   [TempMailProvider.MailTM]: {
     label: 'Mail.TM',
     tag: 'HYDRA REST',
-    accent: '#5B82B8',
-    tint: 'rgba(91, 130, 184, 0.14)',
-    border: 'rgba(91, 130, 184, 0.38)',
+    accent: '#5278A8',
+    tint: 'rgba(82, 120, 168, 0.14)',
+    border: 'rgba(82, 120, 168, 0.36)',
   },
   [TempMailProvider.GuerrillaMail]: {
     label: 'GuerrillaMail',
     tag: 'MULTI-DOMAIN',
-    accent: '#51A37D',
-    tint: 'rgba(81, 163, 125, 0.14)',
-    border: 'rgba(81, 163, 125, 0.38)',
+    accent: '#4D8B6E',
+    tint: 'rgba(77, 139, 110, 0.14)',
+    border: 'rgba(77, 139, 110, 0.36)',
   },
   [TempMailProvider.TempMailLol]: {
     label: 'TempMail.lol',
     tag: 'LOCAL CACHE',
-    accent: '#C5954E',
-    tint: 'rgba(197, 149, 78, 0.14)',
-    border: 'rgba(197, 149, 78, 0.38)',
+    accent: '#BD883E',
+    tint: 'rgba(189, 136, 62, 0.14)',
+    border: 'rgba(189, 136, 62, 0.36)',
   },
   [TempMailProvider.Maildrop]: {
     label: 'Maildrop.cc',
     tag: 'GRAPHQL',
-    accent: '#C26A58',
-    tint: 'rgba(194, 106, 88, 0.14)',
-    border: 'rgba(194, 106, 88, 0.38)',
+    accent: '#BA5E4E',
+    tint: 'rgba(186, 94, 78, 0.14)',
+    border: 'rgba(186, 94, 78, 0.36)',
   },
 };
 
@@ -475,15 +475,13 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
   const activeExistingEmail = getExistingAddressForProvider(selectedProvider);
   const activeMeta = PROVIDER_META[selectedProvider];
 
-  // 3-Layer Warm Slate-Tinted Inbox Atmosphere
-  const canvasBg = isLight ? '#F6F6F4' : '#121418';
-  const cardBg = isLight ? '#FFFFFF' : '#191C22';
-  const cardBorder = isLight ? '#E3E4E8' : '#282C35';
-  const wellBg = isLight ? '#EFEFED' : '#101216';
-  const textPrimary = isLight ? '#18191C' : '#ECEEEF';
-  const textSecondary = isLight ? '#525660' : '#9EA4B0';
-  const textMuted = isLight ? '#787D87' : '#6C727F';
-  const sageAccent = isLight ? '#3F8765' : '#51A37D';
+  const canvasBg = isLight ? '#F8F7F4' : '#141311';
+  const cardBg = isLight ? '#FFFFFF' : '#1C1A17';
+  const cardBorder = isLight ? '#E5E1D8' : '#2E2A25';
+  const wellBg = isLight ? '#EFECE6' : '#100F0D';
+  const textPrimary = isLight ? '#18191C' : '#F2F3F5';
+  const textSecondary = isLight ? '#52555E' : '#A1A6B3';
+  const textMuted = isLight ? '#7C808B' : '#6E7482';
 
   return (
     <div
@@ -491,9 +489,8 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       style={{
         backgroundColor: canvasBg,
         backgroundImage: isLight
-          ? 'radial-gradient(ellipse 75% 360px at 50% -90px, rgba(66, 102, 150, 0.05), transparent 70%), radial-gradient(rgba(24, 25, 28, 0.035) 1px, transparent 1px)'
-          : 'radial-gradient(ellipse 75% 360px at 50% -90px, rgba(91, 130, 184, 0.055), transparent 70%), radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px)',
-        backgroundSize: '100% 100%, 24px 24px',
+          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(166, 139, 96, 0.05), transparent 70%)'
+          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(166, 139, 96, 0.045), transparent 70%)',
       }}
     >
       <div className="workspace-shell">
@@ -505,29 +502,31 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
             display: 'flex',
             flexDirection: 'column',
             gap: 18,
-            maxWidth: 760,
+            maxWidth: 740,
             width: '100%',
             margin: '0 auto',
-            paddingBottom: 44,
+            paddingBottom: 40,
           }}
         >
-          {/* Layer 2 — Provider Selector Card (24px padding) */}
+          {/* Provider Selector */}
           <section
             style={{
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
-              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 12,
               padding: 24,
               display: 'flex',
               flexDirection: 'column',
-              gap: 16,
+              gap: 14,
+              boxShadow: isLight
+                ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
+                : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                <FiMail size={15} strokeWidth={1.5} color={activeMeta.accent} />
-                <h2 style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FiMail size={15} color={activeMeta.accent} />
+                <h2 style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
                   Select Disposable Provider
                 </h2>
               </div>
@@ -540,7 +539,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   border: `1px solid ${activeMeta.border}`,
                   borderRadius: 999,
                   padding: '2px 9px',
-                  fontWeight: 500,
+                  fontWeight: 600,
                 }}
               >
                 {activeMeta.tag}
@@ -550,7 +549,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(155px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                 gap: 10,
               }}
             >
@@ -571,11 +570,10 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                     type="button"
                     onClick={() => setSelectedProvider(provider)}
                     style={{
-                      padding: '13px 15px',
+                      padding: '12px 14px',
                       borderRadius: 9,
                       backgroundColor: isSelected ? meta.tint : wellBg,
                       border: `1px solid ${isSelected ? meta.border : cardBorder}`,
-                      boxShadow: isSelected ? 'none' : 'var(--well-inner-shadow)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'flex-start',
@@ -595,7 +593,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                     >
                       <span
                         style={{
-                          fontSize: 13.5,
+                          fontSize: 13,
                           fontWeight: 600,
                           color: isSelected ? meta.accent : textPrimary,
                         }}
@@ -626,18 +624,20 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
             </div>
           </section>
 
-          {/* Layer 2 — Active Account Banner (24px padding) */}
+          {/* Active Account Banner */}
           {activeExistingEmail && (
             <section
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${activeMeta.border}`,
-                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 12,
-                padding: 24,
+                padding: 20,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 14,
+                gap: 12,
+                boxShadow: isLight
+                  ? '0 8px 24px rgba(15, 23, 42, 0.04)'
+                  : '0 14px 34px rgba(0, 0, 0, 0.32)',
               }}
             >
               <div
@@ -650,7 +650,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span className="live-pulse-dot" />
-                  <span style={{ fontSize: 13.5, fontWeight: 600, color: textPrimary }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
                     Active {activeMeta.label} Inbox
                   </span>
                 </div>
@@ -658,12 +658,12 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   className="mono"
                   style={{
                     fontSize: 11,
-                    color: sageAccent,
-                    backgroundColor: 'rgba(81, 163, 125, 0.14)',
-                    border: '1px solid rgba(81, 163, 125, 0.36)',
+                    color: '#4D8B6E',
+                    backgroundColor: 'rgba(77, 139, 110, 0.14)',
+                    border: '1px solid rgba(77, 139, 110, 0.36)',
                     borderRadius: 999,
-                    padding: '2px 9px',
-                    fontWeight: 500,
+                    padding: '2px 8px',
+                    fontWeight: 600,
                   }}
                 >
                   LIVE
@@ -676,10 +676,9 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 12,
-                  padding: '13px 16px',
+                  padding: '12px 14px',
                   backgroundColor: wellBg,
                   border: `1px solid ${cardBorder}`,
-                  boxShadow: 'var(--well-inner-shadow)',
                   borderRadius: 9,
                   flexWrap: 'wrap',
                 }}
@@ -705,7 +704,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                     onClick={() => copyToClipboard(activeExistingEmail)}
                     title="Copy Email Address"
                   >
-                    <FiCopy size={13} strokeWidth={1.5} />
+                    <FiCopy size={13} />
                     <span>Copy</span>
                   </Button>
                   <Button
@@ -713,7 +712,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                     size="sm"
                     onClick={() => accessExistingInbox(selectedProvider)}
                   >
-                    <FiInbox size={13} strokeWidth={1.5} />
+                    <FiInbox size={13} />
                     <span>Open Inbox</span>
                   </Button>
                 </div>
@@ -721,21 +720,23 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
             </section>
           )}
 
-          {/* Layer 2 — Create New Email Card (24px padding) */}
+          {/* Create New Email Card */}
           <section
             style={{
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
-              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 12,
-              padding: 24,
+              padding: 20,
               display: 'flex',
               flexDirection: 'column',
-              gap: 18,
+              gap: 16,
+              boxShadow: isLight
+                ? '0 8px 24px rgba(15, 23, 42, 0.04)'
+                : '0 14px 34px rgba(0, 0, 0, 0.32)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
                 Provision New {activeMeta.label} Address
               </h2>
               <span className="mono" style={{ fontSize: 11, color: textMuted }}>
@@ -743,12 +744,12 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
               </span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
                 <label
                   style={{
                     display: 'block',
-                    fontSize: 12.5,
+                    fontSize: 12,
                     color: textSecondary,
                     marginBottom: 6,
                     fontWeight: 500,
@@ -773,7 +774,6 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                       flex: 1,
                       backgroundColor: wellBg,
                       border: `1px solid ${cardBorder}`,
-                      boxShadow: 'var(--well-inner-shadow)',
                       borderRadius: 8,
                       padding: '10px 12px',
                       fontSize: 13,
@@ -787,7 +787,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                     aria-label="Generate Random Username"
                     title="Generate Random Username"
                   >
-                    <FiRefreshCw size={14} strokeWidth={1.5} />
+                    <FiRefreshCw size={14} />
                   </Button>
                 </div>
               </div>
@@ -797,7 +797,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   <label
                     style={{
                       display: 'block',
-                      fontSize: 12.5,
+                      fontSize: 12,
                       color: textSecondary,
                       marginBottom: 6,
                       fontWeight: 500,
@@ -817,18 +817,13 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                       padding: '10px 12px',
                       backgroundColor: wellBg,
                       border: `1px solid ${cardBorder}`,
-                      boxShadow: 'var(--well-inner-shadow)',
                       borderRadius: 8,
                       fontSize: 13,
                       color: textPrimary,
                     }}
                   >
                     <span>@{selectedDomain}</span>
-                    {domainDropdownVisible ? (
-                      <FiChevronUp size={15} strokeWidth={1.5} />
-                    ) : (
-                      <FiChevronDown size={15} strokeWidth={1.5} />
-                    )}
+                    {domainDropdownVisible ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
                   </button>
 
                   <DomainSelectModal
@@ -849,7 +844,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   <label
                     style={{
                       display: 'block',
-                      fontSize: 12.5,
+                      fontSize: 12,
                       color: textSecondary,
                       marginBottom: 6,
                       fontWeight: 500,
@@ -871,7 +866,6 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                       padding: '10px 12px',
                       backgroundColor: wellBg,
                       border: `1px solid ${cardBorder}`,
-                      boxShadow: 'var(--well-inner-shadow)',
                       borderRadius: 8,
                       fontSize: 13,
                       color: textPrimary,
@@ -879,9 +873,9 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   >
                     <span>@{selectedGuerrillaDomain}</span>
                     {guerrillaDomainDropdownVisible ? (
-                      <FiChevronUp size={15} strokeWidth={1.5} />
+                      <FiChevronUp size={15} />
                     ) : (
-                      <FiChevronDown size={15} strokeWidth={1.5} />
+                      <FiChevronDown size={15} />
                     )}
                   </button>
 
@@ -903,7 +897,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   <label
                     style={{
                       display: 'block',
-                      fontSize: 12.5,
+                      fontSize: 12,
                       color: textSecondary,
                       marginBottom: 6,
                       fontWeight: 500,
@@ -917,7 +911,6 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                       padding: '10px 12px',
                       backgroundColor: wellBg,
                       border: `1px solid ${cardBorder}`,
-                      boxShadow: 'var(--well-inner-shadow)',
                       borderRadius: 8,
                       fontSize: 13,
                       color: textSecondary,
@@ -928,14 +921,13 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                 </div>
               )}
 
-              {/* Layer 3 — Recessed Address Preview Well */}
+              {/* Preview */}
               <div
                 style={{
-                  padding: '13px 16px',
+                  padding: '12px 14px',
                   backgroundColor: wellBg,
                   border: `1px solid ${cardBorder}`,
-                  boxShadow: 'var(--well-inner-shadow)',
-                  borderRadius: 9,
+                  borderRadius: 8,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 4,
@@ -966,20 +958,19 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
             </Button>
           </section>
 
-          {/* Layer 2 — Provider Capabilities Card (24px padding) */}
+          {/* How It Works */}
           <section
             style={{
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
-              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 12,
-              padding: 24,
+              padding: 20,
               display: 'flex',
               flexDirection: 'column',
-              gap: 12,
+              gap: 10,
             }}
           >
-            <h3 style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
               Provider Capabilities
             </h3>
             <p style={{ fontSize: 13, color: textSecondary, lineHeight: 1.6 }}>
@@ -990,7 +981,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: 12,
+                gap: 10,
                 marginTop: 4,
               }}
             >
@@ -1019,17 +1010,16 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   <div
                     key={provider}
                     style={{
-                      padding: '12px 14px',
-                      borderRadius: 9,
+                      padding: '10px 12px',
+                      borderRadius: 8,
                       backgroundColor: wellBg,
                       border: `1px solid ${cardBorder}`,
-                      boxShadow: 'var(--well-inner-shadow)',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 4,
                     }}
                   >
-                    <span style={{ fontSize: 12.5, fontWeight: 600, color: meta.accent }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: meta.accent }}>
                       {meta.label}
                     </span>
                     <span style={{ fontSize: 12, color: textSecondary, lineHeight: 1.5 }}>

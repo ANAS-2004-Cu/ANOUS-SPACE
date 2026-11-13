@@ -20,10 +20,9 @@ const WINNING_LINES = [
   [2, 4, 6],
 ];
 
-// Muted Organic Tabletop Palette (Strictly 25%–55% saturation, zero neon)
-const COLOR_X = '#5B82B8'; // Muted Slate-Blue X (hsl(215, 40%, 54%))
-const COLOR_O = '#C48157'; // Warm Ochre-Terracotta O (hsl(23, 48%, 55%))
-const COLOR_WIN = '#51A37D'; // Muted Sage Victory Line (hsl(152, 34%, 48%))
+const COLOR_X = '#5278A8'; // Muted Slate Blue X
+const COLOR_O = '#BD883E'; // Warm Ochre O
+const COLOR_WIN = '#4D8B6E'; // Muted Sage Winning Line
 
 function calculateWinner(squares: (string | null)[]): string | null {
   for (let i = 0; i < WINNING_LINES.length; i++) {
@@ -368,16 +367,15 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
     return false;
   };
 
-  // 3-Layer Tactile Tabletop Palette
-  const canvasBg = isLight ? '#F6F6F3' : '#121316';
-  const tabletopBg = isLight ? '#FFFFFF' : '#191B20';
-  const tabletopBorder = isLight ? '#E2E3E6' : '#282B33';
-  const recessedWellBg = isLight ? '#EEEEEC' : '#101114';
-  const cellBg = isLight ? '#FAF9F6' : '#1E2128';
-  const cellBorder = isLight ? '#D8D9DE' : '#2E323C';
-  const textPrimary = isLight ? '#18191C' : '#ECEEEF';
-  const textSecondary = isLight ? '#525660' : '#9EA4B0';
-  const textMuted = isLight ? '#787D87' : '#6C727F';
+  const canvasBg = isLight ? '#F4F4F7' : '#13141B';
+  const tabletopBg = isLight ? '#FFFFFF' : '#1C1F2B';
+  const tabletopBorder = isLight ? '#DCE0EC' : '#2C3144';
+  const recessedWellBg = isLight ? '#E6E9F2' : '#0E1017';
+  const cellBg = isLight ? '#F7F8FC' : '#151822';
+  const cellBorder = isLight ? '#D5DAE8' : '#252A3A';
+  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
+  const textSecondary = isLight ? '#475569' : '#9CA3AF';
+  const textMuted = isLight ? '#64748B' : '#6B7280';
 
   return (
     <div
@@ -385,9 +383,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
       style={{
         backgroundColor: canvasBg,
         backgroundImage: isLight
-          ? 'radial-gradient(circle at 25% 8%, rgba(66, 102, 150, 0.05), transparent 45%), radial-gradient(circle at 75% 12%, rgba(196, 129, 87, 0.05), transparent 45%), radial-gradient(rgba(24, 25, 28, 0.035) 1px, transparent 1px)'
-          : 'radial-gradient(circle at 25% 8%, rgba(91, 130, 184, 0.055), transparent 48%), radial-gradient(circle at 75% 12%, rgba(196, 129, 87, 0.05), transparent 48%), radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px)',
-        backgroundSize: '100% 100%, 100% 100%, 24px 24px',
+          ? 'radial-gradient(circle at 25% 10%, rgba(56, 189, 248, 0.1), transparent 45%), radial-gradient(circle at 75% 15%, rgba(251, 146, 60, 0.1), transparent 45%)'
+          : 'radial-gradient(circle at 25% 10%, rgba(56, 189, 248, 0.12), transparent 48%), radial-gradient(circle at 75% 15%, rgba(251, 146, 60, 0.11), transparent 48%)',
       }}
     >
       <div className="workspace-shell">
@@ -398,24 +395,26 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 18,
+            gap: 16,
             maxWidth: 540,
             width: '100%',
             margin: '0 auto',
-            paddingBottom: 44,
+            paddingBottom: 40,
           }}
         >
-          {/* Layer 3 — Recessed Segmented Variant Tabs (Classic 3x3 | 3-Marker) */}
+          {/* Segmented Variant Tabs (Classic 3x3 | 3-Marker) */}
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: 6,
               padding: 5,
-              backgroundColor: recessedWellBg,
+              backgroundColor: tabletopBg,
               border: `1px solid ${tabletopBorder}`,
-              boxShadow: 'var(--well-inner-shadow)',
               borderRadius: 11,
+              boxShadow: isLight
+                ? '0 4px 14px rgba(15, 23, 42, 0.04)'
+                : '0 10px 26px rgba(0, 0, 0, 0.35)',
             }}
           >
             <button
@@ -427,11 +426,11 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 fontSize: 13,
                 fontWeight: 600,
                 backgroundColor:
-                  activeVariant === 'classic' ? 'rgba(91, 130, 184, 0.14)' : 'transparent',
+                  activeVariant === 'classic' ? 'rgba(56, 189, 248, 0.16)' : 'transparent',
                 color: activeVariant === 'classic' ? COLOR_X : textSecondary,
                 border:
                   activeVariant === 'classic'
-                    ? '1px solid rgba(91, 130, 184, 0.38)'
+                    ? '1px solid rgba(56, 189, 248, 0.45)'
                     : '1px solid transparent',
               }}
             >
@@ -446,11 +445,11 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 fontSize: 13,
                 fontWeight: 600,
                 backgroundColor:
-                  activeVariant === '3-marker' ? 'rgba(196, 129, 87, 0.14)' : 'transparent',
+                  activeVariant === '3-marker' ? 'rgba(251, 146, 60, 0.16)' : 'transparent',
                 color: activeVariant === '3-marker' ? COLOR_O : textSecondary,
                 border:
                   activeVariant === '3-marker'
-                    ? '1px solid rgba(196, 129, 87, 0.38)'
+                    ? '1px solid rgba(251, 146, 60, 0.45)'
                     : '1px solid transparent',
               }}
             >
@@ -463,13 +462,15 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               style={{
                 backgroundColor: tabletopBg,
                 border: `1px solid ${tabletopBorder}`,
-                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 14,
-                padding: 24,
+                padding: 22,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 18,
+                boxShadow: isLight
+                  ? '0 14px 32px rgba(15, 23, 42, 0.06)'
+                  : '0 22px 48px rgba(0, 0, 0, 0.48)',
               }}
             >
               {/* Mode Switcher */}
@@ -484,7 +485,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 14.5, fontWeight: 600, color: textPrimary }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
                     Classic 3x3 Tabletop
                   </span>
                   <div className="mono" style={{ display: 'flex', gap: 6, fontSize: 11 }}>
@@ -499,7 +500,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                     variant={typeBoard === 1 ? 'primary' : 'secondary'}
                     onClick={() => switchClassicMode(1)}
                   >
-                    <FiCpu size={13} strokeWidth={1.5} />
+                    <FiCpu size={13} />
                     <span>1 Player</span>
                   </Button>
                   <Button
@@ -507,26 +508,25 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                     variant={typeBoard === 2 ? 'primary' : 'secondary'}
                     onClick={() => switchClassicMode(2)}
                   >
-                    <FiUsers size={13} strokeWidth={1.5} />
+                    <FiUsers size={13} />
                     <span>2 Players</span>
                   </Button>
                 </div>
               </div>
 
-              {/* Layer 3 — Recessed Status Banner */}
+              {/* Status Banner */}
               <div
                 className="mono"
                 style={{
                   width: '100%',
                   padding: '11px 14px',
                   backgroundColor: recessedWellBg,
-                  boxShadow: 'var(--well-inner-shadow)',
                   border: `1px solid ${
                     winner
-                      ? 'rgba(81, 163, 125, 0.45)'
+                      ? 'rgba(16, 185, 129, 0.5)'
                       : currentPlayer === 'X'
-                      ? 'rgba(91, 130, 184, 0.36)'
-                      : 'rgba(196, 129, 87, 0.36)'
+                      ? 'rgba(56, 189, 248, 0.35)'
+                      : 'rgba(251, 146, 60, 0.35)'
                   }`,
                   borderRadius: 10,
                   textAlign: 'center',
@@ -550,10 +550,10 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                   : `Player ${currentPlayer}'s turn`}
               </div>
 
-              {/* Layer 3 — 3x3 Recessed Tabletop Well */}
+              {/* 3x3 Raised & Recessed Board */}
               <div
                 style={{
-                  width: 'clamp(264px, 78vw, 336px)',
+                  width: 'clamp(260px, 78vw, 332px)',
                   aspectRatio: '1 / 1',
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
@@ -564,8 +564,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                   border: `1px solid ${tabletopBorder}`,
                   borderRadius: 14,
                   boxShadow: isLight
-                    ? 'inset 0 2px 5px rgba(24, 25, 28, 0.06)'
-                    : 'inset 0 2px 8px rgba(0, 0, 0, 0.48)',
+                    ? 'inset 0 2px 6px rgba(15, 23, 42, 0.08)'
+                    : 'inset 0 3px 10px rgba(0, 0, 0, 0.55)',
                 }}
               >
                 {board.map((cell, idx) => {
@@ -583,7 +583,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                       className="mono"
                       style={{
                         backgroundColor: isWinningSquare
-                          ? 'rgba(81, 163, 125, 0.14)'
+                          ? 'rgba(16, 185, 129, 0.16)'
                           : cellBg,
                         border: isWinningSquare
                           ? `2px solid ${COLOR_WIN}`
@@ -595,7 +595,9 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                         fontSize: 'clamp(32px, 9vw, 44px)',
                         fontWeight: 700,
                         color: markerColor,
-                        boxShadow: 'var(--card-top-highlight)',
+                        boxShadow: isLight
+                          ? '0 2px 5px rgba(15, 23, 42, 0.05)'
+                          : '0 4px 10px rgba(0, 0, 0, 0.35)',
                         transition: 'border-color 0.15s ease, background-color 0.15s ease',
                       }}
                     >
@@ -615,7 +617,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  paddingTop: 10,
+                  paddingTop: 8,
                   borderTop: `1px solid ${tabletopBorder}`,
                 }}
               >
@@ -623,7 +625,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                   Mode state preserved across switches
                 </span>
                 <Button variant="secondary" size="sm" onClick={resetClassicGame}>
-                  <FiRotateCcw size={13} strokeWidth={1.5} />
+                  <FiRotateCcw size={13} />
                   <span>Reset Board</span>
                 </Button>
               </div>
@@ -633,13 +635,15 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               style={{
                 backgroundColor: tabletopBg,
                 border: `1px solid ${tabletopBorder}`,
-                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 14,
                 padding: 24,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: 18,
+                gap: 16,
+                boxShadow: isLight
+                  ? 'var(--card-top-highlight), 0 10px 26px rgba(24, 25, 28, 0.06)'
+                  : 'var(--card-top-highlight), 0 18px 36px rgba(0, 0, 0, 0.42)',
               }}
             >
               {/* Header & Mode Switcher */}
@@ -654,10 +658,10 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 14.5, fontWeight: 600, color: textPrimary }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
                     Three-Marker Variant (FIFO Queue)
                   </div>
-                  <div style={{ fontSize: 12.5, color: textSecondary }}>
+                  <div style={{ fontSize: 12, color: textSecondary }}>
                     Max 3 markers per player — placing a 4th evicts the oldest marker.
                   </div>
                 </div>
@@ -681,20 +685,19 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 </div>
               </div>
 
-              {/* Layer 3 — Recessed Status Banner */}
+              {/* Status Banner */}
               <div
                 className="mono"
                 style={{
                   width: '100%',
                   padding: '11px 14px',
                   backgroundColor: recessedWellBg,
-                  boxShadow: 'var(--well-inner-shadow)',
                   border: `1px solid ${
                     tmStatus.includes('wins')
-                      ? 'rgba(81, 163, 125, 0.45)'
+                      ? 'rgba(77, 139, 110, 0.45)'
                       : tmIsXNext
-                      ? 'rgba(91, 130, 184, 0.36)'
-                      : 'rgba(196, 129, 87, 0.36)'
+                      ? 'rgba(82, 120, 168, 0.35)'
+                      : 'rgba(189, 136, 62, 0.35)'
                   }`,
                   borderRadius: 10,
                   textAlign: 'center',
@@ -710,10 +713,10 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 {tmStatus}
               </div>
 
-              {/* Layer 3 — 3x3 Recessed Tabletop Well */}
+              {/* 3x3 Raised & Recessed Board */}
               <div
                 style={{
-                  width: 'clamp(264px, 78vw, 336px)',
+                  width: 'clamp(260px, 78vw, 332px)',
                   aspectRatio: '1 / 1',
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
@@ -725,7 +728,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                   borderRadius: 14,
                   boxShadow: isLight
                     ? 'inset 0 2px 5px rgba(24, 25, 28, 0.06)'
-                    : 'inset 0 2px 8px rgba(0, 0, 0, 0.48)',
+                    : 'inset 0 3px 8px rgba(0, 0, 0, 0.45)',
                 }}
               >
                 {tmBoard.map((cell, idx) => {
@@ -756,7 +759,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                       style={{
                         position: 'relative',
                         backgroundColor: isWinningSquare
-                          ? 'rgba(81, 163, 125, 0.14)'
+                          ? 'rgba(77, 139, 110, 0.16)'
                           : cellBg,
                         border: isWinningSquare
                           ? `2px solid ${COLOR_WIN}`
@@ -772,8 +775,10 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                         fontSize: 'clamp(32px, 9vw, 44px)',
                         fontWeight: 700,
                         color: markerColor,
-                        opacity: isEvicting ? 0.56 : 1,
-                        boxShadow: 'var(--card-top-highlight)',
+                        opacity: isEvicting ? 0.55 : 1,
+                        boxShadow: isLight
+                          ? '0 2px 5px rgba(24, 25, 28, 0.05)'
+                          : '0 4px 10px rgba(0, 0, 0, 0.3)',
                         transition: 'all 0.15s ease',
                       }}
                       title={
@@ -826,8 +831,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                       fontSize: 12,
                       fontWeight: 600,
                       color: COLOR_X,
-                      backgroundColor: 'rgba(91, 130, 184, 0.14)',
-                      border: '1px solid rgba(91, 130, 184, 0.36)',
+                      backgroundColor: 'rgba(82, 120, 168, 0.12)',
+                      border: '1px solid rgba(82, 120, 168, 0.35)',
                       borderRadius: 7,
                       padding: '4px 10px',
                     }}
@@ -840,8 +845,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                       fontSize: 12,
                       fontWeight: 600,
                       color: COLOR_O,
-                      backgroundColor: 'rgba(196, 129, 87, 0.14)',
-                      border: '1px solid rgba(196, 129, 87, 0.36)',
+                      backgroundColor: 'rgba(189, 136, 62, 0.12)',
+                      border: '1px solid rgba(189, 136, 62, 0.35)',
                       borderRadius: 7,
                       padding: '4px 10px',
                     }}

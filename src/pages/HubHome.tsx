@@ -30,22 +30,22 @@ const CATEGORY_ACCENT: Record<
   Tools: {
     color: 'var(--accent-tools)',
     subtleBg: 'var(--accent-tools-subtle)',
-    borderTint: 'var(--accent-tools-border)',
+    borderTint: 'rgba(82, 120, 168, 0.34)',
   },
   Games: {
     color: 'var(--accent-games)',
     subtleBg: 'var(--accent-games-subtle)',
-    borderTint: 'var(--accent-games-border)',
+    borderTint: 'rgba(77, 139, 110, 0.34)',
   },
   Projects: {
     color: 'var(--accent-projects)',
     subtleBg: 'var(--accent-projects-subtle)',
-    borderTint: 'var(--accent-projects-border)',
+    borderTint: 'rgba(189, 136, 62, 0.34)',
   },
   Private: {
     color: 'var(--accent-vault)',
     subtleBg: 'var(--accent-vault-subtle)',
-    borderTint: 'var(--accent-vault-border)',
+    borderTint: 'rgba(186, 94, 78, 0.34)',
   },
 };
 
@@ -257,25 +257,24 @@ export const HubHome: React.FC<HubHomeProps> = ({
     <div className="workspace-shell">
       <AppHeader onOpenCommandPalette={onOpenCommandPalette} />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 28 }}>
-        {/* Clean Editorial Hero: Bold Title + Single Punchy Subtitle */}
-        <section style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* Clean Hero Section: Bold Title + Single Punchy Subtitle */}
+        <section style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <h1
             style={{
-              fontSize: 'clamp(22px, 3vw, 28px)',
+              fontSize: 'clamp(20px, 2.8vw, 26px)',
               fontWeight: 600,
               color: 'var(--text-primary)',
-              letterSpacing: '-0.025em',
-              lineHeight: 1.25,
+              letterSpacing: '-0.02em',
             }}
           >
             Personal Engineering Workspace &amp; Micro-Tools
           </h1>
           <p
             style={{
-              fontSize: 14.5,
+              fontSize: 14,
               color: 'var(--text-secondary)',
-              lineHeight: 1.6,
+              lineHeight: 1.55,
             }}
           >
             Self-contained developer utilities, tactical game prototypes, and production showcases
@@ -285,27 +284,27 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
         {/* Recent Bar (Up to 3 recently opened internal tools) */}
         {recentTools.length > 0 && (
-          <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
                 fontSize: 11,
-                fontWeight: 600,
+                fontWeight: 500,
                 color: 'var(--text-muted)',
                 textTransform: 'uppercase',
-                letterSpacing: '0.07em',
+                letterSpacing: '0.06em',
               }}
             >
-              <FiClock size={12} strokeWidth={1.5} />
+              <FiClock size={12} />
               <span>Recent</span>
             </div>
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
-                gap: 12,
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                gap: 10,
               }}
             >
               {recentTools.map((tool) => {
@@ -320,7 +319,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       gap: 10,
-                      padding: '12px 14px',
+                      padding: '10px 12px',
                       textAlign: 'left',
                     }}
                   >
@@ -334,9 +333,9 @@ export const HubHome: React.FC<HubHomeProps> = ({
                     >
                       <span
                         style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: 7,
+                          width: 26,
+                          height: 26,
+                          borderRadius: 6,
                           backgroundColor: accent.subtleBg,
                           border: `1px solid ${accent.borderTint}`,
                           display: 'inline-flex',
@@ -367,7 +366,6 @@ export const HubHome: React.FC<HubHomeProps> = ({
                     </div>
                     <FiArrowRight
                       size={13}
-                      strokeWidth={1.5}
                       color="var(--text-secondary)"
                       style={{ flexShrink: 0 }}
                     />
@@ -378,59 +376,43 @@ export const HubHome: React.FC<HubHomeProps> = ({
           </section>
         )}
 
-        {/* Category Filter Bar with Recessed Segmented Well */}
+        {/* Category Tabs */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             borderBottom: '1px solid var(--border-subtle)',
-            paddingBottom: 14,
+            paddingBottom: 12,
             gap: 12,
             flexWrap: 'wrap',
           }}
         >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: 4,
-              backgroundColor: 'var(--bg-well)',
-              border: '1px solid var(--border-subtle)',
-              boxShadow: 'var(--well-inner-shadow)',
-              borderRadius: 9,
-              flexWrap: 'wrap',
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             {tabs.map((tab) => {
               const active = activeTab === tab;
-              const tabAccent =
+              const tabColor =
                 tab === 'Private'
-                  ? CATEGORY_ACCENT.Private
+                  ? 'var(--accent-vault)'
                   : tab === 'Tools'
-                  ? CATEGORY_ACCENT.Tools
+                  ? 'var(--accent-tools)'
                   : tab === 'Games'
-                  ? CATEGORY_ACCENT.Games
+                  ? 'var(--accent-games)'
                   : tab === 'Projects'
-                  ? CATEGORY_ACCENT.Projects
-                  : {
-                      color: 'var(--accent)',
-                      subtleBg: 'var(--accent-subtle)',
-                      borderTint: 'var(--accent-border)',
-                    };
+                  ? 'var(--accent-projects)'
+                  : 'var(--accent)';
               return (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   style={{
-                    padding: '6px 13px',
-                    borderRadius: 6,
-                    fontSize: 12.5,
+                    padding: '6px 12px',
+                    borderRadius: 7,
+                    fontSize: 13,
                     fontWeight: 500,
-                    backgroundColor: active ? tabAccent.subtleBg : 'transparent',
-                    color: active ? tabAccent.color : 'var(--text-secondary)',
-                    border: active ? `1px solid ${tabAccent.borderTint}` : '1px solid transparent',
+                    backgroundColor: active ? tabColor : 'transparent',
+                    color: active ? '#FFFFFF' : 'var(--text-secondary)',
+                    border: active ? `1px solid ${tabColor}` : '1px solid transparent',
                   }}
                 >
                   {tab}
@@ -451,7 +433,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
               backgroundColor: 'var(--bg-surface)',
               border: '1px solid var(--border-subtle)',
               borderRadius: 12,
-              padding: '40px 24px',
+              padding: '36px 20px',
               textAlign: 'center',
               color: 'var(--text-muted)',
               fontSize: 13,
@@ -497,9 +479,8 @@ export const HubHome: React.FC<HubHomeProps> = ({
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           padding: '8px 12px',
-                          backgroundColor: 'var(--bg-well)',
+                          backgroundColor: 'var(--bg-input)',
                           border: '1px solid var(--border-subtle)',
-                          boxShadow: 'var(--well-inner-shadow)',
                           borderRadius: 8,
                           marginBottom: 4,
                         }}
@@ -548,8 +529,8 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span
                           style={{
-                            width: 30,
-                            height: 30,
+                            width: 28,
+                            height: 28,
                             borderRadius: 7,
                             backgroundColor: accent.subtleBg,
                             border: `1px solid ${accent.borderTint}`,
@@ -568,7 +549,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
                             backgroundColor: accent.subtleBg,
                             border: `1px solid ${accent.borderTint}`,
                             borderRadius: 5,
-                            padding: '2px 8px',
+                            padding: '2px 7px',
                             fontWeight: 500,
                           }}
                         >
@@ -593,11 +574,10 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
                     <h2
                       style={{
-                        fontSize: 15.5,
+                        fontSize: 15,
                         fontWeight: 600,
                         color: 'var(--text-primary)',
                         marginTop: 2,
-                        letterSpacing: '-0.01em',
                       }}
                     >
                       {item.title}
@@ -605,7 +585,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
                     <p
                       style={{
-                        fontSize: 13.5,
+                        fontSize: 13,
                         color: 'var(--text-secondary)',
                         lineHeight: 1.55,
                         maxWidth: isShowcaseSpan ? '90%' : undefined,
@@ -623,26 +603,20 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       width: '100%',
-                      marginTop: 20,
-                      paddingTop: 14,
+                      marginTop: 18,
+                      paddingTop: 12,
                       borderTop: '1px solid var(--border-subtle)',
-                      fontSize: 12.5,
+                      fontSize: 12,
                       fontWeight: 500,
                       color: isExternal ? accent.color : 'var(--text-primary)',
                     }}
                   >
                     <span>{isExternal ? 'Live Demo' : 'Open Workspace'}</span>
                     {isExternal ? (
-                      <FiArrowUpRight
-                        size={14}
-                        strokeWidth={1.5}
-                        className="card-arrow"
-                        color={accent.color}
-                      />
+                      <FiArrowUpRight size={14} className="card-arrow" color={accent.color} />
                     ) : (
                       <FiArrowRight
                         size={14}
-                        strokeWidth={1.5}
                         className="card-arrow-right"
                         color="var(--text-secondary)"
                       />
@@ -657,8 +631,8 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
       <footer
         style={{
-          marginTop: 52,
-          padding: '22px 0',
+          marginTop: 48,
+          padding: '20px 0',
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
