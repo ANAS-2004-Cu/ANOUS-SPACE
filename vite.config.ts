@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'local-vault-api-dev-middleware',
+      name: 'local-api-dev-middleware',
       configureServer(server) {
         server.middlewares.use('/api/vault', (req: any, res: any) => {
           if (req.method === 'OPTIONS') {
@@ -59,6 +59,48 @@ export default defineConfig({
               res.statusCode = 400;
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ error: 'Invalid request payload.' }));
+            }
+          });
+        });
+
+        server.middlewares.use('/api/tempmail-lol', (req: any, res: any) => {
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+          let body = '';
+          req.on('data', (chunk: any) => {
+            body += chunk;
+          });
+          req.on('end', async () => {
+            try {
+              const urlObj = new URL(req.url || '', 'http://localhost');
+              const endpoint = urlObj.searchParams.get('endpoint') || '/v2/inbox';
+              const token = urlObj.searchParams.get('token');
+              const targetUrl = token
+                ? `https://api.tempmail.lol${endpoint}?token=${encodeURIComponent(token)}`
+                : `https://api.tempmail.lol${endpoint}`;
+
+              const fetchOptions: RequestInit = {
+                method: req.method || 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: 'application/json',
+                },
+              };
+              if (req.method === 'POST' && body) {
+                fetchOptions.body = body;
+              }
+              const upstream = await fetch(targetUrl, fetchOptions);
+              const text = await upstream.text();
+              res.statusCode = upstream.status;
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.end(text);
+            } catch {
+              res.statusCode = 502;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'Failed to reach TempMail.lol upstream API' }));
             }
           });
         });

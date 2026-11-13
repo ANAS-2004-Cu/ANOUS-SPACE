@@ -50,36 +50,25 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     keywords: ['store', 'shop', 'commerce', 'web', 'portfolio', 'live demo'],
   },
   {
+    id: 'tic-tac-toe',
+    title: 'Tic-Tac-Toe (Classic & 3-Marker)',
+    description:
+      'Standard 3×3 grid and no-draw FIFO 3-marker tactical variant with single-player AI and two-player pass-and-play.',
+    category: 'Games',
+    type: 'internal',
+    to: '/tic-tac-toe',
+    badge: 'Board',
+    keywords: ['xo', 'tictactoe', '3-marker', 'fifo', 'ai', 'game2', 'game3'],
+  },
+  {
     id: 'guess-game',
     title: 'Number Guess (0–99)',
     description:
-      'Range-finding numeric deduction game with 10 attempts, proximity telemetry, and attempt history.',
+      'Range-finding numeric deduction game with 10 attempts, proximity telemetry within 10 units, and attempt history.',
     category: 'Games',
     type: 'internal',
     to: '/guess-game',
     badge: 'Logic',
     keywords: ['number', 'guess', 'game1', 'puzzle'],
-  },
-  {
-    id: 'tic-tac-toe',
-    title: 'Classic Tic-Tac-Toe',
-    description:
-      'Standard 3×3 grid supporting single-player heuristic AI and two-player local pass-and-play with independent state.',
-    category: 'Games',
-    type: 'internal',
-    to: '/tic-tac-toe',
-    badge: 'Board',
-    keywords: ['xo', 'tictactoe', 'game2', 'ai'],
-  },
-  {
-    id: 'tic-tac-toe-3',
-    title: 'Three-Marker Tic-Tac-Toe',
-    description:
-      'No-draw tactical variant where each player holds at most 3 active markers; placing a 4th removes the oldest marker.',
-    category: 'Games',
-    type: 'internal',
-    to: '/tic-tac-toe-3',
-    badge: 'Variant',
-    keywords: ['xo', '3-marker', 'fifo', 'game3'],
   },
 ];
