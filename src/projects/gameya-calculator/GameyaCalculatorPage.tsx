@@ -414,18 +414,19 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
   const endLabel = getMonthYearLabel(startMonth, startYear, safeDuration - 1);
   const monthlyRatePercent = formatNumberOnly((Number(annualRate) || 0) / 12);
 
-  // Fintech Ledger Atmosphere Palette
-  const canvasBg = isLight ? '#F4F7F6' : '#0E1318';
-  const cardBg = isLight ? '#FFFFFF' : '#151D24';
-  const cardBorder = isLight ? '#D5E0DC' : '#22303C';
-  const wellBg = isLight ? '#EDF3F0' : '#0A0E12';
-  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
-  const textSecondary = isLight ? '#475569' : '#94A3B8';
-  const textMuted = isLight ? '#64748B' : '#64748B';
+  // 3-Layer Muted Fintech Ledger Palette (Sage-tinted neutrals, saturation strictly 25%-55%)
+  const canvasBg = isLight ? '#F5F7F5' : '#111413';
+  const cardBg = isLight ? '#FFFFFF' : '#171C1A';
+  const cardBorder = isLight ? '#DCE2DE' : '#262E2B';
+  const wellBg = isLight ? '#EDF1EE' : '#0E1110';
+  const textPrimary = isLight ? '#181A19' : '#ECEFEE';
+  const textSecondary = isLight ? '#525855' : '#9AA39F';
+  const textMuted = isLight ? '#787F7B' : '#6A736F';
 
-  const EMERALD = '#10B981';
-  const AMBER = '#F59E0B';
-  const ROSE = '#F43F5E';
+  // Muted Semantic Accents
+  const SAGE = isLight ? '#3F8765' : '#51A37D';
+  const OCHRE = isLight ? '#A37339' : '#C5954E';
+  const TERRACOTTA = isLight ? '#AA5240' : '#C26A58';
 
   const isPositiveProfit = simulation.netProfit > 0.005;
 
@@ -435,8 +436,9 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
       style={{
         backgroundColor: canvasBg,
         backgroundImage: isLight
-          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(16, 185, 129, 0.1), transparent 70%)'
-          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(16, 185, 129, 0.14), transparent 70%)',
+          ? 'radial-gradient(ellipse 80% 380px at 50% -90px, rgba(63, 135, 101, 0.055), transparent 70%), radial-gradient(rgba(24, 25, 28, 0.035) 1px, transparent 1px)'
+          : 'radial-gradient(ellipse 80% 380px at 50% -90px, rgba(81, 163, 125, 0.065), transparent 70%), radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px)',
+        backgroundSize: '100% 100%, 24px 24px',
       }}
     >
       <div className="workspace-shell">
@@ -451,29 +453,27 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 18,
-            maxWidth: 940,
+            gap: 20,
+            maxWidth: 960,
             width: '100%',
             margin: '0 auto',
             paddingBottom: 48,
             fontFamily: "'Cairo', 'Inter', system-ui, sans-serif",
           }}
         >
-          {/* Title & Overview Strip */}
+          {/* Layer 2 — Title & Overview Strip (24px padding) */}
           <section
             style={{
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
+              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 14,
-              padding: '18px 22px',
+              padding: 24,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: 14,
               flexWrap: 'wrap',
-              boxShadow: isLight
-                ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                : '0 16px 36px rgba(0, 0, 0, 0.35)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -481,17 +481,17 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                 style={{
                   width: 42,
                   height: 42,
-                  borderRadius: 11,
-                  backgroundColor: 'rgba(16, 185, 129, 0.14)',
-                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  borderRadius: 10,
+                  backgroundColor: 'rgba(81, 163, 125, 0.14)',
+                  border: '1px solid rgba(81, 163, 125, 0.36)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: EMERALD,
+                  color: SAGE,
                   flexShrink: 0,
                 }}
               >
-                <FiTrendingUp size={20} />
+                <FiTrendingUp size={19} strokeWidth={1.5} />
               </div>
               <div>
                 <h1 style={{ fontSize: 18, fontWeight: 700, color: textPrimary, margin: 0 }}>
@@ -504,7 +504,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
             </div>
 
             <Button variant="secondary" size="sm" onClick={handleResetDefaults}>
-              <FiRotateCcw size={13} />
+              <FiRotateCcw size={13} strokeWidth={1.5} />
               <span>إعادة ضبط القيم</span>
             </Button>
           </section>
@@ -514,23 +514,21 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: 18,
+              gap: 20,
               alignItems: 'start',
             }}
           >
-            {/* Inputs Card */}
+            {/* Layer 2 — Inputs Card (24px padding) */}
             <section
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
+                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 14,
-                padding: 22,
+                padding: 24,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 16,
-                boxShadow: isLight
-                  ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                  : '0 16px 36px rgba(0, 0, 0, 0.35)',
               }}
             >
               <div
@@ -538,7 +536,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  paddingBottom: 10,
+                  paddingBottom: 12,
                   borderBottom: `1px solid ${cardBorder}`,
                 }}
               >
@@ -549,9 +547,9 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
-                    color: EMERALD,
-                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                    color: SAGE,
+                    backgroundColor: 'rgba(81, 163, 125, 0.14)',
+                    border: '1px solid rgba(81, 163, 125, 0.36)',
                     borderRadius: 999,
                     padding: '2px 10px',
                   }}
@@ -572,7 +570,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     gap: 6,
                   }}
                 >
-                  <FiCalendar size={14} color={EMERALD} />
+                  <FiCalendar size={14} strokeWidth={1.5} color={SAGE} />
                   <span>بداية الجمعية (الشهر والسنة)</span>
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 10 }}>
@@ -582,6 +580,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     style={{
                       backgroundColor: wellBg,
                       border: `1px solid ${cardBorder}`,
+                      boxShadow: 'var(--well-inner-shadow)',
                       borderRadius: 9,
                       padding: '10px 12px',
                       fontSize: 14,
@@ -603,9 +602,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     max={2050}
                     value={startYear}
                     onChange={(e) => setStartYear(Number(e.target.value) || 2026)}
+                    className="tabular-nums"
                     style={{
                       backgroundColor: wellBg,
                       border: `1px solid ${cardBorder}`,
+                      boxShadow: 'var(--well-inner-shadow)',
                       borderRadius: 9,
                       padding: '10px 12px',
                       fontSize: 14,
@@ -639,9 +640,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     const val = Number(e.target.value);
                     setDuration(Number.isNaN(val) ? 2 : val);
                   }}
+                  className="tabular-nums"
                   style={{
                     backgroundColor: wellBg,
                     border: `1px solid ${cardBorder}`,
+                    boxShadow: 'var(--well-inner-shadow)',
                     borderRadius: 9,
                     padding: '10px 14px',
                     fontSize: 15,
@@ -651,13 +654,14 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   }}
                 />
 
-                {/* Live Info Banner */}
+                {/* Layer 3 — Recessed Live Info Banner */}
                 <div
                   style={{
                     backgroundColor: wellBg,
                     border: `1px solid ${cardBorder}`,
+                    boxShadow: 'var(--well-inner-shadow)',
                     borderRadius: 10,
-                    padding: '10px 12px',
+                    padding: '11px 14px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 4,
@@ -673,8 +677,9 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                     <span style={{ color: textSecondary }}>إجمالي قبض الجمعية (المدة × القسط):</span>
                     <span
+                      className="tabular-nums"
                       style={{
-                        color: EMERALD,
+                        color: SAGE,
                         fontWeight: 700,
                         fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
                       }}
@@ -698,7 +703,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     gap: 6,
                   }}
                 >
-                  <FiDollarSign size={14} color={EMERALD} />
+                  <FiDollarSign size={14} strokeWidth={1.5} color={SAGE} />
                   <span>قيمة القسط الشهري / الاسم (ج.م)</span>
                 </label>
                 <input
@@ -708,9 +713,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   step={100}
                   value={installment}
                   onChange={(e) => setInstallment(Math.max(0, Number(e.target.value) || 0))}
+                  className="tabular-nums"
                   style={{
                     backgroundColor: wellBg,
                     border: `1px solid ${cardBorder}`,
+                    boxShadow: 'var(--well-inner-shadow)',
                     borderRadius: 9,
                     padding: '10px 14px',
                     fontSize: 15,
@@ -735,13 +742,14 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                       gap: 6,
                     }}
                   >
-                    <FiPercent size={14} color={EMERALD} />
+                    <FiPercent size={14} strokeWidth={1.5} color={SAGE} />
                     <span>نسبة العائد السنوي المتوقعة %</span>
                   </label>
                   <span
+                    className="tabular-nums"
                     style={{
                       fontSize: 12,
-                      color: EMERALD,
+                      color: SAGE,
                       fontWeight: 600,
                       fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
                     }}
@@ -757,9 +765,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   step={0.5}
                   value={annualRate}
                   onChange={(e) => setAnnualRate(Math.max(0, Number(e.target.value) || 0))}
+                  className="tabular-nums"
                   style={{
                     backgroundColor: wellBg,
                     border: `1px solid ${cardBorder}`,
+                    boxShadow: 'var(--well-inner-shadow)',
                     borderRadius: 9,
                     padding: '10px 14px',
                     fontSize: 15,
@@ -785,7 +795,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     gap: 6,
                   }}
                 >
-                  <FiLayers size={14} color={EMERALD} />
+                  <FiLayers size={14} strokeWidth={1.5} color={SAGE} />
                   <span>نظام القبض</span>
                 </label>
 
@@ -797,6 +807,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     padding: 4,
                     backgroundColor: wellBg,
                     border: `1px solid ${cardBorder}`,
+                    boxShadow: 'var(--well-inner-shadow)',
                     borderRadius: 10,
                   }}
                 >
@@ -810,11 +821,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                       fontWeight: 700,
                       fontFamily: 'inherit',
                       backgroundColor:
-                        payoutMode === 'full' ? 'rgba(16, 185, 129, 0.16)' : 'transparent',
-                      color: payoutMode === 'full' ? EMERALD : textSecondary,
+                        payoutMode === 'full' ? 'rgba(81, 163, 125, 0.14)' : 'transparent',
+                      color: payoutMode === 'full' ? SAGE : textSecondary,
                       border:
                         payoutMode === 'full'
-                          ? '1px solid rgba(16, 185, 129, 0.45)'
+                          ? '1px solid rgba(81, 163, 125, 0.38)'
                           : '1px solid transparent',
                     }}
                   >
@@ -830,11 +841,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                       fontWeight: 700,
                       fontFamily: 'inherit',
                       backgroundColor:
-                        payoutMode === 'split' ? 'rgba(16, 185, 129, 0.16)' : 'transparent',
-                      color: payoutMode === 'split' ? EMERALD : textSecondary,
+                        payoutMode === 'split' ? 'rgba(81, 163, 125, 0.14)' : 'transparent',
+                      color: payoutMode === 'split' ? SAGE : textSecondary,
                       border:
                         payoutMode === 'split'
-                          ? '1px solid rgba(16, 185, 129, 0.45)'
+                          ? '1px solid rgba(81, 163, 125, 0.38)'
                           : '1px solid transparent',
                     }}
                   >
@@ -853,6 +864,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                       style={{
                         backgroundColor: wellBg,
                         border: `1px solid ${cardBorder}`,
+                        boxShadow: 'var(--well-inner-shadow)',
                         borderRadius: 9,
                         padding: '10px 12px',
                         fontSize: 13.5,
@@ -886,6 +898,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                         style={{
                           backgroundColor: wellBg,
                           border: `1px solid ${cardBorder}`,
+                          boxShadow: 'var(--well-inner-shadow)',
                           borderRadius: 9,
                           padding: '10px 12px',
                           fontSize: 13.5,
@@ -912,6 +925,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                         style={{
                           backgroundColor: wellBg,
                           border: `1px solid ${cardBorder}`,
+                          boxShadow: 'var(--well-inner-shadow)',
                           borderRadius: 9,
                           padding: '10px 12px',
                           fontSize: 13.5,
@@ -933,21 +947,19 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
               </div>
             </section>
 
-            {/* Primary Result Hero Card */}
+            {/* Layer 2 — Primary Result Hero Card (24px padding) */}
             <section
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${
-                  isPositiveProfit ? 'rgba(16, 185, 129, 0.45)' : cardBorder
+                  isPositiveProfit ? 'rgba(81, 163, 125, 0.4)' : cardBorder
                 }`,
+                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 14,
-                padding: 22,
+                padding: 24,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 18,
-                boxShadow: isLight
-                  ? '0 10px 28px rgba(15, 23, 42, 0.05)'
-                  : '0 18px 42px rgba(0, 0, 0, 0.42)',
               }}
             >
               <div
@@ -965,12 +977,12 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   style={{
                     fontSize: 11.5,
                     fontWeight: 700,
-                    color: isPositiveProfit ? EMERALD : textSecondary,
+                    color: isPositiveProfit ? SAGE : textSecondary,
                     backgroundColor: isPositiveProfit
-                      ? 'rgba(16, 185, 129, 0.14)'
+                      ? 'rgba(81, 163, 125, 0.14)'
                       : wellBg,
                     border: `1px solid ${
-                      isPositiveProfit ? 'rgba(16, 185, 129, 0.4)' : cardBorder
+                      isPositiveProfit ? 'rgba(81, 163, 125, 0.36)' : cardBorder
                     }`,
                     borderRadius: 999,
                     padding: '3px 10px',
@@ -982,17 +994,18 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                 </span>
               </div>
 
-              {/* Hero Net Profit Box */}
+              {/* Layer 3 — Hero Net Profit Box */}
               <div
                 style={{
                   backgroundColor: isPositiveProfit
-                    ? 'rgba(16, 185, 129, 0.1)'
+                    ? 'rgba(81, 163, 125, 0.1)'
                     : wellBg,
                   border: `1px solid ${
-                    isPositiveProfit ? 'rgba(16, 185, 129, 0.4)' : cardBorder
+                    isPositiveProfit ? 'rgba(81, 163, 125, 0.36)' : cardBorder
                   }`,
+                  boxShadow: 'var(--well-inner-shadow)',
                   borderRadius: 12,
-                  padding: '20px 18px',
+                  padding: '22px 18px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -1004,10 +1017,15 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   صافي الربح النهائي في نهاية الجمعية
                 </span>
                 <div
+                  className="tabular-nums"
                   style={{
                     fontSize: 'clamp(26px, 4vw, 34px)',
                     fontWeight: 700,
-                    color: isPositiveProfit ? EMERALD : simulation.netProfit < 0 ? ROSE : textPrimary,
+                    color: isPositiveProfit
+                      ? SAGE
+                      : simulation.netProfit < 0
+                      ? TERRACOTTA
+                      : textPrimary,
                     fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
                   }}
                 >
@@ -1031,8 +1049,9 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   style={{
                     backgroundColor: wellBg,
                     border: `1px solid ${cardBorder}`,
+                    boxShadow: 'var(--well-inner-shadow)',
                     borderRadius: 11,
-                    padding: '14px 14px',
+                    padding: '14px 16px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 4,
@@ -1042,10 +1061,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     إجمالي العوائد المكتسبة
                   </span>
                   <span
+                    className="tabular-nums"
                     style={{
                       fontSize: 17,
                       fontWeight: 700,
-                      color: EMERALD,
+                      color: SAGE,
                       fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
                     }}
                   >
@@ -1060,8 +1080,9 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                   style={{
                     backgroundColor: wellBg,
                     border: `1px solid ${cardBorder}`,
+                    boxShadow: 'var(--well-inner-shadow)',
                     borderRadius: 11,
-                    padding: '14px 14px',
+                    padding: '14px 16px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 4,
@@ -1071,6 +1092,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                     صافي المبلغ الداخل للصندوق عند القبض
                   </span>
                   <span
+                    className="tabular-nums"
                     style={{
                       fontSize: 17,
                       fontWeight: 700,
@@ -1091,8 +1113,9 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                 style={{
                   backgroundColor: wellBg,
                   border: `1px solid ${cardBorder}`,
+                  boxShadow: 'var(--well-inner-shadow)',
                   borderRadius: 10,
-                  padding: '12px 14px',
+                  padding: '13px 15px',
                   fontSize: 12.5,
                   color: textSecondary,
                   lineHeight: 1.65,
@@ -1112,14 +1135,12 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
+                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 14,
-                padding: 22,
+                padding: 24,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 14,
-                boxShadow: isLight
-                  ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                  : '0 16px 36px rgba(0, 0, 0, 0.35)',
+                gap: 16,
               }}
             >
               <div
@@ -1161,13 +1182,14 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                       onClick={() => setFullPayoutMonth(item.monthNumber)}
                       style={{
                         backgroundColor: isSelected
-                          ? 'rgba(16, 185, 129, 0.14)'
+                          ? 'rgba(81, 163, 125, 0.14)'
                           : wellBg,
                         border: `1.5px solid ${
-                          isSelected ? EMERALD : cardBorder
+                          isSelected ? SAGE : cardBorder
                         }`,
+                        boxShadow: isSelected ? 'none' : 'var(--well-inner-shadow)',
                         borderRadius: 11,
-                        padding: '12px 14px',
+                        padding: '13px 15px',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'flex-start',
@@ -1190,12 +1212,14 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                           style={{
                             fontSize: 12.5,
                             fontWeight: 700,
-                            color: isSelected ? EMERALD : textPrimary,
+                            color: isSelected ? SAGE : textPrimary,
                           }}
                         >
                           الشهر {item.monthNumber}
                         </span>
-                        {isSelected && <FiCheckCircle size={14} color={EMERALD} />}
+                        {isSelected && (
+                          <FiCheckCircle size={14} strokeWidth={1.5} color={SAGE} />
+                        )}
                       </div>
 
                       <span style={{ fontSize: 11.5, color: textSecondary }}>
@@ -1203,10 +1227,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                       </span>
 
                       <div
+                        className="tabular-nums"
                         style={{
                           fontSize: 15,
                           fontWeight: 700,
-                          color: hasProfit ? EMERALD : textMuted,
+                          color: hasProfit ? SAGE : textMuted,
                           fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
                           marginTop: 2,
                         }}
@@ -1214,7 +1239,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                         {formatMoney(item.netProfit)}
                       </div>
 
-                      <span style={{ fontSize: 11, color: textMuted }}>
+                      <span className="tabular-nums" style={{ fontSize: 11, color: textMuted }}>
                         صافي داخل الصندوق: {formatMoney(item.netEntered)}
                       </span>
                     </button>
@@ -1224,19 +1249,17 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
             </section>
           )}
 
-          {/* Expandable Monthly Ledger */}
+          {/* Expandable Monthly Ledger (24px padding) */}
           <section
             style={{
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
+              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 14,
-              padding: 20,
+              padding: 24,
               display: 'flex',
               flexDirection: 'column',
-              gap: 14,
-              boxShadow: isLight
-                ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                : '0 16px 36px rgba(0, 0, 0, 0.35)',
+              gap: 16,
             }}
           >
             <div
@@ -1263,7 +1286,11 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                 size="sm"
                 onClick={() => setShowLedger((prev) => !prev)}
               >
-                {showLedger ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+                {showLedger ? (
+                  <FiChevronUp size={14} strokeWidth={1.5} />
+                ) : (
+                  <FiChevronDown size={14} strokeWidth={1.5} />
+                )}
                 <span>
                   {showLedger ? 'إخفاء الجدول التفصيلي' : 'عرض الجدول التفصيلي لكل شهر'}
                 </span>
@@ -1271,7 +1298,16 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
             </div>
 
             {showLedger && (
-              <div style={{ overflowX: 'auto', width: '100%' }}>
+              <div
+                style={{
+                  overflowX: 'auto',
+                  width: '100%',
+                  borderRadius: 10,
+                  border: `1px solid ${cardBorder}`,
+                  backgroundColor: wellBg,
+                  boxShadow: 'var(--well-inner-shadow)',
+                }}
+              >
                 <table
                   style={{
                     width: '100%',
@@ -1289,15 +1325,15 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                         color: textSecondary,
                       }}
                     >
-                      <th style={{ padding: '11px 12px', fontWeight: 700 }}>رقم الشهر</th>
-                      <th style={{ padding: '11px 12px', fontWeight: 700 }}>الشهر والسنة</th>
-                      <th style={{ padding: '11px 12px', fontWeight: 700 }}>حركة الشهر (يوم 1)</th>
-                      <th style={{ padding: '11px 12px', fontWeight: 700 }}>الدين المتراكم</th>
-                      <th style={{ padding: '11px 12px', fontWeight: 700 }}>
+                      <th style={{ padding: '12px 14px', fontWeight: 700 }}>رقم الشهر</th>
+                      <th style={{ padding: '12px 14px', fontWeight: 700 }}>الشهر والسنة</th>
+                      <th style={{ padding: '12px 14px', fontWeight: 700 }}>حركة الشهر (يوم 1)</th>
+                      <th style={{ padding: '12px 14px', fontWeight: 700 }}>الدين المتراكم</th>
+                      <th style={{ padding: '12px 14px', fontWeight: 700 }}>
                         المبلغ المستثمر (بعد القسط)
                       </th>
-                      <th style={{ padding: '11px 12px', fontWeight: 700 }}>عائد الشهر</th>
-                      <th style={{ padding: '11px 12px', fontWeight: 700 }}>الرصيد آخر الشهر</th>
+                      <th style={{ padding: '12px 14px', fontWeight: 700 }}>عائد الشهر</th>
+                      <th style={{ padding: '12px 14px', fontWeight: 700 }}>الرصيد آخر الشهر</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1305,19 +1341,19 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                       const badgeStyle =
                         row.actionTone === 'payout'
                           ? {
-                              color: EMERALD,
-                              bg: 'rgba(16, 185, 129, 0.14)',
-                              border: 'rgba(16, 185, 129, 0.4)',
+                              color: SAGE,
+                              bg: 'rgba(81, 163, 125, 0.14)',
+                              border: 'rgba(81, 163, 125, 0.38)',
                             }
                           : row.actionTone === 'debt'
                           ? {
-                              color: AMBER,
-                              bg: 'rgba(245, 158, 11, 0.14)',
-                              border: 'rgba(245, 158, 11, 0.4)',
+                              color: OCHRE,
+                              bg: 'rgba(197, 149, 78, 0.14)',
+                              border: 'rgba(197, 149, 78, 0.38)',
                             }
                           : {
                               color: textSecondary,
-                              bg: wellBg,
+                              bg: cardBg,
                               border: cardBorder,
                             };
 
@@ -1328,13 +1364,14 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                             borderBottom: `1px solid ${cardBorder}`,
                             backgroundColor:
                               row.actionTone === 'payout'
-                                ? 'rgba(16, 185, 129, 0.04)'
-                                : 'transparent',
+                                ? 'rgba(81, 163, 125, 0.05)'
+                                : cardBg,
                           }}
                         >
                           <td
+                            className="tabular-nums"
                             style={{
-                              padding: '11px 12px',
+                              padding: '12px 14px',
                               fontWeight: 700,
                               color: textPrimary,
                               fontFamily: "'JetBrains Mono', monospace",
@@ -1342,10 +1379,10 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                           >
                             #{row.monthNumber}
                           </td>
-                          <td style={{ padding: '11px 12px', color: textPrimary, fontWeight: 600 }}>
+                          <td style={{ padding: '12px 14px', color: textPrimary, fontWeight: 600 }}>
                             {row.monthLabel}
                           </td>
-                          <td style={{ padding: '11px 12px' }}>
+                          <td style={{ padding: '12px 14px' }}>
                             <span
                               style={{
                                 display: 'inline-block',
@@ -1362,18 +1399,20 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                             </span>
                           </td>
                           <td
+                            className="tabular-nums"
                             style={{
-                              padding: '11px 12px',
+                              padding: '12px 14px',
                               fontWeight: 700,
-                              color: row.accumulatedDebt > 0 ? ROSE : textMuted,
+                              color: row.accumulatedDebt > 0 ? TERRACOTTA : textMuted,
                               fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
                             }}
                           >
                             {formatMoney(row.accumulatedDebt)}
                           </td>
                           <td
+                            className="tabular-nums"
                             style={{
-                              padding: '11px 12px',
+                              padding: '12px 14px',
                               fontWeight: 600,
                               color: textPrimary,
                               fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
@@ -1382,20 +1421,22 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
                             {formatMoney(row.investedAfterInstallment)}
                           </td>
                           <td
+                            className="tabular-nums"
                             style={{
-                              padding: '11px 12px',
+                              padding: '12px 14px',
                               fontWeight: 700,
-                              color: row.monthlyInterest > 0 ? EMERALD : textMuted,
+                              color: row.monthlyInterest > 0 ? SAGE : textMuted,
                               fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
                             }}
                           >
                             +{formatMoney(row.monthlyInterest)}
                           </td>
                           <td
+                            className="tabular-nums"
                             style={{
-                              padding: '11px 12px',
+                              padding: '12px 14px',
                               fontWeight: 700,
-                              color: row.endOfMonthBalance > 0 ? EMERALD : textPrimary,
+                              color: row.endOfMonthBalance > 0 ? SAGE : textPrimary,
                               fontFamily: "'JetBrains Mono', 'Cairo', sans-serif",
                             }}
                           >

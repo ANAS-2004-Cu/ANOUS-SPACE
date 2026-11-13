@@ -77,17 +77,28 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
     message: string;
   } | null>(null);
 
-  // IDE theme palette (GitHub-dark obsidian #0D1117 / #161B22 in dark mode; crisp studio paper in light mode)
+  // 3-Layer Editorial Code Studio Palette (Slate-tinted neutrals, saturation strictly 25%-55%)
   const idePalette = {
-    canvasBg: isLight ? '#F6F8FA' : '#0D1117',
-    windowBg: isLight ? '#FFFFFF' : '#161B22',
-    toolbarBg: isLight ? '#F0F3F6' : '#0D1117',
-    editorBg: isLight ? '#FFFFFF' : '#0D1117',
-    gutterBg: isLight ? '#F8FAFC' : '#11161D',
-    border: isLight ? '#D0D7DE' : '#30363D',
-    gutterText: isLight ? '#8C959F' : '#484F58',
-    textPrimary: isLight ? '#1F2328' : '#E6EDF3',
-    textSecondary: isLight ? '#59636E' : '#8B949E',
+    canvasBg: isLight ? '#F6F7F8' : '#111317',
+    windowBg: isLight ? '#FFFFFF' : '#181B21',
+    toolbarBg: isLight ? '#EFEFED' : '#14171C',
+    editorWellBg: isLight ? '#FAF9F6' : '#0F1115',
+    gutterBg: isLight ? '#F2F2F0' : '#12151A',
+    controlBg: isLight ? '#E8E8E5' : '#20242C',
+    border: isLight ? '#E2E4E8' : '#272B34',
+    gutterText: isLight ? '#858B96' : '#58606E',
+    textPrimary: isLight ? '#181A1E' : '#EAECEF',
+    textSecondary: isLight ? '#525864' : '#9AA1AE',
+    slateAccent: isLight ? '#426696' : '#5B82B8',
+    slateSubtle: isLight ? 'rgba(66, 102, 150, 0.1)' : 'rgba(91, 130, 184, 0.14)',
+    slateBorder: isLight ? 'rgba(66, 102, 150, 0.3)' : 'rgba(91, 130, 184, 0.36)',
+    sageValid: isLight ? '#3F8765' : '#51A37D',
+    sageSubtle: isLight ? 'rgba(63, 135, 101, 0.1)' : 'rgba(81, 163, 125, 0.14)',
+    sageBorder: isLight ? 'rgba(63, 135, 101, 0.32)' : 'rgba(81, 163, 125, 0.38)',
+    ochreWarn: isLight ? '#A37339' : '#C5954E',
+    terracottaInvalid: isLight ? '#AA5240' : '#C26A58',
+    terracottaSubtle: isLight ? 'rgba(170, 82, 64, 0.1)' : 'rgba(194, 106, 88, 0.14)',
+    terracottaBorder: isLight ? 'rgba(170, 82, 64, 0.32)' : 'rgba(194, 106, 88, 0.38)',
   };
 
   useEffect(() => {
@@ -316,8 +327,9 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
       style={{
         backgroundColor: idePalette.canvasBg,
         backgroundImage: isLight
-          ? 'radial-gradient(ellipse 70% 340px at 50% -80px, rgba(59, 130, 246, 0.06), transparent 70%)'
-          : 'radial-gradient(ellipse 70% 340px at 50% -80px, rgba(56, 189, 248, 0.07), transparent 70%)',
+          ? 'radial-gradient(ellipse 70% 320px at 50% -90px, rgba(66, 102, 150, 0.05), transparent 70%), radial-gradient(rgba(24, 25, 28, 0.035) 1px, transparent 1px)'
+          : 'radial-gradient(ellipse 70% 320px at 50% -90px, rgba(91, 130, 184, 0.055), transparent 70%), radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px)',
+        backgroundSize: '100% 100%, 24px 24px',
       }}
     >
       <div className="workspace-shell">
@@ -328,11 +340,11 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 16,
-            paddingBottom: 40,
+            gap: 20,
+            paddingBottom: 44,
           }}
         >
-          {/* Main IDE Editor Window Container (#161B22) */}
+          {/* Layer 2 — Elevated Studio Container */}
           <section
             onDragOver={(e) => {
               e.preventDefault();
@@ -342,57 +354,55 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
             onDrop={handleDrop}
             style={{
               backgroundColor: idePalette.windowBg,
-              border: `1px solid ${isDragging ? '#3B82F6' : idePalette.border}`,
+              border: `1px solid ${isDragging ? idePalette.slateAccent : idePalette.border}`,
               borderRadius: 12,
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: isLight
-                ? '0 10px 30px -10px rgba(15, 23, 42, 0.08)'
-                : '0 16px 38px -12px rgba(0, 0, 0, 0.65)',
+              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
             }}
           >
-            {/* IDE Window Top Toolbar Bar */}
+            {/* Studio Window Top Toolbar Bar */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '10px 14px',
+                padding: '12px 18px',
                 backgroundColor: idePalette.toolbarBg,
                 borderBottom: `1px solid ${idePalette.border}`,
                 gap: 12,
                 flexWrap: 'wrap',
               }}
             >
-              {/* Left: Window Dots + Active Buffer Tab */}
+              {/* Left: Muted Architectural Window Dots + Active Buffer Tab */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span
                     style={{
-                      width: 10,
-                      height: 10,
+                      width: 9,
+                      height: 9,
                       borderRadius: '50%',
-                      backgroundColor: '#F43F5E',
-                      opacity: 0.75,
+                      backgroundColor: idePalette.terracottaInvalid,
+                      opacity: 0.72,
                     }}
                   />
                   <span
                     style={{
-                      width: 10,
-                      height: 10,
+                      width: 9,
+                      height: 9,
                       borderRadius: '50%',
-                      backgroundColor: '#F59E0B',
-                      opacity: 0.75,
+                      backgroundColor: idePalette.ochreWarn,
+                      opacity: 0.72,
                     }}
                   />
                   <span
                     style={{
-                      width: 10,
-                      height: 10,
+                      width: 9,
+                      height: 9,
                       borderRadius: '50%',
-                      backgroundColor: '#10B981',
-                      opacity: 0.75,
+                      backgroundColor: idePalette.sageValid,
+                      opacity: 0.72,
                     }}
                   />
                 </div>
@@ -403,7 +413,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 7,
-                    padding: '4px 10px',
+                    padding: '5px 11px',
                     borderRadius: 6,
                     backgroundColor: idePalette.windowBg,
                     border: `1px solid ${idePalette.border}`,
@@ -412,7 +422,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                     fontWeight: 500,
                   }}
                 >
-                  <FiFileText size={12} color="#3B82F6" />
+                  <FiFileText size={12} strokeWidth={1.5} color={idePalette.slateAccent} />
                   <span>{resolvedFullFilename}</span>
                 </div>
               </div>
@@ -431,7 +441,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <FiUpload size={13} />
+                  <FiUpload size={13} strokeWidth={1.5} />
                   <span>Import File</span>
                 </Button>
 
@@ -442,7 +452,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                   onClick={handleCopy}
                   disabled={!content}
                 >
-                  <FiCopy size={13} />
+                  <FiCopy size={13} strokeWidth={1.5} />
                   <span>{copied ? 'Copied' : 'Copy'}</span>
                 </Button>
 
@@ -453,13 +463,13 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                   onClick={handleClear}
                   disabled={!content}
                 >
-                  <FiTrash2 size={13} />
+                  <FiTrash2 size={13} strokeWidth={1.5} />
                   <span>Clear</span>
                 </Button>
               </div>
             </div>
 
-            {/* Smart JSON Helper Bar (Always accessible when JSON is detected or .json selected) */}
+            {/* Smart JSON Helper Bar (Muted Slate / Sage / Terracotta Diagnostics) */}
             {looksLikeJson && (
               <div
                 style={{
@@ -467,10 +477,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 10,
-                  padding: '8px 14px',
-                  backgroundColor: isLight
-                    ? 'rgba(59, 130, 246, 0.05)'
-                    : 'rgba(56, 189, 248, 0.06)',
+                  padding: '10px 18px',
+                  backgroundColor: idePalette.slateSubtle,
                   borderBottom: `1px solid ${idePalette.border}`,
                   flexWrap: 'wrap',
                 }}
@@ -484,10 +492,11 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                       gap: 6,
                       fontSize: 11,
                       fontWeight: 600,
-                      color: '#38BDF8',
+                      color: idePalette.slateAccent,
+                      letterSpacing: '0.04em',
                     }}
                   >
-                    <FiCode size={13} />
+                    <FiCode size={13} strokeWidth={1.5} />
                     <span>JSON STUDIO</span>
                   </span>
 
@@ -498,25 +507,29 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 6,
-                        padding: '3px 9px',
+                        padding: '3px 10px',
                         borderRadius: 999,
                         fontSize: 11,
                         fontWeight: 500,
                         backgroundColor:
                           jsonStatus.type === 'valid'
-                            ? 'rgba(16, 185, 129, 0.16)'
-                            : 'rgba(244, 63, 94, 0.16)',
-                        border:
+                            ? idePalette.sageSubtle
+                            : idePalette.terracottaSubtle,
+                        border: `1px solid ${
                           jsonStatus.type === 'valid'
-                            ? '1px solid rgba(16, 185, 129, 0.45)'
-                            : '1px solid rgba(244, 63, 94, 0.45)',
-                        color: jsonStatus.type === 'valid' ? '#10B981' : '#F43F5E',
+                            ? idePalette.sageBorder
+                            : idePalette.terracottaBorder
+                        }`,
+                        color:
+                          jsonStatus.type === 'valid'
+                            ? idePalette.sageValid
+                            : idePalette.terracottaInvalid,
                       }}
                     >
                       {jsonStatus.type === 'valid' ? (
-                        <FiCheckCircle size={12} />
+                        <FiCheckCircle size={12} strokeWidth={1.5} />
                       ) : (
-                        <FiAlertCircle size={12} />
+                        <FiAlertCircle size={12} strokeWidth={1.5} />
                       )}
                       <span>{jsonStatus.message}</span>
                     </span>
@@ -537,14 +550,15 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               </div>
             )}
 
-            {/* Editor Surface with Synchronized Line-Number Gutter */}
+            {/* Layer 3 — Recessed Editor Well with Synchronized Line-Number Gutter */}
             <div
               style={{
                 display: 'flex',
                 position: 'relative',
-                minHeight: 400,
+                minHeight: 410,
                 maxHeight: '62vh',
-                backgroundColor: idePalette.editorBg,
+                backgroundColor: idePalette.editorWellBg,
+                boxShadow: 'var(--well-inner-shadow)',
               }}
             >
               {/* Line-Number Gutter */}
@@ -553,8 +567,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                 aria-hidden="true"
                 className="mono"
                 style={{
-                  width: 52,
-                  padding: '16px 10px 16px 6px',
+                  width: 54,
+                  padding: '18px 12px 18px 6px',
                   backgroundColor: idePalette.gutterBg,
                   borderRight: `1px solid ${idePalette.border}`,
                   color: idePalette.gutterText,
@@ -587,8 +601,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                 style={{
                   flex: 1,
                   width: '100%',
-                  minHeight: 400,
-                  padding: '16px',
+                  minHeight: 410,
+                  padding: '18px',
                   backgroundColor: 'transparent',
                   border: 'none',
                   color: idePalette.textPrimary,
@@ -601,14 +615,14 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               />
             </div>
 
-            {/* Bottom IDE Status Bar */}
+            {/* Bottom Studio Status Bar */}
             <div
               className="mono"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '7px 14px',
+                padding: '9px 18px',
                 backgroundColor: idePalette.toolbarBg,
                 borderTop: `1px solid ${idePalette.border}`,
                 fontSize: 11,
@@ -626,21 +640,22 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                 <span>UTF-8</span>
                 <span>Spaces: 2</span>
-                <span style={{ color: '#10B981' }}>Auto-Saved</span>
+                <span style={{ color: idePalette.sageValid, fontWeight: 500 }}>Auto-Saved</span>
               </div>
             </div>
           </section>
 
-          {/* Instant File Maker & Extension Selector Dock */}
+          {/* Layer 2 — Instant File Exporter & Extension Selector Dock (24px internal padding) */}
           <section
             style={{
               backgroundColor: idePalette.windowBg,
               border: `1px solid ${idePalette.border}`,
+              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 12,
-              padding: 18,
+              padding: 24,
               display: 'flex',
               flexDirection: 'column',
-              gap: 14,
+              gap: 16,
             }}
           >
             <div
@@ -653,10 +668,10 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               }}
             >
               <div>
-                <h2 style={{ fontSize: 14, fontWeight: 600, color: idePalette.textPrimary }}>
+                <h2 style={{ fontSize: 15, fontWeight: 600, color: idePalette.textPrimary }}>
                   Instant File Exporter
                 </h2>
-                <p style={{ fontSize: 12, color: idePalette.textSecondary }}>
+                <p style={{ fontSize: 12.5, color: idePalette.textSecondary, marginTop: 2 }}>
                   Choose a target extension and export the buffer directly as a local file.
                 </p>
               </div>
@@ -664,19 +679,32 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                 className="mono"
                 style={{
                   fontSize: 12,
-                  color: '#38BDF8',
-                  backgroundColor: 'rgba(56, 189, 248, 0.12)',
-                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  color: idePalette.slateAccent,
+                  backgroundColor: idePalette.slateSubtle,
+                  border: `1px solid ${idePalette.slateBorder}`,
                   borderRadius: 6,
-                  padding: '3px 9px',
+                  padding: '4px 10px',
+                  fontWeight: 500,
                 }}
               >
                 {resolvedFullFilename}
               </span>
             </div>
 
-            {/* Extension Selector Pills */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {/* Extension Selector Pills inside a Recessed Well */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                flexWrap: 'wrap',
+                padding: 6,
+                backgroundColor: idePalette.editorWellBg,
+                border: `1px solid ${idePalette.border}`,
+                boxShadow: 'var(--well-inner-shadow)',
+                borderRadius: 10,
+              }}
+            >
               {PRESET_EXTENSIONS.map((ext) => {
                 const active = selectedExt === ext;
                 return (
@@ -686,13 +714,15 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                     onClick={() => setSelectedExt(ext)}
                     className="mono"
                     style={{
-                      padding: '5px 11px',
-                      borderRadius: 999,
+                      padding: '6px 12px',
+                      borderRadius: 7,
                       fontSize: 12,
                       fontWeight: 500,
-                      backgroundColor: active ? '#3B82F6' : idePalette.toolbarBg,
-                      color: active ? '#FFFFFF' : idePalette.textSecondary,
-                      border: active ? '1px solid #3B82F6' : `1px solid ${idePalette.border}`,
+                      backgroundColor: active ? idePalette.slateSubtle : 'transparent',
+                      color: active ? idePalette.slateAccent : idePalette.textSecondary,
+                      border: active
+                        ? `1px solid ${idePalette.slateBorder}`
+                        : '1px solid transparent',
                     }}
                   >
                     {ext === 'custom' ? 'Custom...' : ext}
@@ -719,10 +749,11 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                 style={{
                   flex: 1,
                   minWidth: 180,
-                  backgroundColor: idePalette.toolbarBg,
+                  backgroundColor: idePalette.editorWellBg,
                   border: `1px solid ${idePalette.border}`,
+                  boxShadow: 'var(--well-inner-shadow)',
                   borderRadius: 8,
-                  padding: '9px 12px',
+                  padding: '10px 12px',
                   fontSize: 13,
                   color: idePalette.textPrimary,
                 }}
@@ -737,10 +768,11 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                   className="mono"
                   style={{
                     width: 110,
-                    backgroundColor: idePalette.toolbarBg,
+                    backgroundColor: idePalette.editorWellBg,
                     border: `1px solid ${idePalette.border}`,
+                    boxShadow: 'var(--well-inner-shadow)',
                     borderRadius: 8,
-                    padding: '9px 12px',
+                    padding: '10px 12px',
                     fontSize: 13,
                     color: idePalette.textPrimary,
                   }}
@@ -748,7 +780,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               )}
 
               <Button type="button" variant="primary" size="md" onClick={handleDownloadFile}>
-                <FiDownload size={14} />
+                <FiDownload size={14} strokeWidth={1.5} />
                 <span>Download {resolvedFullFilename}</span>
               </Button>
             </div>

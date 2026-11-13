@@ -29,13 +29,14 @@ import {
 } from './tempMailService';
 import * as GuerrillaAPI from './tempMailService';
 
+// Strictly Muted Organic Avatar Palette (Saturation 25%–50%, zero neon/violet/cyan)
 const AVATAR_PALETTE = [
-  { color: '#6366F1', bg: 'rgba(99, 102, 241, 0.15)', border: 'rgba(99, 102, 241, 0.4)' },
-  { color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.4)' },
-  { color: '#F43F5E', bg: 'rgba(244, 63, 94, 0.15)', border: 'rgba(244, 63, 94, 0.4)' },
-  { color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)' },
-  { color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.15)', border: 'rgba(14, 165, 233, 0.4)' },
-  { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.4)' },
+  { color: '#5B82B8', bg: 'rgba(91, 130, 184, 0.14)', border: 'rgba(91, 130, 184, 0.36)' },
+  { color: '#51A37D', bg: 'rgba(81, 163, 125, 0.14)', border: 'rgba(81, 163, 125, 0.36)' },
+  { color: '#C5954E', bg: 'rgba(197, 149, 78, 0.14)', border: 'rgba(197, 149, 78, 0.36)' },
+  { color: '#C26A58', bg: 'rgba(194, 106, 88, 0.14)', border: 'rgba(194, 106, 88, 0.36)' },
+  { color: '#9E8566', bg: 'rgba(158, 133, 102, 0.14)', border: 'rgba(158, 133, 102, 0.36)' },
+  { color: '#A35C6A', bg: 'rgba(163, 92, 106, 0.14)', border: 'rgba(163, 92, 106, 0.36)' },
 ];
 
 const getAvatarStyle = (seed: string) => {
@@ -231,17 +232,19 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       : email.mail_subject
     : 'Message Detail';
 
-  const canvasBg = isLight ? '#F2F4FB' : '#0F1322';
-  const cardBg = isLight ? '#FFFFFF' : '#171D33';
-  const cardBorder = isLight ? '#DCE2F2' : '#263052';
-  const wellBg = isLight ? '#F7F9FE' : '#0B0E1A';
-  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
-  const textSecondary = isLight ? '#475569' : '#94A3B8';
-  const textMuted = isLight ? '#64748B' : '#64748B';
+  const canvasBg = isLight ? '#F6F6F4' : '#121418';
+  const cardBg = isLight ? '#FFFFFF' : '#191C22';
+  const cardBorder = isLight ? '#E3E4E8' : '#282C35';
+  const wellBg = isLight ? '#EFEFED' : '#101216';
+  const textPrimary = isLight ? '#18191C' : '#ECEEEF';
+  const textSecondary = isLight ? '#525660' : '#9EA4B0';
+  const textMuted = isLight ? '#787D87' : '#6C727F';
+  const slateAccent = isLight ? '#426696' : '#5B82B8';
+  const terracottaDanger = isLight ? '#AA5240' : '#C26A58';
 
-  const iframeText = isLight ? '#0F172A' : '#F3F4F6';
-  const iframeBg = isLight ? '#FFFFFF' : '#0B0E1A';
-  const iframeBorder = isLight ? '#E2E8F0' : '#263052';
+  const iframeText = isLight ? '#18191C' : '#ECEEEF';
+  const iframeBg = isLight ? '#FAF9F6' : '#101216';
+  const iframeBorder = isLight ? '#E3E4E8' : '#282C35';
 
   const htmlWrapper = `<!doctype html>
 <html>
@@ -254,13 +257,13 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
         color: ${iframeText};
         background-color: ${iframeBg};
-        padding: 18px;
+        padding: 20px;
         margin: 0;
         font-size: 14px;
         line-height: 1.6;
         word-break: break-word;
       }
-      a { color: #6366F1; }
+      a { color: ${slateAccent}; }
       img { max-width: 100%; height: auto; }
       table { width: 100%; border-collapse: collapse; }
       th, td { border: 1px solid ${iframeBorder}; padding: 8px; }
@@ -278,8 +281,9 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       style={{
         backgroundColor: canvasBg,
         backgroundImage: isLight
-          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(99, 102, 241, 0.1), transparent 70%)'
-          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(99, 102, 241, 0.16), transparent 70%)',
+          ? 'radial-gradient(ellipse 75% 360px at 50% -90px, rgba(66, 102, 150, 0.05), transparent 70%), radial-gradient(rgba(24, 25, 28, 0.035) 1px, transparent 1px)'
+          : 'radial-gradient(ellipse 75% 360px at 50% -90px, rgba(91, 130, 184, 0.055), transparent 70%), radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px)',
+        backgroundSize: '100% 100%, 24px 24px',
       }}
     >
       <div className="workspace-shell">
@@ -293,11 +297,11 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 14,
+            gap: 16,
             maxWidth: 780,
             width: '100%',
             margin: '0 auto',
-            paddingBottom: 40,
+            paddingBottom: 44,
           }}
         >
           {/* Top Action Bar */}
@@ -311,7 +315,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
             }}
           >
             <Button variant="secondary" size="sm" onClick={handleBack}>
-              <FiArrowLeft size={13} />
+              <FiArrowLeft size={13} strokeWidth={1.5} />
               <span>Back to Inbox</span>
             </Button>
 
@@ -322,7 +326,11 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                   size="sm"
                   onClick={() => setShowHtml(!showHtml)}
                 >
-                  {showHtml ? <FiFileText size={13} /> : <FiCode size={13} />}
+                  {showHtml ? (
+                    <FiFileText size={13} strokeWidth={1.5} />
+                  ) : (
+                    <FiCode size={13} strokeWidth={1.5} />
+                  )}
                   <span>View {showHtml ? 'Plain Text' : 'HTML'}</span>
                 </Button>
                 <Button
@@ -330,11 +338,11 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                   size="sm"
                   onClick={() => copyToClipboard(plainTextContent)}
                 >
-                  <FiCopy size={13} />
+                  <FiCopy size={13} strokeWidth={1.5} />
                   <span>Copy Content</span>
                 </Button>
                 <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
-                  <FiTrash2 size={13} />
+                  <FiTrash2 size={13} strokeWidth={1.5} />
                   <span>Delete</span>
                 </Button>
               </div>
@@ -346,8 +354,9 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
+                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 12,
-                padding: '60px 20px',
+                padding: '64px 24px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -363,8 +372,9 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
+                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 12,
-                padding: '60px 24px',
+                padding: '64px 24px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -373,7 +383,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                 textAlign: 'center',
               }}
             >
-              <FiAlertCircle size={32} color="#F43F5E" />
+              <FiAlertCircle size={30} strokeWidth={1.5} color={terracottaDanger} />
               <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
                 Failed to load email
               </div>
@@ -383,22 +393,20 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
             </div>
           ) : (
             <>
-              {/* Metadata Panel */}
+              {/* Layer 2 — Metadata Panel (24px padding) */}
               <section
                 style={{
                   backgroundColor: cardBg,
                   border: `1px solid ${cardBorder}`,
+                  boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                   borderRadius: 12,
-                  padding: 20,
+                  padding: 24,
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 12,
-                  boxShadow: isLight
-                    ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                    : '0 14px 34px rgba(0, 0, 0, 0.32)',
+                  gap: 14,
                 }}
               >
-                <h1 style={{ fontSize: 16, fontWeight: 600, color: textPrimary }}>
+                <h1 style={{ fontSize: 16.5, fontWeight: 600, color: textPrimary }}>
                   {emailSubject || '(No subject)'}
                 </h1>
 
@@ -427,7 +435,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                         justifyContent: 'space-between',
                         gap: 12,
                         flexWrap: 'wrap',
-                        paddingTop: 12,
+                        paddingTop: 14,
                         borderTop: `1px solid ${cardBorder}`,
                       }}
                     >
@@ -435,8 +443,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                         <div
                           className="mono"
                           style={{
-                            width: 38,
-                            height: 38,
+                            width: 40,
+                            height: 40,
                             borderRadius: '50%',
                             backgroundColor: avatar.bg,
                             border: `1px solid ${avatar.border}`,
@@ -452,7 +460,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                           {initial}
                         </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 600, color: textPrimary }}>
                             {fromName || 'Unknown'}
                           </div>
                           <div
@@ -483,54 +491,63 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                 )}
               </section>
 
-              {/* Message Body Viewer */}
+              {/* Layer 2 + Layer 3 — Message Body Reading Pane */}
               <section
                 style={{
                   backgroundColor: cardBg,
                   border: `1px solid ${cardBorder}`,
+                  boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                   borderRadius: 12,
+                  padding: 12,
                   overflow: 'hidden',
-                  minHeight: 320,
-                  boxShadow: isLight
-                    ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                    : '0 14px 34px rgba(0, 0, 0, 0.32)',
+                  minHeight: 340,
                 }}
               >
-                {showHtml ? (
-                  <iframe
-                    title="Email Content"
-                    style={{
-                      width: '100%',
-                      height: 400,
-                      border: 'none',
-                      backgroundColor: wellBg,
-                      display: 'block',
-                    }}
-                    srcDoc={htmlWrapper}
-                    sandbox="allow-popups allow-popups-to-escape-sandbox"
-                  />
-                ) : (
-                  <div
-                    className="mono"
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      copyToClipboard(plainTextContent);
-                    }}
-                    style={{
-                      padding: 20,
-                      color: textPrimary,
-                      fontSize: 13,
-                      lineHeight: 1.65,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      userSelect: 'text',
-                      backgroundColor: wellBg,
-                      minHeight: 320,
-                    }}
-                  >
-                    {plainTextContent || 'No content available'}
-                  </div>
-                )}
+                <div
+                  style={{
+                    borderRadius: 9,
+                    overflow: 'hidden',
+                    border: `1px solid ${cardBorder}`,
+                    backgroundColor: wellBg,
+                    boxShadow: 'var(--well-inner-shadow)',
+                  }}
+                >
+                  {showHtml ? (
+                    <iframe
+                      title="Email Content"
+                      style={{
+                        width: '100%',
+                        height: 410,
+                        border: 'none',
+                        backgroundColor: wellBg,
+                        display: 'block',
+                      }}
+                      srcDoc={htmlWrapper}
+                      sandbox="allow-popups allow-popups-to-escape-sandbox"
+                    />
+                  ) : (
+                    <div
+                      className="mono"
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        copyToClipboard(plainTextContent);
+                      }}
+                      style={{
+                        padding: 20,
+                        color: textPrimary,
+                        fontSize: 13,
+                        lineHeight: 1.65,
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        userSelect: 'text',
+                        backgroundColor: wellBg,
+                        minHeight: 340,
+                      }}
+                    >
+                      {plainTextContent || 'No content available'}
+                    </div>
+                  )}
+                </div>
               </section>
 
               {/* Attachments */}
@@ -542,14 +559,15 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                     style={{
                       backgroundColor: cardBg,
                       border: `1px solid ${cardBorder}`,
+                      boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                       borderRadius: 12,
-                      padding: 20,
+                      padding: 24,
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 10,
+                      gap: 12,
                     }}
                   >
-                    <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: textPrimary }}>
                       Attachments ({email.attachments.length})
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -573,9 +591,10 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             gap: 12,
-                            padding: '10px 14px',
+                            padding: '11px 14px',
                             backgroundColor: wellBg,
                             border: `1px solid ${cardBorder}`,
+                            boxShadow: 'var(--well-inner-shadow)',
                             borderRadius: 8,
                             textAlign: 'left',
                           }}
@@ -588,7 +607,12 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                               minWidth: 0,
                             }}
                           >
-                            <FiPaperclip size={14} color="#6366F1" style={{ flexShrink: 0 }} />
+                            <FiPaperclip
+                              size={14}
+                              strokeWidth={1.5}
+                              color={slateAccent}
+                              style={{ flexShrink: 0 }}
+                            />
                             <div style={{ minWidth: 0 }}>
                               <div
                                 style={{
@@ -608,7 +632,12 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                               </div>
                             </div>
                           </div>
-                          <FiDownload size={14} color="#6366F1" style={{ flexShrink: 0 }} />
+                          <FiDownload
+                            size={14}
+                            strokeWidth={1.5}
+                            color={slateAccent}
+                            style={{ flexShrink: 0 }}
+                          />
                         </button>
                       ))}
                     </div>

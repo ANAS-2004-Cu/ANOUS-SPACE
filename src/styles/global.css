@@ -1,74 +1,157 @@
 :root,
 [data-theme='dark'] {
-  --bg-app: #0B0F19;
-  --bg-surface: #131929;
-  --bg-surface-hover: #182034;
-  --bg-elevated: #1C253B;
-  --bg-input: #0D121F;
-  --bg-backdrop: rgba(7, 10, 18, 0.8);
-  --border-subtle: #222B40;
-  --border-hover: #33415E;
-  --text-primary: #F3F4F6;
-  --text-secondary: #9CA3AF;
-  --text-muted: #6B7280;
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
-  --accent-subtle: rgba(59, 130, 246, 0.14);
-  --accent-tools: #3B82F6;
-  --accent-tools-subtle: rgba(59, 130, 246, 0.14);
-  --accent-games: #10B981;
-  --accent-games-subtle: rgba(16, 185, 129, 0.14);
-  --accent-projects: #8B5CF6;
-  --accent-projects-subtle: rgba(139, 92, 246, 0.14);
-  --accent-vault: #F43F5E;
-  --accent-vault-subtle: rgba(244, 63, 94, 0.14);
-  --danger: #F43F5E;
-  --danger-subtle: rgba(244, 63, 94, 0.14);
-  --success: #10B981;
-  --success-subtle: rgba(16, 185, 129, 0.14);
-  --card-top-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-  --card-shadow-hover: 0 12px 28px -10px rgba(0, 0, 0, 0.6);
-  --dot-color: rgba(255, 255, 255, 0.035);
-  --spotlight-primary: rgba(59, 130, 246, 0.09);
-  --spotlight-warm: rgba(245, 158, 11, 0.045);
-  --line-art-stroke: rgba(243, 244, 246, 0.06);
+  /* Layer 1 — Base Canvas (Deep matte charcoal with ~2% slate-warm tint) */
+  --bg-app: #121316;
+  /* Layer 2 — Elevated Cards & Containers */
+  --bg-surface: #191B20;
+  --bg-surface-hover: #1E2127;
+  --bg-elevated: #23272F;
+  /* Layer 3 — Recessed Inputs, Wells & Secondary Controls */
+  --bg-input: #101114;
+  --bg-well: #101114;
+  --bg-control: #21242B;
+  --bg-backdrop: rgba(11, 12, 15, 0.78);
+
+  /* Crisp 1px Borders */
+  --border-subtle: #282B33;
+  --border-hover: #363A45;
+  --border-strong: #434856;
+
+  /* Editorial Typography Tones */
+  --text-primary: #ECEEEF;
+  --text-secondary: #9EA4B0;
+  --text-muted: #6C727F;
+
+  /* Muted Brand & Category Accents (Saturation strictly 25%–55%) */
+  --accent: #5B82B8;
+  --accent-hover: #4E73A6;
+  --accent-subtle: rgba(91, 130, 184, 0.14);
+  --accent-border: rgba(91, 130, 184, 0.36);
+
+  /* Tools: Slate Blue (hsl(215, 40%, 54%)) */
+  --accent-tools: #5B82B8;
+  --accent-tools-subtle: rgba(91, 130, 184, 0.14);
+  --accent-tools-border: rgba(91, 130, 184, 0.36);
+
+  /* Games: Muted Sage Green (hsl(152, 34%, 48%)) */
+  --accent-games: #51A37D;
+  --accent-games-subtle: rgba(81, 163, 125, 0.14);
+  --accent-games-border: rgba(81, 163, 125, 0.36);
+
+  /* Projects: Warm Ochre / Amber (hsl(36, 48%, 54%)) */
+  --accent-projects: #C5954E;
+  --accent-projects-subtle: rgba(197, 149, 78, 0.14);
+  --accent-projects-border: rgba(197, 149, 78, 0.36);
+
+  /* Vault / Private: Earthy Terracotta (hsl(11, 45%, 55%)) */
+  --accent-vault: #C26A58;
+  --accent-vault-subtle: rgba(194, 106, 88, 0.14);
+  --accent-vault-border: rgba(194, 106, 88, 0.38);
+
+  /* Muted Semantic States */
+  --success: #51A37D;
+  --success-subtle: rgba(81, 163, 125, 0.14);
+  --success-border: rgba(81, 163, 125, 0.36);
+
+  --warning: #C5954E;
+  --warning-subtle: rgba(197, 149, 78, 0.14);
+  --warning-border: rgba(197, 149, 78, 0.36);
+
+  --danger: #C26A58;
+  --danger-subtle: rgba(194, 106, 88, 0.14);
+  --danger-border: rgba(194, 106, 88, 0.38);
+
+  /* Tactile Surface Craft (No colored glow shadows) */
+  --card-top-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.045);
+  --well-inner-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  --card-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.38);
+  --card-shadow-hover: 0 12px 26px -8px rgba(0, 0, 0, 0.55);
+
+  /* Micro-Texture & Geometric Line Art */
+  --dot-color: rgba(255, 255, 255, 0.028);
+  --grid-line-color: rgba(255, 255, 255, 0.02);
+  --ambient-top-wash: rgba(91, 130, 184, 0.045);
+  --ambient-warm-wash: rgba(197, 149, 78, 0.03);
+  --line-art-stroke: rgba(236, 238, 239, 0.055);
+
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 [data-theme='light'] {
-  --bg-app: #F4F6FA;
+  /* Layer 1 — Base Canvas (Warm off-white paper) */
+  --bg-app: #F7F7F5;
+  /* Layer 2 — Elevated Cards & Containers */
   --bg-surface: #FFFFFF;
-  --bg-surface-hover: #F8FAFC;
-  --bg-elevated: #EDF1F7;
-  --bg-input: #EEF2F8;
-  --bg-backdrop: rgba(15, 23, 42, 0.45);
-  --border-subtle: #DCE2EE;
-  --border-hover: #C4CEE0;
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #64748B;
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
-  --accent-subtle: rgba(59, 130, 246, 0.1);
-  --accent-tools: #3B82F6;
-  --accent-tools-subtle: rgba(59, 130, 246, 0.1);
-  --accent-games: #10B981;
-  --accent-games-subtle: rgba(16, 185, 129, 0.1);
-  --accent-projects: #8B5CF6;
-  --accent-projects-subtle: rgba(139, 92, 246, 0.1);
-  --accent-vault: #F43F5E;
-  --accent-vault-subtle: rgba(244, 63, 94, 0.1);
-  --danger: #E11D48;
-  --danger-subtle: rgba(225, 29, 72, 0.08);
-  --success: #059669;
-  --success-subtle: rgba(5, 150, 105, 0.1);
+  --bg-surface-hover: #FAF9F6;
+  --bg-elevated: #F2F1EE;
+  /* Layer 3 — Recessed Inputs, Wells & Secondary Controls */
+  --bg-input: #EFEFED;
+  --bg-well: #EFEFED;
+  --bg-control: #E8E7E3;
+  --bg-backdrop: rgba(24, 25, 28, 0.42);
+
+  /* Crisp 1px Borders */
+  --border-subtle: #E4E4E7;
+  --border-hover: #CFCFD6;
+  --border-strong: #B8B8C2;
+
+  /* Editorial Typography Tones */
+  --text-primary: #18191C;
+  --text-secondary: #525660;
+  --text-muted: #787D87;
+
+  /* Muted Brand & Category Accents (Saturation strictly 25%–55%) */
+  --accent: #426696;
+  --accent-hover: #365580;
+  --accent-subtle: rgba(66, 102, 150, 0.1);
+  --accent-border: rgba(66, 102, 150, 0.3);
+
+  /* Tools: Deep Slate Blue (hsl(214, 39%, 42%)) */
+  --accent-tools: #426696;
+  --accent-tools-subtle: rgba(66, 102, 150, 0.1);
+  --accent-tools-border: rgba(66, 102, 150, 0.3);
+
+  /* Games: Muted Forest Sage (hsl(152, 36%, 39%)) */
+  --accent-games: #3F8765;
+  --accent-games-subtle: rgba(63, 135, 101, 0.1);
+  --accent-games-border: rgba(63, 135, 101, 0.3);
+
+  /* Projects: Warm Ochre (hsl(35, 48%, 43%)) */
+  --accent-projects: #A37339;
+  --accent-projects-subtle: rgba(163, 115, 57, 0.1);
+  --accent-projects-border: rgba(163, 115, 57, 0.3);
+
+  /* Vault / Private: Earthy Terracotta (hsl(11, 45%, 46%)) */
+  --accent-vault: #AA5240;
+  --accent-vault-subtle: rgba(170, 82, 64, 0.1);
+  --accent-vault-border: rgba(170, 82, 64, 0.32);
+
+  /* Muted Semantic States */
+  --success: #3F8765;
+  --success-subtle: rgba(63, 135, 101, 0.1);
+  --success-border: rgba(63, 135, 101, 0.3);
+
+  --warning: #A37339;
+  --warning-subtle: rgba(163, 115, 57, 0.1);
+  --warning-border: rgba(163, 115, 57, 0.3);
+
+  --danger: #AA5240;
+  --danger-subtle: rgba(170, 82, 64, 0.1);
+  --danger-border: rgba(170, 82, 64, 0.32);
+
+  /* Tactile Surface Craft */
   --card-top-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-  --card-shadow-hover: 0 12px 26px -8px rgba(15, 23, 42, 0.09);
-  --dot-color: rgba(15, 23, 42, 0.045);
-  --spotlight-primary: rgba(59, 130, 246, 0.07);
-  --spotlight-warm: rgba(245, 158, 11, 0.04);
-  --line-art-stroke: rgba(15, 23, 42, 0.06);
+  --well-inner-shadow: inset 0 1px 2px rgba(24, 25, 28, 0.05);
+  --card-shadow: 0 2px 8px -2px rgba(24, 25, 28, 0.05);
+  --card-shadow-hover: 0 10px 22px -6px rgba(24, 25, 28, 0.09);
+
+  /* Micro-Texture & Geometric Line Art */
+  --dot-color: rgba(24, 25, 28, 0.04);
+  --grid-line-color: rgba(24, 25, 28, 0.025);
+  --ambient-top-wash: rgba(66, 102, 150, 0.04);
+  --ambient-warm-wash: rgba(163, 115, 57, 0.03);
+  --line-art-stroke: rgba(24, 25, 28, 0.06);
 }
 
 *,
@@ -86,18 +169,18 @@ body,
   min-height: 100vh;
   background-color: var(--bg-app);
   background-image:
-    radial-gradient(ellipse 75% 420px at 35% -90px, var(--spotlight-primary), transparent 75%),
-    radial-gradient(ellipse 55% 360px at 78% -60px, var(--spotlight-warm), transparent 75%),
+    radial-gradient(ellipse 75% 400px at 30% -100px, var(--ambient-top-wash), transparent 75%),
+    radial-gradient(ellipse 55% 340px at 78% -80px, var(--ambient-warm-wash), transparent 75%),
     radial-gradient(var(--dot-color) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 22px 22px;
+  background-size: 100% 100%, 100% 100%, 24px 24px;
   background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.22s ease, color 0.22s ease;
 }
 
 button {
@@ -107,20 +190,20 @@ button {
   background: none;
   color: inherit;
   transition:
-    background-color 0.14s ease,
-    border-color 0.14s ease,
-    color 0.14s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
     transform 0.12s cubic-bezier(0.2, 0, 0, 1),
-    box-shadow 0.14s ease;
+    box-shadow 0.15s ease;
 }
 
 button:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: scale(0.985);
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.52;
 }
 
 input,
@@ -129,6 +212,13 @@ select {
   font-family: inherit;
   color: var(--text-primary);
   outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent) !important;
 }
 
 a {
@@ -138,15 +228,20 @@ a {
 
 .mono {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Shell container */
 .workspace-shell {
   width: 100%;
-  max-width: 1080px;
+  max-width: 1100px;
   margin: 0 auto;
   min-height: 100vh;
-  padding: 0 20px;
+  padding: 0 24px;
   display: flex;
   flex-direction: column;
 }
@@ -158,11 +253,27 @@ a {
   transition: background-color 0.35s ease, background-image 0.35s ease;
 }
 
+/* Reusable 3-Layer Surface Primitives */
+.surface-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--card-top-highlight), var(--card-shadow);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.recessed-well {
+  background-color: var(--bg-well);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--well-inner-shadow);
+  border-radius: 9px;
+}
+
 /* Bento Grid */
 .bento-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 16px;
   width: 100%;
 }
 
@@ -171,18 +282,18 @@ a {
   overflow: hidden;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  box-shadow: var(--card-top-highlight);
-  border-radius: 11px;
-  padding: 18px;
+  box-shadow: var(--card-top-highlight), var(--card-shadow);
+  border-radius: 12px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 168px;
+  min-height: 188px;
   transition:
-    border-color 0.16s ease,
-    background-color 0.16s ease,
-    transform 0.16s cubic-bezier(0.2, 0, 0, 1),
-    box-shadow 0.16s ease;
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    transform 0.18s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.18s ease;
   text-align: left;
   cursor: pointer;
 }
@@ -218,13 +329,13 @@ a {
 
 .bento-card .card-artwork {
   position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 112px;
-  height: 112px;
+  right: -4px;
+  bottom: -4px;
+  width: 122px;
+  height: 122px;
   pointer-events: none;
   color: var(--line-art-stroke);
-  transition: color 0.18s ease, transform 0.22s ease;
+  transition: color 0.2s ease, transform 0.24s ease;
 }
 
 .bento-card:hover .card-artwork {
@@ -244,32 +355,43 @@ a {
 .recent-chip {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  box-shadow: var(--card-top-highlight);
-  border-radius: 8px;
+  box-shadow: var(--card-top-highlight), var(--card-shadow);
+  border-radius: 10px;
   transition:
-    border-color 0.15s ease,
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    transform 0.16s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.16s ease;
 }
 
 .recent-chip:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  background-color: var(--bg-surface-hover);
   border-color: var(--border-hover);
   box-shadow: var(--card-top-highlight), var(--card-shadow-hover);
 }
 
+.recent-chip:active {
+  transform: scale(0.985);
+}
+
 .kbd-badge {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: var(--text-muted);
-  background-color: var(--bg-app);
+  background-color: var(--bg-well);
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  box-shadow: var(--well-inner-shadow);
+  border-radius: 5px;
   padding: 2px 6px;
   line-height: 1.2;
 }
 
 @media (max-width: 640px) {
+  .workspace-shell {
+    padding: 0 16px;
+  }
   .hide-on-mobile {
     display: none !important;
   }
@@ -286,11 +408,11 @@ a {
 
 @keyframes markerPop {
   0% {
-    transform: scale(0.55);
-    opacity: 0.3;
+    transform: scale(0.6);
+    opacity: 0.35;
   }
   70% {
-    transform: scale(1.08);
+    transform: scale(1.06);
     opacity: 1;
   }
   100% {
@@ -301,13 +423,16 @@ a {
 
 @keyframes statusPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55);
+    opacity: 1;
+    transform: scale(1);
   }
-  70% {
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  50% {
+    opacity: 0.55;
+    transform: scale(0.92);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -320,10 +445,10 @@ a {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #10B981;
+  background-color: var(--success);
   display: inline-block;
   flex-shrink: 0;
-  animation: statusPulse 2s infinite;
+  animation: statusPulse 2.4s ease-in-out infinite;
 }
 
 .spinner {

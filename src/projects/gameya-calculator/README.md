@@ -6,7 +6,7 @@
 
 ## Overview
 
-**حاسبة استثمار الجمعيات** is a Private-Vault-guarded financial simulation micro-app built in RTL Arabic (`dir="rtl"`, Google Font `Cairo`) with a dedicated **Fintech Ledger** atmosphere (`#0E1318` deep slate-emerald canvas and `#151D24` cards in Dark Mode; `#F4F7F6` canvas and `#FFFFFF` cards in Light Mode).
+**حاسبة استثمار الجمعيات** is a Private-Vault-guarded financial simulation micro-app built in RTL Arabic (`dir="rtl"`, Google Font `Cairo`) with a dedicated **Fintech Ledger** atmosphere (`#111413` deep forest-slate canvas and `#171C1A` cards in Dark Mode; `#F5F7F5` canvas and `#FFFFFF` cards in Light Mode), with sage / ochre / terracotta semantic accents.
 
 It computes the exact real-time net profit (`صافي الربح النهائي في نهاية الجمعية`) of investing a rotating savings association (*Gam'eya* / جمعية) payout into a monthly-compounded yield fund (`AnnualRate / 12`), supporting both **Full Payout (`قبض كامل - 100%`)** and **Split Payout (`قبض مقسم - 50% + 50%`, where second-half months `<= firstHalfMonth` are disabled and auto-adjusted)**.
 

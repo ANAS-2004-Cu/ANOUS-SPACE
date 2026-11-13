@@ -6,9 +6,9 @@
 
 ## Overview
 
-**Tic-Tac-Toe Arena** pairs the traditional **Classic 3x3** game with a draw-proof **3-Marker Queue** variant inside a warm charcoal-slate **Tactile Board Game Arena** (`#13141B` canvas and `#1C1F2B` raised tabletop in Dark Mode; `#F4F4F7` canvas and `#FFFFFF` tabletop in Light Mode).
+**Tic-Tac-Toe Arena** pairs the traditional **Classic 3x3** game with a draw-proof **3-Marker Queue** variant inside a warm charcoal **Tactile Board Game Arena** (`#121316` canvas and `#191B20` raised tabletop in Dark Mode; `#F6F6F3` canvas and `#FFFFFF` tabletop in Light Mode).
 
-Game cells sit inside a recessed well (`#0E1017` dark / `#E6E9F2` light) and render bold Sky-Blue `X` (`#38BDF8`) vs. Warm Coral-Orange `O` (`#FB923C`) markers with a `.marker-pop` keyframe scale animation (`@keyframes markerPop`) and Emerald (`#10B981`) winning-line highlights across the 8 standard `WINNING_LINES`.
+Game cells sit inside a recessed well (`#101114` dark / `#EEEEEC` light) and render Slate-Blue `X` (`#5B82B8`) vs. Ochre-Terracotta `O` (`#C48157`) markers with a `.marker-pop` keyframe scale animation (`@keyframes markerPop`) and Sage (`#51A37D`) winning-line highlights across the 8 standard `WINNING_LINES`.
 
 > [!TIP]
 > **Snapshot Isolation, FIFO 3-Marker Eviction & AI Heuristics**:

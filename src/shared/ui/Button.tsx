@@ -18,9 +18,9 @@ export const Button: React.FC<ButtonProps> = ({
   ...rest
 }) => {
   const sizeStyles: Record<'sm' | 'md' | 'lg', React.CSSProperties> = {
-    sm: { padding: '5px 10px', fontSize: 12, borderRadius: 6 },
-    md: { padding: '8px 14px', fontSize: 13, borderRadius: 7 },
-    lg: { padding: '10px 18px', fontSize: 14, borderRadius: 8 },
+    sm: { padding: '6px 11px', fontSize: 12, borderRadius: 7 },
+    md: { padding: '8px 14px', fontSize: 13, borderRadius: 8 },
+    lg: { padding: '11px 18px', fontSize: 14, borderRadius: 9 },
   };
 
   const variantStyles: Record<'primary' | 'secondary' | 'ghost' | 'danger', React.CSSProperties> = {
@@ -28,9 +28,10 @@ export const Button: React.FC<ButtonProps> = ({
       backgroundColor: 'var(--accent)',
       color: '#FFFFFF',
       border: '1px solid var(--accent)',
+      boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.16)',
     },
     secondary: {
-      backgroundColor: 'var(--bg-surface)',
+      backgroundColor: 'var(--bg-control)',
       color: 'var(--text-primary)',
       border: '1px solid var(--border-subtle)',
       boxShadow: 'var(--card-top-highlight)',
@@ -43,7 +44,7 @@ export const Button: React.FC<ButtonProps> = ({
     danger: {
       backgroundColor: 'var(--danger-subtle)',
       color: 'var(--danger)',
-      border: '1px solid rgba(239, 68, 68, 0.35)',
+      border: '1px solid var(--danger-border)',
     },
   };
 

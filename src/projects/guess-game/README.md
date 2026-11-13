@@ -11,13 +11,13 @@
 > [!NOTE]
 > **Thermal Zone State Machine (`ZONE_THEME`) & Progress Telemetry**:
 > Every submitted coordinate updates `radarZone` and smoothly transitions the full-viewport `.route-theme-canvas` background, card borders, target readout box, and directional telemetry pills across five distinct states:
-> - **`cool` (`distance > 25` or Standby)**: Deep Ocean Slate (`#0C1624` dark / `#EFF6FF` light) with Sky-Blue (`#38BDF8`) accent and badge `RADAR STANDBY` or `COLD SIGNAL (> 25)`.
-> - **`warm` (`10 < distance <= 25`)**: Warm Amber Slate (`#1F1712` dark / `#FFFBEB` light) with Amber (`#F59E0B`) accent and badge `WARM PROXIMITY (≤ 25)`.
-> - **`hot` (`distance <= 10`)**: Fiery Terracotta (`#241313` dark / `#FEF2F2` light) with Rose-Coral (`#FB7185`) accent, badge `HOT — WITHIN 10 UNITS`, and proximity status (`Close — Too High (Within 10)` or `Close — Too Low (Within 10)`).
-> - **`victory` (`perfect === true`)**: Rich Emerald (`#0D211A` dark / `#ECFDF5` light) with Emerald (`#10B981`) accent, badge `TARGET LOCKED`, and full target reveal.
-> - **`limit` (`limit === true` or `tries >= 10`)**: Crimson Slate (`#221115` dark / `#FEF2F2` light) with Rose (`#F43F5E`) accent, badge `ATTEMPTS EXHAUSTED`, and target reveal.
+> - **`cool` (`distance > 25` or Standby)**: Cool Slate (`#111419` dark / `#F5F7F9` light) with Slate-Blue (`#5B82B8`) accent and badge `RADAR STANDBY` or `COLD SIGNAL (> 25)`.
+> - **`warm` (`10 < distance <= 25`)**: Warm Umber (`#161411` dark / `#F9F7F2` light) with Ochre (`#C5954E`) accent and badge `WARM PROXIMITY (≤ 25)`.
+> - **`hot` (`distance <= 10`)**: Clay (`#171211` dark / `#F9F4F2` light) with Terracotta (`#C26A58`) accent, badge `HOT — WITHIN 10 UNITS`, and proximity status (`Close — Too High (Within 10)` or `Close — Too Low (Within 10)`).
+> - **`victory` (`perfect === true`)**: Forest (`#111614` dark / `#F4F8F5` light) with Sage (`#51A37D`) accent, badge `TARGET LOCKED`, and full target reveal.
+> - **`limit` (`limit === true` or `tries >= 10`)**: Oxblood Slate (`#161213` dark / `#F8F4F4` light) with Burgundy-Terracotta (`#A85751`) accent, badge `ATTEMPTS EXHAUSTED`, and target reveal.
 >
-> The **Remaining Radar Sweeps** progress bar shifts color dynamically based on `remaining / MAX_TRIES`: Emerald (`#10B981`) above `50%`, Amber (`#F59E0B`) above `25%`, and Rose (`#F43F5E`) at or below `25%`.
+> The **Remaining Radar Sweeps** progress bar shifts color dynamically based on `remaining / MAX_TRIES`: Sage (`#51A37D`) above `50%`, Ochre (`#C5954E`) above `25%`, and Terracotta (`#C26A58`) at or below `25%`.
 
 ---
 

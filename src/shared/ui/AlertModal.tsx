@@ -48,8 +48,8 @@ export const AlertModal: React.FC<AlertModalProps> = ({
           backgroundColor: 'var(--bg-surface)',
           border: '1px solid var(--border-subtle)',
           boxShadow: 'var(--card-top-highlight), var(--card-shadow-hover)',
-          borderRadius: 10,
-          padding: 20,
+          borderRadius: 12,
+          padding: 24,
           display: 'flex',
           flexDirection: 'column',
           gap: 12,
@@ -62,7 +62,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
             style={{
               fontSize: 13,
               color: 'var(--text-secondary)',
-              lineHeight: 1.5,
+              lineHeight: 1.55,
               whiteSpace: 'pre-wrap',
             }}
           >

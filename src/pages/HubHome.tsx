@@ -28,44 +28,44 @@ const CATEGORY_ACCENT: Record<
   { color: string; subtleBg: string; borderTint: string }
 > = {
   Tools: {
-    color: '#3B82F6',
-    subtleBg: 'rgba(59, 130, 246, 0.14)',
-    borderTint: 'rgba(59, 130, 246, 0.35)',
+    color: 'var(--accent-tools)',
+    subtleBg: 'var(--accent-tools-subtle)',
+    borderTint: 'var(--accent-tools-border)',
   },
   Games: {
-    color: '#10B981',
-    subtleBg: 'rgba(16, 185, 129, 0.14)',
-    borderTint: 'rgba(16, 185, 129, 0.35)',
+    color: 'var(--accent-games)',
+    subtleBg: 'var(--accent-games-subtle)',
+    borderTint: 'var(--accent-games-border)',
   },
   Projects: {
-    color: '#8B5CF6',
-    subtleBg: 'rgba(139, 92, 246, 0.14)',
-    borderTint: 'rgba(139, 92, 246, 0.35)',
+    color: 'var(--accent-projects)',
+    subtleBg: 'var(--accent-projects-subtle)',
+    borderTint: 'var(--accent-projects-border)',
   },
   Private: {
-    color: '#F43F5E',
-    subtleBg: 'rgba(244, 63, 94, 0.14)',
-    borderTint: 'rgba(244, 63, 94, 0.35)',
+    color: 'var(--accent-vault)',
+    subtleBg: 'var(--accent-vault-subtle)',
+    borderTint: 'var(--accent-vault-border)',
   },
 };
 
 function renderProjectIcon(item: ProjectItem, color: string) {
   switch (item.id) {
     case 'scratchpad':
-      return <FiCode size={15} color={color} />;
+      return <FiCode size={15} strokeWidth={1.5} color={color} />;
     case 'temp-mail':
-      return <FiMail size={15} color={color} />;
+      return <FiMail size={15} strokeWidth={1.5} color={color} />;
     case 'tic-tac-toe':
-      return <FiGrid size={15} color={color} />;
+      return <FiGrid size={15} strokeWidth={1.5} color={color} />;
     case 'guess-game':
-      return <FiHash size={15} color={color} />;
+      return <FiHash size={15} strokeWidth={1.5} color={color} />;
     case 'ecommerce-showcase':
-      return <FiLayers size={15} color={color} />;
+      return <FiLayers size={15} strokeWidth={1.5} color={color} />;
     default:
       return item.category === 'Private' ? (
-        <FiLock size={15} color={color} />
+        <FiLock size={15} strokeWidth={1.5} color={color} />
       ) : (
-        <FiLayers size={15} color={color} />
+        <FiLayers size={15} strokeWidth={1.5} color={color} />
       );
   }
 }
@@ -79,7 +79,7 @@ function renderCardArtwork(id: string) {
           viewBox="0 0 120 120"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
@@ -95,7 +95,7 @@ function renderCardArtwork(id: string) {
           viewBox="0 0 120 120"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
@@ -112,7 +112,7 @@ function renderCardArtwork(id: string) {
           viewBox="0 0 120 120"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.5"
           strokeLinecap="round"
         >
           <line x1="48" y1="24" x2="48" y2="96" />
@@ -130,7 +130,7 @@ function renderCardArtwork(id: string) {
           viewBox="0 0 120 120"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.5"
           strokeLinecap="round"
         >
           <line x1="24" y1="86" x2="96" y2="86" />
@@ -149,7 +149,7 @@ function renderCardArtwork(id: string) {
           viewBox="0 0 120 120"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
@@ -257,24 +257,25 @@ export const HubHome: React.FC<HubHomeProps> = ({
     <div className="workspace-shell">
       <AppHeader onOpenCommandPalette={onOpenCommandPalette} />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* Clean Hero Section: Bold Title + Single Punchy Subtitle */}
-        <section style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 28 }}>
+        {/* Clean Editorial Hero: Bold Title + Single Punchy Subtitle */}
+        <section style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <h1
             style={{
-              fontSize: 'clamp(20px, 2.8vw, 26px)',
+              fontSize: 'clamp(22px, 3vw, 28px)',
               fontWeight: 600,
               color: 'var(--text-primary)',
-              letterSpacing: '-0.02em',
+              letterSpacing: '-0.025em',
+              lineHeight: 1.25,
             }}
           >
             Personal Engineering Workspace &amp; Micro-Tools
           </h1>
           <p
             style={{
-              fontSize: 14,
+              fontSize: 14.5,
               color: 'var(--text-secondary)',
-              lineHeight: 1.55,
+              lineHeight: 1.6,
             }}
           >
             Self-contained developer utilities, tactical game prototypes, and production showcases
@@ -284,27 +285,27 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
         {/* Recent Bar (Up to 3 recently opened internal tools) */}
         {recentTools.length > 0 && (
-          <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
                 fontSize: 11,
-                fontWeight: 500,
+                fontWeight: 600,
                 color: 'var(--text-muted)',
                 textTransform: 'uppercase',
-                letterSpacing: '0.06em',
+                letterSpacing: '0.07em',
               }}
             >
-              <FiClock size={12} />
+              <FiClock size={12} strokeWidth={1.5} />
               <span>Recent</span>
             </div>
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                gap: 10,
+                gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+                gap: 12,
               }}
             >
               {recentTools.map((tool) => {
@@ -319,7 +320,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       gap: 10,
-                      padding: '10px 12px',
+                      padding: '12px 14px',
                       textAlign: 'left',
                     }}
                   >
@@ -333,9 +334,9 @@ export const HubHome: React.FC<HubHomeProps> = ({
                     >
                       <span
                         style={{
-                          width: 26,
-                          height: 26,
-                          borderRadius: 6,
+                          width: 28,
+                          height: 28,
+                          borderRadius: 7,
                           backgroundColor: accent.subtleBg,
                           border: `1px solid ${accent.borderTint}`,
                           display: 'inline-flex',
@@ -366,6 +367,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
                     </div>
                     <FiArrowRight
                       size={13}
+                      strokeWidth={1.5}
                       color="var(--text-secondary)"
                       style={{ flexShrink: 0 }}
                     />
@@ -376,43 +378,59 @@ export const HubHome: React.FC<HubHomeProps> = ({
           </section>
         )}
 
-        {/* Category Tabs */}
+        {/* Category Filter Bar with Recessed Segmented Well */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             borderBottom: '1px solid var(--border-subtle)',
-            paddingBottom: 12,
+            paddingBottom: 14,
             gap: 12,
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: 4,
+              backgroundColor: 'var(--bg-well)',
+              border: '1px solid var(--border-subtle)',
+              boxShadow: 'var(--well-inner-shadow)',
+              borderRadius: 9,
+              flexWrap: 'wrap',
+            }}
+          >
             {tabs.map((tab) => {
               const active = activeTab === tab;
-              const tabColor =
+              const tabAccent =
                 tab === 'Private'
-                  ? '#F43F5E'
+                  ? CATEGORY_ACCENT.Private
                   : tab === 'Tools'
-                  ? '#3B82F6'
+                  ? CATEGORY_ACCENT.Tools
                   : tab === 'Games'
-                  ? '#10B981'
+                  ? CATEGORY_ACCENT.Games
                   : tab === 'Projects'
-                  ? '#8B5CF6'
-                  : 'var(--accent)';
+                  ? CATEGORY_ACCENT.Projects
+                  : {
+                      color: 'var(--accent)',
+                      subtleBg: 'var(--accent-subtle)',
+                      borderTint: 'var(--accent-border)',
+                    };
               return (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   style={{
-                    padding: '6px 12px',
+                    padding: '6px 13px',
                     borderRadius: 6,
-                    fontSize: 13,
+                    fontSize: 12.5,
                     fontWeight: 500,
-                    backgroundColor: active ? tabColor : 'transparent',
-                    color: active ? '#FFFFFF' : 'var(--text-secondary)',
-                    border: active ? `1px solid ${tabColor}` : '1px solid transparent',
+                    backgroundColor: active ? tabAccent.subtleBg : 'transparent',
+                    color: active ? tabAccent.color : 'var(--text-secondary)',
+                    border: active ? `1px solid ${tabAccent.borderTint}` : '1px solid transparent',
                   }}
                 >
                   {tab}
@@ -432,8 +450,8 @@ export const HubHome: React.FC<HubHomeProps> = ({
             style={{
               backgroundColor: 'var(--bg-surface)',
               border: '1px solid var(--border-subtle)',
-              borderRadius: 10,
-              padding: '36px 20px',
+              borderRadius: 12,
+              padding: '40px 24px',
               textAlign: 'center',
               color: 'var(--text-muted)',
               fontSize: 13,
@@ -478,10 +496,11 @@ export const HubHome: React.FC<HubHomeProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          padding: '7px 10px',
-                          backgroundColor: 'var(--bg-app)',
+                          padding: '8px 12px',
+                          backgroundColor: 'var(--bg-well)',
                           border: '1px solid var(--border-subtle)',
-                          borderRadius: 7,
+                          boxShadow: 'var(--well-inner-shadow)',
+                          borderRadius: 8,
                           marginBottom: 4,
                         }}
                       >
@@ -529,8 +548,8 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span
                           style={{
-                            width: 28,
-                            height: 28,
+                            width: 30,
+                            height: 30,
                             borderRadius: 7,
                             backgroundColor: accent.subtleBg,
                             border: `1px solid ${accent.borderTint}`,
@@ -549,7 +568,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
                             backgroundColor: accent.subtleBg,
                             border: `1px solid ${accent.borderTint}`,
                             borderRadius: 5,
-                            padding: '2px 7px',
+                            padding: '2px 8px',
                             fontWeight: 500,
                           }}
                         >
@@ -574,10 +593,11 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
                     <h2
                       style={{
-                        fontSize: 15,
+                        fontSize: 15.5,
                         fontWeight: 600,
                         color: 'var(--text-primary)',
                         marginTop: 2,
+                        letterSpacing: '-0.01em',
                       }}
                     >
                       {item.title}
@@ -585,7 +605,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
                     <p
                       style={{
-                        fontSize: 13,
+                        fontSize: 13.5,
                         color: 'var(--text-secondary)',
                         lineHeight: 1.55,
                         maxWidth: isShowcaseSpan ? '90%' : undefined,
@@ -603,20 +623,26 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       width: '100%',
-                      marginTop: 18,
-                      paddingTop: 12,
+                      marginTop: 20,
+                      paddingTop: 14,
                       borderTop: '1px solid var(--border-subtle)',
-                      fontSize: 12,
+                      fontSize: 12.5,
                       fontWeight: 500,
                       color: isExternal ? accent.color : 'var(--text-primary)',
                     }}
                   >
                     <span>{isExternal ? 'Live Demo' : 'Open Workspace'}</span>
                     {isExternal ? (
-                      <FiArrowUpRight size={14} className="card-arrow" color={accent.color} />
+                      <FiArrowUpRight
+                        size={14}
+                        strokeWidth={1.5}
+                        className="card-arrow"
+                        color={accent.color}
+                      />
                     ) : (
                       <FiArrowRight
                         size={14}
+                        strokeWidth={1.5}
                         className="card-arrow-right"
                         color="var(--text-secondary)"
                       />
@@ -631,8 +657,8 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
       <footer
         style={{
-          marginTop: 48,
-          padding: '20px 0',
+          marginTop: 52,
+          padding: '22px 0',
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',

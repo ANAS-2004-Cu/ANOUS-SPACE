@@ -21,13 +21,14 @@ import {
   deleteMaildropMessage,
 } from './tempMailService';
 
+// Strictly Muted Organic Avatar Palette (Saturation 25%–50%, zero neon/violet/cyan)
 const AVATAR_PALETTE = [
-  { color: '#6366F1', bg: 'rgba(99, 102, 241, 0.15)', border: 'rgba(99, 102, 241, 0.4)' },
-  { color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.4)' },
-  { color: '#F43F5E', bg: 'rgba(244, 63, 94, 0.15)', border: 'rgba(244, 63, 94, 0.4)' },
-  { color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)' },
-  { color: '#0EA5E9', bg: 'rgba(14, 165, 233, 0.15)', border: 'rgba(14, 165, 233, 0.4)' },
-  { color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.15)', border: 'rgba(139, 92, 246, 0.4)' },
+  { color: '#5B82B8', bg: 'rgba(91, 130, 184, 0.14)', border: 'rgba(91, 130, 184, 0.36)' },
+  { color: '#51A37D', bg: 'rgba(81, 163, 125, 0.14)', border: 'rgba(81, 163, 125, 0.36)' },
+  { color: '#C5954E', bg: 'rgba(197, 149, 78, 0.14)', border: 'rgba(197, 149, 78, 0.36)' },
+  { color: '#C26A58', bg: 'rgba(194, 106, 88, 0.14)', border: 'rgba(194, 106, 88, 0.36)' },
+  { color: '#9E8566', bg: 'rgba(158, 133, 102, 0.14)', border: 'rgba(158, 133, 102, 0.36)' },
+  { color: '#A35C6A', bg: 'rgba(163, 92, 106, 0.14)', border: 'rgba(163, 92, 106, 0.36)' },
 ];
 
 const getAvatarStyle = (seed: string) => {
@@ -60,25 +61,25 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
         return {
           title: 'TempMail.lol Inbox',
           label: 'TempMail.lol',
-          accent: '#F59E0B',
-          bg: 'rgba(245, 158, 11, 0.14)',
-          border: 'rgba(245, 158, 11, 0.42)',
+          accent: '#C5954E',
+          bg: 'rgba(197, 149, 78, 0.14)',
+          border: 'rgba(197, 149, 78, 0.38)',
         };
       case TempMailProvider.Maildrop:
         return {
           title: 'Maildrop.cc Inbox',
           label: 'Maildrop.cc',
-          accent: '#06B6D4',
-          bg: 'rgba(6, 182, 212, 0.14)',
-          border: 'rgba(6, 182, 212, 0.42)',
+          accent: '#C26A58',
+          bg: 'rgba(194, 106, 88, 0.14)',
+          border: 'rgba(194, 106, 88, 0.38)',
         };
       default:
         return {
           title: 'Mail.TM Inbox',
           label: 'Mail.TM',
-          accent: '#6366F1',
-          bg: 'rgba(99, 102, 241, 0.14)',
-          border: 'rgba(99, 102, 241, 0.42)',
+          accent: '#5B82B8',
+          bg: 'rgba(91, 130, 184, 0.14)',
+          border: 'rgba(91, 130, 184, 0.38)',
         };
     }
   };
@@ -208,12 +209,14 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
     });
   };
 
-  const canvasBg = isLight ? '#F2F4FB' : '#0F1322';
-  const cardBg = isLight ? '#FFFFFF' : '#171D33';
-  const cardBorder = isLight ? '#DCE2F2' : '#263052';
-  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
-  const textSecondary = isLight ? '#475569' : '#94A3B8';
-  const textMuted = isLight ? '#64748B' : '#64748B';
+  const canvasBg = isLight ? '#F6F6F4' : '#121418';
+  const cardBg = isLight ? '#FFFFFF' : '#191C22';
+  const cardBorder = isLight ? '#E3E4E8' : '#282C35';
+  const wellBg = isLight ? '#EFEFED' : '#101216';
+  const textPrimary = isLight ? '#18191C' : '#ECEEEF';
+  const textSecondary = isLight ? '#525660' : '#9EA4B0';
+  const textMuted = isLight ? '#787D87' : '#6C727F';
+  const terracottaDanger = isLight ? '#AA5240' : '#C26A58';
 
   return (
     <div
@@ -221,8 +224,9 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
       style={{
         backgroundColor: canvasBg,
         backgroundImage: isLight
-          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(99, 102, 241, 0.1), transparent 70%)'
-          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(99, 102, 241, 0.16), transparent 70%)',
+          ? 'radial-gradient(ellipse 75% 360px at 50% -90px, rgba(66, 102, 150, 0.05), transparent 70%), radial-gradient(rgba(24, 25, 28, 0.035) 1px, transparent 1px)'
+          : 'radial-gradient(ellipse 75% 360px at 50% -90px, rgba(91, 130, 184, 0.055), transparent 70%), radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px)',
+        backgroundSize: '100% 100%, 24px 24px',
       }}
     >
       <div className="workspace-shell">
@@ -233,14 +237,14 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 14,
+            gap: 16,
             maxWidth: 760,
             width: '100%',
             margin: '0 auto',
-            paddingBottom: 40,
+            paddingBottom: 44,
           }}
         >
-          {/* Toolbar */}
+          {/* Layer 2 — Inbox Header Toolbar */}
           <div
             style={{
               display: 'flex',
@@ -249,12 +253,10 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
               gap: 12,
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
+              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 12,
-              padding: '12px 16px',
+              padding: '14px 20px',
               flexWrap: 'wrap',
-              boxShadow: isLight
-                ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                : '0 14px 34px rgba(0, 0, 0, 0.32)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -264,7 +266,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                 onClick={() => navigate('/temp-mail')}
                 aria-label="Back to Temp-Mail"
               >
-                <FiArrowLeft size={13} />
+                <FiArrowLeft size={13} strokeWidth={1.5} />
                 <span>Providers</span>
               </Button>
               <span
@@ -275,8 +277,8 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                   backgroundColor: providerBadge.bg,
                   border: `1px solid ${providerBadge.border}`,
                   borderRadius: 999,
-                  padding: '2px 8px',
-                  fontWeight: 600,
+                  padding: '2px 9px',
+                  fontWeight: 500,
                   flexShrink: 0,
                 }}
               >
@@ -288,6 +290,10 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    backgroundColor: wellBg,
+                    border: `1px solid ${cardBorder}`,
                     minWidth: 0,
                   }}
                 >
@@ -295,7 +301,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                   <span
                     className="mono"
                     style={{
-                      fontSize: 13,
+                      fontSize: 12.5,
                       color: textPrimary,
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
@@ -317,6 +323,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
             >
               <FiRefreshCw
                 size={13}
+                strokeWidth={1.5}
                 style={refreshing ? { animation: 'spin 0.8s linear infinite' } : undefined}
               />
               <span>Refresh</span>
@@ -329,8 +336,9 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
+                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 12,
-                padding: '60px 20px',
+                padding: '64px 24px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -346,8 +354,9 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
               style={{
                 backgroundColor: cardBg,
                 border: `1px solid ${cardBorder}`,
+                boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
                 borderRadius: 12,
-                padding: '60px 24px',
+                padding: '64px 24px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -356,7 +365,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                 textAlign: 'center',
               }}
             >
-              <FiInbox size={32} color={providerBadge.accent} />
+              <FiInbox size={30} strokeWidth={1.5} color={providerBadge.accent} />
               <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
                 Inbox is ready and listening
               </div>
@@ -388,20 +397,21 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                     style={{
                       backgroundColor: cardBg,
                       border: `1px solid ${cardBorder}`,
-                      borderRadius: 11,
-                      padding: '14px 16px',
+                      boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
+                      borderRadius: 12,
+                      padding: '16px 20px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 14,
                       cursor: 'pointer',
-                      transition: 'border-color 0.15s ease, transform 0.15s ease',
+                      transition: 'border-color 0.16s ease, transform 0.16s ease',
                     }}
                   >
                     <div
                       className="mono"
                       style={{
-                        width: 38,
-                        height: 38,
+                        width: 40,
+                        height: 40,
                         borderRadius: '50%',
                         backgroundColor: avatar.bg,
                         border: `1px solid ${avatar.border}`,
@@ -420,7 +430,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <div
                         style={{
-                          fontSize: 13,
+                          fontSize: 13.5,
                           fontWeight: 600,
                           color: textPrimary,
                           whiteSpace: 'nowrap',
@@ -444,7 +454,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                       </div>
                       <div
                         style={{
-                          fontSize: 12,
+                          fontSize: 12.5,
                           color: textSecondary,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
@@ -471,9 +481,9 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                         type="button"
                         onClick={(e) => handleDeleteEmail(item.id, e)}
                         aria-label="Delete Email"
-                        style={{ color: '#F43F5E', padding: 4, display: 'inline-flex' }}
+                        style={{ color: terracottaDanger, padding: 4, display: 'inline-flex' }}
                       >
-                        <FiTrash2 size={15} />
+                        <FiTrash2 size={15} strokeWidth={1.5} />
                       </button>
                     </div>
                   </div>

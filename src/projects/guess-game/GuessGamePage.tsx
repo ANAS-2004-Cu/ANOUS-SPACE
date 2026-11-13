@@ -172,6 +172,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
     radarZone = 'cool';
   }
 
+  // Strictly Muted Organic Temperature Zones (2%–3% hue-tinted neutrals, saturation 25%–55%, zero glow shadows)
   const ZONE_THEME: Record<
     RadarZone,
     {
@@ -179,67 +180,79 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
       bgLight: string;
       cardDark: string;
       cardLight: string;
+      wellDark: string;
+      wellLight: string;
       borderDark: string;
       borderLight: string;
       accent: string;
       badge: string;
-      glow: string;
+      ambientWash: string;
     }
   > = {
     cool: {
-      bgDark: '#0C1624',
-      bgLight: '#EFF6FF',
-      cardDark: '#122033',
+      bgDark: '#111419',
+      bgLight: '#F5F7F9',
+      cardDark: '#171C23',
       cardLight: '#FFFFFF',
-      borderDark: '#1E3452',
-      borderLight: '#BFDBFE',
-      accent: '#38BDF8',
+      wellDark: '#0E1116',
+      wellLight: '#EDF0F4',
+      borderDark: '#262E3A',
+      borderLight: '#DCE2EA',
+      accent: '#5B82B8', // Muted Slate Blue (hsl(215, 40%, 54%))
       badge: lastGuess ? 'COLD SIGNAL (> 25)' : 'RADAR STANDBY',
-      glow: 'rgba(56, 189, 248, 0.16)',
+      ambientWash: 'rgba(91, 130, 184, 0.06)',
     },
     warm: {
-      bgDark: '#1F1712',
-      bgLight: '#FFFBEB',
-      cardDark: '#2A1F18',
+      bgDark: '#161411',
+      bgLight: '#F9F7F2',
+      cardDark: '#1F1B16',
       cardLight: '#FFFFFF',
-      borderDark: '#453224',
-      borderLight: '#FDE68A',
-      accent: '#F59E0B',
+      wellDark: '#12100D',
+      wellLight: '#F1EDE4',
+      borderDark: '#332C22',
+      borderLight: '#E6DEC8',
+      accent: '#C5954E', // Warm Ochre (hsl(36, 48%, 54%))
       badge: 'WARM PROXIMITY (≤ 25)',
-      glow: 'rgba(245, 158, 11, 0.18)',
+      ambientWash: 'rgba(197, 149, 78, 0.065)',
     },
     hot: {
-      bgDark: '#241313',
-      bgLight: '#FEF2F2',
-      cardDark: '#311919',
+      bgDark: '#171211',
+      bgLight: '#F9F4F2',
+      cardDark: '#211917',
       cardLight: '#FFFFFF',
-      borderDark: '#522727',
-      borderLight: '#FECACA',
-      accent: '#FB7185',
+      wellDark: '#130F0E',
+      wellLight: '#F2E9E6',
+      borderDark: '#382825',
+      borderLight: '#E6D2CC',
+      accent: '#C26A58', // Earthy Terracotta (hsl(11, 45%, 55%))
       badge: 'HOT — WITHIN 10 UNITS',
-      glow: 'rgba(251, 113, 133, 0.2)',
+      ambientWash: 'rgba(194, 106, 88, 0.07)',
     },
     victory: {
-      bgDark: '#0D211A',
-      bgLight: '#ECFDF5',
-      cardDark: '#132E24',
+      bgDark: '#111614',
+      bgLight: '#F4F8F5',
+      cardDark: '#17201B',
       cardLight: '#FFFFFF',
-      borderDark: '#1F4D3C',
-      borderLight: '#A7F3D0',
-      accent: '#10B981',
+      wellDark: '#0E1310',
+      wellLight: '#EBF1ED',
+      borderDark: '#25362D',
+      borderLight: '#D4E3DA',
+      accent: '#51A37D', // Muted Sage Green (hsl(152, 34%, 48%))
       badge: 'TARGET LOCKED',
-      glow: 'rgba(16, 185, 129, 0.2)',
+      ambientWash: 'rgba(81, 163, 125, 0.07)',
     },
     limit: {
-      bgDark: '#221115',
-      bgLight: '#FEF2F2',
-      cardDark: '#2E171D',
+      bgDark: '#161213',
+      bgLight: '#F8F4F4',
+      cardDark: '#20181A',
       cardLight: '#FFFFFF',
-      borderDark: '#4D242E',
-      borderLight: '#FECDD3',
-      accent: '#F43F5E',
+      wellDark: '#120E0F',
+      wellLight: '#F0E8E9',
+      borderDark: '#36272A',
+      borderLight: '#E4D2D5',
+      accent: '#A85751', // Muted Burgundy-Terracotta (hsl(4, 35%, 49%))
       badge: 'ATTEMPTS EXHAUSTED',
-      glow: 'rgba(244, 63, 94, 0.18)',
+      ambientWash: 'rgba(168, 87, 81, 0.065)',
     },
   };
 
@@ -247,10 +260,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
   const canvasBg = isLight ? activeZone.bgLight : activeZone.bgDark;
   const cardBg = isLight ? activeZone.cardLight : activeZone.cardDark;
   const cardBorder = isLight ? activeZone.borderLight : activeZone.borderDark;
-  const wellBg = isLight ? '#F8FAFC' : 'rgba(9, 13, 22, 0.55)';
-  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
-  const textSecondary = isLight ? '#475569' : '#94A3B8';
-  const textMuted = isLight ? '#64748B' : '#64748B';
+  const wellBg = isLight ? activeZone.wellLight : activeZone.wellDark;
+  const textPrimary = isLight ? '#18191C' : '#ECEEEF';
+  const textSecondary = isLight ? '#525660' : '#9EA4B0';
+  const textMuted = isLight ? '#787D87' : '#6C727F';
 
   const getMessage = (): { title: string; detail: string } => {
     if (perfect) {
@@ -303,14 +316,14 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
     }
     return {
       title: 'Awaiting Coordinates',
-      detail: 'Enter an integer from 0 to 99. The atmosphere shifts from ocean cool to terracotta hot as you close in.',
+      detail: 'Enter an integer from 0 to 99. The atmosphere shifts from deep slate to warm ochre and terracotta as you close in.',
     };
   };
 
   const remaining = Math.max(0, MAX_TRIES - tries);
   const progressRatio = remaining / MAX_TRIES;
   const progressBarColor =
-    progressRatio > 0.5 ? '#10B981' : progressRatio > 0.25 ? '#F59E0B' : '#F43F5E';
+    progressRatio > 0.5 ? '#51A37D' : progressRatio > 0.25 ? '#C5954E' : '#C26A58';
 
   const statusInfo = getMessage();
 
@@ -319,7 +332,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
       className="route-theme-canvas"
       style={{
         backgroundColor: canvasBg,
-        backgroundImage: `radial-gradient(ellipse 75% 45% at 50% 0%, ${activeZone.glow}, transparent 70%)`,
+        backgroundImage: `radial-gradient(ellipse 75% 380px at 50% -80px, ${activeZone.ambientWash}, transparent 72%), radial-gradient(${
+          isLight ? 'rgba(24, 25, 28, 0.035)' : 'rgba(255, 255, 255, 0.025)'
+        } 1px, transparent 1px)`,
+        backgroundSize: '100% 100%, 24px 24px',
       }}
     >
       <div className="workspace-shell">
@@ -330,34 +346,32 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 16,
+            gap: 18,
             maxWidth: 560,
             width: '100%',
             margin: '0 auto',
-            paddingBottom: 40,
+            paddingBottom: 44,
           }}
         >
-          {/* Large Target / Radar Readout Hero Card */}
+          {/* Layer 2 — Large Target / Radar Readout Hero Card (24px padding) */}
           <section
             style={{
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
+              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 14,
-              padding: '22px 20px',
+              padding: 24,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 16,
+              gap: 18,
               flexWrap: 'wrap',
-              boxShadow: isLight
-                ? '0 10px 28px rgba(15, 23, 42, 0.05)'
-                : '0 18px 42px rgba(0, 0, 0, 0.42)',
-              transition: 'background-color 0.4s ease, border-color 0.4s ease',
+              transition: 'background-color 0.35s ease, border-color 0.35s ease',
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 200 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FiTarget size={14} color={activeZone.accent} />
+                <FiTarget size={14} strokeWidth={1.5} color={activeZone.accent} />
                 <span
                   className="mono"
                   style={{
@@ -372,34 +386,34 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
               </div>
               <div
                 style={{
-                  fontSize: 16,
-                  fontWeight: 700,
+                  fontSize: 16.5,
+                  fontWeight: 600,
                   color: textPrimary,
                 }}
               >
                 {statusInfo.title}
               </div>
-              <p style={{ fontSize: 13, color: textSecondary, lineHeight: 1.55 }}>
+              <p style={{ fontSize: 13.5, color: textSecondary, lineHeight: 1.55 }}>
                 {statusInfo.detail}
               </p>
             </div>
 
-            {/* Bold Target Display Box */}
+            {/* Layer 3 — Recessed Target Readout Box (Zero neon glow shadow) */}
             <div
-              className="mono"
+              className="mono tabular-nums"
               style={{
-                width: 96,
-                height: 96,
-                borderRadius: 14,
+                width: 98,
+                height: 98,
+                borderRadius: 12,
                 backgroundColor: wellBg,
-                border: `2px solid ${activeZone.accent}`,
+                border: `1.5px solid ${activeZone.accent}`,
+                boxShadow: 'var(--well-inner-shadow)',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                boxShadow: `0 0 24px ${activeZone.glow}`,
-                transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
+                transition: 'border-color 0.35s ease, background-color 0.35s ease',
               }}
             >
               <span
@@ -429,26 +443,24 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
             </div>
           </section>
 
-          {/* Main Input & Progress Card */}
+          {/* Layer 2 — Main Input & Progress Card (24px padding) */}
           <section
             style={{
               backgroundColor: cardBg,
               border: `1px solid ${cardBorder}`,
+              boxShadow: 'var(--card-top-highlight), var(--card-shadow)',
               borderRadius: 14,
-              padding: 20,
+              padding: 24,
               display: 'flex',
               flexDirection: 'column',
               gap: 18,
-              boxShadow: isLight
-                ? '0 10px 28px rgba(15, 23, 42, 0.05)'
-                : '0 18px 42px rgba(0, 0, 0, 0.42)',
-              transition: 'background-color 0.4s ease, border-color 0.4s ease',
+              transition: 'background-color 0.35s ease, border-color 0.35s ease',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <label
                 htmlFor="guess-number-input"
-                style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}
+                style={{ fontSize: 13.5, fontWeight: 600, color: textPrimary }}
               >
                 Enter coordinates (0 – 99)
               </label>
@@ -477,11 +489,12 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                     handleCheckPress();
                   }
                 }}
-                className="mono"
+                className="mono tabular-nums"
                 style={{
                   flex: 1,
                   backgroundColor: wellBg,
                   border: `1px solid ${cardBorder}`,
+                  boxShadow: 'var(--well-inner-shadow)',
                   borderRadius: 10,
                   padding: '12px 14px',
                   fontSize: 18,
@@ -499,16 +512,16 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                 onClick={handleCheckPress}
                 disabled={!hit || tries >= MAX_TRIES}
               >
-                <FiCheck size={15} />
+                <FiCheck size={15} strokeWidth={1.5} />
                 <span>CHECK</span>
               </Button>
             </div>
 
             {/* Remaining Attempts Progress Bar */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}>
                 <span style={{ color: textSecondary }}>Remaining Radar Sweeps</span>
-                <span className="mono" style={{ color: textPrimary, fontWeight: 600 }}>
+                <span className="mono tabular-nums" style={{ color: textPrimary, fontWeight: 600 }}>
                   {remaining} / {MAX_TRIES}
                 </span>
               </div>
@@ -518,6 +531,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                   height: 8,
                   backgroundColor: wellBg,
                   border: `1px solid ${cardBorder}`,
+                  boxShadow: 'var(--well-inner-shadow)',
                   borderRadius: 999,
                   overflow: 'hidden',
                 }}
@@ -533,19 +547,19 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
               </div>
             </div>
 
-            {/* Color-Coded Directional Guess Pills */}
+            {/* Muted Color-Coded Directional Guess Pills */}
             {guessHistory.length > 0 && (
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 8,
-                  paddingTop: 12,
+                  gap: 10,
+                  paddingTop: 14,
                   borderTop: `1px solid ${cardBorder}`,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 12, color: textSecondary, fontWeight: 500 }}>
+                  <span style={{ fontSize: 12.5, color: textSecondary, fontWeight: 500 }}>
                     Telemetry Log
                   </span>
                   <span className="mono" style={{ fontSize: 11, color: textMuted }}>
@@ -566,31 +580,31 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                     const isWarm = !isCorrect && item.distance > 10 && item.distance <= 25;
 
                     const pillColor = isCorrect
-                      ? '#10B981'
+                      ? '#51A37D'
                       : isHot
-                      ? '#FB7185'
+                      ? '#C26A58'
                       : isWarm
-                      ? '#F59E0B'
-                      : '#38BDF8';
+                      ? '#C5954E'
+                      : '#5B82B8';
                     const pillBg = isCorrect
-                      ? 'rgba(16, 185, 129, 0.14)'
+                      ? 'rgba(81, 163, 125, 0.14)'
                       : isHot
-                      ? 'rgba(251, 113, 133, 0.14)'
+                      ? 'rgba(194, 106, 88, 0.14)'
                       : isWarm
-                      ? 'rgba(245, 158, 11, 0.14)'
-                      : 'rgba(56, 189, 248, 0.12)';
+                      ? 'rgba(197, 149, 78, 0.14)'
+                      : 'rgba(91, 130, 184, 0.14)';
                     const pillBorder = isCorrect
-                      ? 'rgba(16, 185, 129, 0.45)'
+                      ? 'rgba(81, 163, 125, 0.38)'
                       : isHot
-                      ? 'rgba(251, 113, 133, 0.45)'
+                      ? 'rgba(194, 106, 88, 0.38)'
                       : isWarm
-                      ? 'rgba(245, 158, 11, 0.45)'
-                      : 'rgba(56, 189, 248, 0.35)';
+                      ? 'rgba(197, 149, 78, 0.38)'
+                      : 'rgba(91, 130, 184, 0.36)';
 
                     return (
                       <div
                         key={idx}
-                        className="mono"
+                        className="mono tabular-nums"
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -613,11 +627,11 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                       >
                         <span>{String(item.value).padStart(2, '0')}</span>
                         {isCorrect ? (
-                          <FiCheck size={12} color="#10B981" />
+                          <FiCheck size={12} strokeWidth={1.5} color="#51A37D" />
                         ) : isLow ? (
-                          <FiArrowUp size={12} color={pillColor} />
+                          <FiArrowUp size={12} strokeWidth={1.5} color={pillColor} />
                         ) : (
-                          <FiArrowDown size={12} color={pillColor} />
+                          <FiArrowDown size={12} strokeWidth={1.5} color={pillColor} />
                         )}
                       </div>
                     );
@@ -637,11 +651,11 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
             }}
           >
             <Button variant="secondary" onClick={() => navigate('/')}>
-              <FiHome size={14} />
+              <FiHome size={14} strokeWidth={1.5} />
               <span>HOME</span>
             </Button>
             <Button variant="secondary" onClick={reset}>
-              <FiRotateCcw size={14} />
+              <FiRotateCcw size={14} strokeWidth={1.5} />
               <span>NEW TARGET</span>
             </Button>
           </div>

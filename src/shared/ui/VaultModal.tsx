@@ -56,12 +56,12 @@ export const VaultModal: React.FC = () => {
       <div
         style={{
           width: '100%',
-          maxWidth: 400,
+          maxWidth: 420,
           backgroundColor: 'var(--bg-surface)',
           border: '1px solid var(--border-subtle)',
           boxShadow: 'var(--card-top-highlight), var(--card-shadow-hover)',
-          borderRadius: 10,
-          padding: 20,
+          borderRadius: 12,
+          padding: 24,
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -70,16 +70,29 @@ export const VaultModal: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: 14,
+            marginBottom: 16,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {isUnlocked ? (
-              <FiUnlock size={15} color="var(--accent)" />
-            ) : (
-              <FiLock size={15} color="var(--text-secondary)" />
-            )}
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 7,
+                backgroundColor: 'var(--accent-vault-subtle)',
+                border: '1px solid var(--accent-vault-border)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {isUnlocked ? (
+                <FiUnlock size={14} strokeWidth={1.5} color="var(--accent-vault)" />
+              ) : (
+                <FiLock size={14} strokeWidth={1.5} color="var(--accent-vault)" />
+              )}
+            </span>
+            <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
               Private Vault
             </span>
           </div>
@@ -88,13 +101,13 @@ export const VaultModal: React.FC = () => {
             style={{ color: 'var(--text-muted)', padding: 4 }}
             aria-label="Close modal"
           >
-            <FiX size={16} />
+            <FiX size={16} strokeWidth={1.5} />
           </button>
         </div>
 
         {isUnlocked ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
               Private Vault is currently unlocked for this browser session. Restricted tools are
               accessible under the Private tab.
             </p>
@@ -115,8 +128,8 @@ export const VaultModal: React.FC = () => {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
               Enter administrator credentials to unlock private workspace items.
             </p>
             <input
@@ -131,10 +144,11 @@ export const VaultModal: React.FC = () => {
               className="mono"
               style={{
                 width: '100%',
-                backgroundColor: 'var(--bg-input)',
+                backgroundColor: 'var(--bg-well)',
                 border: `1px solid ${error ? 'var(--danger)' : 'var(--border-subtle)'}`,
-                borderRadius: 7,
-                padding: '9px 12px',
+                boxShadow: 'var(--well-inner-shadow)',
+                borderRadius: 8,
+                padding: '10px 12px',
                 fontSize: 13,
                 color: 'var(--text-primary)',
               }}

@@ -32,7 +32,7 @@ export interface ProjectItem {
 | Field | Type | Behavior in `HubHome` & `CommandPalette` |
 | :--- | :--- | :--- |
 | `id` | `string` | Unique identifier; used as React `key`, icon/artwork switch key in `HubHome.tsx`, and ID stored in `anous_recent_tools`. |
-| `category` | `ProjectCategory` | Determines filter tab placement and card accent color (`Tools` `#3B82F6`, `Games` `#10B981`, `Projects` `#8B5CF6`, `Private` `#F43F5E`). |
+| `category` | `ProjectCategory` | Determines filter tab placement and card accent color (`Tools` slate blue `#5B82B8`, `Games` sage `#51A37D`, `Projects` ochre `#C5954E`, `Private` terracotta `#C26A58`). |
 | `type` | `'internal' \| 'external'` | `'internal'` navigates via React Router (`navigate(item.to)`); `'external'` opens `item.externalUrl` in a new tab (`window.open(..., '_blank', 'noopener,noreferrer')`). |
 | `featured` | `boolean` (optional) | When `true` (or when `category === 'Projects'`), applies `.bento-card-featured` (spanning 2 grid columns on screens `>= 720px`). |
 | `keywords` | `string[]` (optional) | Additional search tokens matched by `CommandPalette`. |
@@ -93,7 +93,7 @@ export const MyModulePage: React.FC<MyModulePageProps> = ({ onOpenCommandPalette
   return (
     <div
       className="route-theme-canvas"
-      style={{ backgroundColor: isLight ? '#F4F6FA' : '#0B0F19' }}
+      style={{ backgroundColor: isLight ? '#F7F7F5' : '#121316' }}
     >
       <div className="workspace-shell">
         <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="My Module" />

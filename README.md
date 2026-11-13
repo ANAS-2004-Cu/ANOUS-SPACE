@@ -4,11 +4,11 @@
 
 **A modular, keyboard-first personal engineering workspace hosting self-contained web utilities, tactical game prototypes, external project showcases, and a session-scoped Private Vault.**
 
-[![React](https://img.shields.io/badge/React-18.3-131929?style=flat-square&logo=react&logoColor=3B82F6)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-131929?style=flat-square&logo=typescript&logoColor=3B82F6)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.4-131929?style=flat-square&logo=vite&logoColor=3B82F6)](https://vite.dev/)
-[![Vercel Edge](https://img.shields.io/badge/Runtime-Vercel_Edge-131929?style=flat-square&logo=vercel&logoColor=F3F4F6)](https://vercel.com/)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-anous--space.vercel.app-3B82F6?style=flat-square)](https://github.com/ANAS-2004-Cu/ANOUS-SPACE)
+[![React](https://img.shields.io/badge/React-18.3-191B20?style=flat-square&logo=react&logoColor=5B82B8)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-191B20?style=flat-square&logo=typescript&logoColor=5B82B8)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.4-191B20?style=flat-square&logo=vite&logoColor=5B82B8)](https://vite.dev/)
+[![Vercel Edge](https://img.shields.io/badge/Runtime-Vercel_Edge-191B20?style=flat-square&logo=vercel&logoColor=F3F4F6)](https://vercel.com/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-anous--space.vercel.app-5B82B8?style=flat-square)](https://github.com/ANAS-2004-Cu/ANOUS-SPACE)
 
 </div>
 
@@ -24,11 +24,11 @@ The root shell (`src/App.tsx` and `src/pages/HubHome.tsx`) handles routing, glob
 
 ## Hub Shell Capabilities
 
-- **Category-Coded Bento Grid & `1`–`9` Direct Launch**: Organizes workspace cards into color-coded domains—`Tools` (`#3B82F6` Electric Blue), `Games` (`#10B981` Emerald), and 2-column `Projects` showcases (`#8B5CF6` Violet)—with custom geometric SVG watermarks. Pressing number keys `1`–`9` on the Hub Home (when no input or modal is active) launches the corresponding visible card immediately.
+- **Category-Coded Bento Grid & `1`–`9` Direct Launch**: Organizes workspace cards into color-coded domains—`Tools` (`#5B82B8` slate blue), `Games` (`#51A37D` sage), and 2-column `Projects` showcases (`#C5954E` ochre)—with custom geometric SVG watermarks. Pressing number keys `1`–`9` on the Hub Home (when no input or modal is active) launches the corresponding visible card immediately.
 - **Recent Tools Bar**: Tracks the last 3 opened public internal workspaces in `localStorage` (`anous_recent_tools`) and surfaces them as quick-launch chips above the category filter bar.
 - **Hybrid Command Palette (`Ctrl+K` & Touch Search)**: Global modal launcher (`src/shared/ui/CommandPalette.tsx`) accessible from any route via `Ctrl+K` (`Cmd+K` on macOS) or the header `Search` button, indexing titles, descriptions, categories, badges, and search keywords.
-- **Adaptive Dark & Crisp Light Themes**: Instant theme switcher in `AppHeader` (`localStorage['anous_theme']`) toggling between the midnight-navy dark shell (`#0B0F19`) and warm daylight paper (`#F4F6FA`), while allowing each internal module to project its own custom route canvas.
-- **Session-Backed Private Vault**: Authenticates against `POST /api/vault` (`src/shared/context/VaultContext.tsx`) and stores unlocked session state in `window.sessionStorage['anous_vault_session']`. While unlocked, a Rose-accented `Private` tab (`#F43F5E`) and header lock control appear, and guarded internal routes become accessible until the tab is closed or locked.
+- **Adaptive Dark & Crisp Light Themes**: Instant theme switcher in `AppHeader` (`localStorage['anous_theme']`) toggling between a warm graphite dark shell (`#121316`) and soft paper light shell (`#F7F7F5`), while allowing each internal module to project its own custom route canvas.
+- **Session-Backed Private Vault**: Authenticates against `POST /api/vault` (`src/shared/context/VaultContext.tsx`) and stores unlocked session state in `window.sessionStorage['anous_vault_session']`. While unlocked, a terracotta-accented `Private` tab (`#C26A58`) and header lock control appear, and guarded internal routes become accessible until the tab is closed or locked.
 
 > [!TIP]
 > **Unlocking the Private Vault**: On desktop, press `Ctrl+K`, type `vault`, and hit `Enter` to open the Vault authentication prompt. On mobile or touch devices, press and hold **ANAS GAMAL** in the top-left header for **2 seconds** (`2000ms`) to trigger the same modal.

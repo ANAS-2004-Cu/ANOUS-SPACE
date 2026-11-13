@@ -78,7 +78,7 @@ To ensure modules can be added, refactored, or removed without side effects acro
 | `src/shared/context/ThemeContext.tsx` | `ThemeProvider`, `useTheme`, `ThemeMode` | Hydrates `'dark'` \| `'light'` synchronously from `localStorage['anous_theme']`, applies `data-theme` on `document.documentElement`, and exposes `toggleTheme()` and `setTheme()`. |
 | `src/shared/context/VaultContext.tsx` | `VaultProvider`, `useVault` | Hydrates `{ unlocked, projects }` synchronously from `sessionStorage['anous_vault_session']`. `unlockVault(password)` sends `POST /api/vault` and normalizes returned items into `ProjectItem[]` (`category: 'Private'`), treating paths starting with `/` as internal routes. |
 | `src/shared/context/AlertContext.tsx` | `AlertProvider`, `useAlert` | Manages modal state for `AlertModal` and exposes `showAlert(title, message?, actions?)`. |
-| `src/shared/ui/AppHeader.tsx` | `AppHeader` | Renders the top navigation bar, back-to-hub button on child routes, **2000ms pointer hold timer** (`startPress`) on `ANAS GAMAL` to open `VaultModal`, active Rose `#F43F5E` `Vault` status pill when unlocked, theme toggle button, and `Search` (`Ctrl K`) button. |
+| `src/shared/ui/AppHeader.tsx` | `AppHeader` | Renders the top navigation bar, back-to-hub button on child routes, **2000ms pointer hold timer** (`startPress`) on `ANAS GAMAL` to open `VaultModal`, active terracotta `--accent-vault` `Vault` status pill when unlocked, theme toggle button, and `Search` (`Ctrl K`) button. |
 | `src/shared/ui/CommandPalette.tsx` | `CommandPalette` | Global search modal (`zIndex: 1100`). Searches `PUBLIC_PROJECTS` (plus `privateProjects` when unlocked), supports `ArrowUp`/`ArrowDown`/`Enter`/`Escape`, and surfaces the Vault action row when the query equals `"vault"`. |
 | `src/shared/ui/VaultModal.tsx` | `VaultModal` | Password authentication dialog (`zIndex: 1150`) when locked, or session status + `Lock Vault` confirmation when unlocked. |
 | `src/shared/ui/AlertModal.tsx` | `AlertModal`, `AlertAction` | Accessible dialog (`zIndex: 1200`) mapping action styles `'default'`, `'cancel'`, and `'destructive'` to `Button` variants. |
@@ -107,15 +107,16 @@ To ensure modules can be added, refactored, or removed without side effects acro
 
 | CSS Token / Surface | Dark Mode (`[data-theme='dark']`) | Light Mode (`[data-theme='light']`) | Usage |
 | :--- | :--- | :--- | :--- |
-| `--bg-app` | `#0B0F19` | `#F4F6FA` | Hub Home midnight-navy / warm paper canvas with dot-grid & radial spotlights |
-| `--bg-surface` | `#131929` | `#FFFFFF` | Elevated cards, modals, and header buttons |
-| `--bg-elevated` | `#1C253B` | `#EDF1F7` | Active command palette rows and hover states |
-| `--bg-input` | `#0D121F` | `#EEF2F8` | Input fields and modal header/footer bars |
-| `--border-subtle` | `#222B40` | `#DCE2EE` | Crisp `1px solid` structural borders |
-| `--text-primary` | `#F3F4F6` | `#0F172A` | Primary headings and values |
-| `--text-secondary` | `#9CA3AF` | `#475569` | Descriptions and secondary labels |
-| `--text-muted` | `#6B7280` | `#64748B` | Keyboard badges, timestamps, and metadata |
-| `--accent-tools` | `#3B82F6` | `#3B82F6` | Electric Blue accent for `Tools` cards and primary buttons |
-| `--accent-games` | `#10B981` | `#10B981` | Emerald accent for `Games` cards |
-| `--accent-projects` | `#8B5CF6` | `#8B5CF6` | Violet accent for 2-column `Projects` showcase cards |
-| `--accent-vault` | `#F43F5E` | `#F43F5E` | Rose accent for `Private` Vault tab, badges, and header indicator |
+| `--bg-app` | `#121316` | `#F7F7F5` | Layer 1 base canvas with a faint dot-grid and soft top wash |
+| `--bg-surface` | `#191B20` | `#FFFFFF` | Layer 2 cards, modals, and header buttons |
+| `--bg-elevated` | `#23272F` | `#F2F1EE` | Active command palette rows and hover states |
+| `--bg-well` / `--bg-input` | `#101114` | `#EFEFED` | Layer 3 recessed wells, inputs, and segmented controls (with `--well-inner-shadow`) |
+| `--bg-control` | `#21242B` | `#E8E7E3` | Raised controls sitting inside a recessed well |
+| `--border-subtle` | `#282B33` | `#E4E4E7` | Crisp `1px solid` structural borders |
+| `--text-primary` | `#ECEEEF` | `#18191C` | Primary headings and values |
+| `--text-secondary` | `#9EA4B0` | `#525660` | Descriptions and secondary labels |
+| `--text-muted` | `#6C727F` | `#787D87` | Keyboard badges, timestamps, and metadata |
+| `--accent-tools` / `--accent` | `#5B82B8` | `#426696` | Muted slate blue for `Tools` cards and primary buttons |
+| `--accent-games` / `--success` | `#51A37D` | `#3F8765` | Sage green for `Games` cards and success states |
+| `--accent-projects` / `--warning` | `#C5954E` | `#A37339` | Warm ochre for 2-column `Projects` showcase cards and warnings |
+| `--accent-vault` / `--danger` | `#C26A58` | `#AA5240` | Earthy terracotta for the `Private` Vault tab, header indicator, and errors |
