@@ -6,12 +6,15 @@
 
 ## Overview
 
-Spinning up a full desktop IDE just to inspect a raw webhook payload, format a minified JSON response, or save a quick `.env` file is unnecessary friction. **Quick Scratchpad & File Maker** provides an instant, auto-saving browser code studio styled in GitHub-dark obsidian (`#0D1117` in Dark Mode / `#F6F8FA` in Light Mode).
+**Quick Scratchpad & File Maker** is a persistent, browser-based **Code Studio IDE** (`#0D1117` GitHub-dark obsidian canvas in Dark Mode / `#F6F8FA` studio paper in Light Mode) built for inspecting raw API payloads, drafting configuration files, and exporting snippets without spinning up a local project.
 
-It pairs a synchronized line-number gutter and monospace editor window (`#161B22`) with real-time JSON syntax diagnostics, drag-and-drop local file loading, live character/word/byte telemetry, and instant client-side `Blob` file export across nine preset or custom file extensions.
+The workspace renders an IDE editor window (`#161B22` dark / `#FFFFFF` light) featuring a top window bar with traffic-light indicators and an active filename tab (`resolvedFullFilename`), a scroll-synchronized line-number gutter (`handleScrollSync`), 2-space `Tab` indentation (`handleEditorKeyDown`), drag-and-drop or file-picker text import (`FileReader.readAsText`), a live bottom status bar (`Ln`, `Words`, `Chars`, byte size via `new Blob([content]).size`, `UTF-8`, `Spaces: 2`, `Auto-Saved`), and an instant client-side `Blob` file exporter.
 
 > [!TIP]
-> **Smart JSON Mode & Instant Export**: Whenever `.json` is selected in the extension pill bar—or when the buffer begins with `{` or `[`—the top IDE toolbar automatically activates live syntax validation (`JSON VALID` in emerald `#10B981` vs. `JSON INVALID` in rose `#F43F5E`) alongside one-click **Format** (`2-space pretty print`) and **Minify** actions.
+> **Smart JSON Studio & Line/Column Error Diagnostics**:
+> - **Auto-Detection (`looksLikeJson`)**: The `JSON STUDIO` toolbar activates automatically whenever `.json` is selected in the extension dock or when the trimmed buffer begins with `{` or `[`.
+> - **Line & Column Pinpointing (`parseJsonWithDiagnostic`)**: When `JSON.parse` throws a `SyntaxError` containing a character offset (`position <N>`), the parser slices the buffer up to `pos`, splits by newline (`/\r\n|\r|\n/`), and reports the exact `(Line X, Column Y)` in a rose diagnostic pill (`#F43F5E`), or confirms valid formatting (`2-space indent`) and minification in an emerald pill (`#10B981`).
+> - **Preset & Custom Extensions (`PRESET_EXTENSIONS`)**: Supports one-click pills for `.json`, `.env`, `.txt`, `.md`, `.js`, `.ts`, `.html`, `.css`, plus `Custom...` (defaulting to `.yaml` and automatically prefixing `.` if omitted). When importing a file via drag-and-drop or `Import File`, the filename and extension pill synchronize automatically.
 
 ---
 
@@ -19,7 +22,7 @@ It pairs a synchronized line-number gutter and monospace editor window (`#161B22
 
 | File | Responsibility |
 | :--- | :--- |
-| `ScratchpadPage.tsx` | Renders the Code Studio IDE container, top window toolbar with active filename tab, synchronized scroll line-number gutter, drag-and-drop `FileReader` importer, JSON formatter/minifier, IDE status footer, and pill-based multi-extension `Blob` downloader. |
+| `ScratchpadPage.tsx` | Implements the Code Studio IDE window, scroll-synced line-number gutter, 2-space `Tab` handler, `FileReader` drag-and-drop importer, `parseJsonWithDiagnostic` formatter/minifier/validator, live byte/word/line status bar, and `URL.createObjectURL(new Blob(...))` file downloader. |
 | `README.md` | Module documentation for the Quick Scratchpad & File Maker workspace. |
 
 ---
@@ -28,15 +31,15 @@ It pairs a synchronized line-number gutter and monospace editor window (`#161B22
 
 | Route | Component | Responsibility |
 | :--- | :--- | :--- |
-| `/scratchpad` | `ScratchpadPage` | Main interactive editor, JSON diagnostic workspace, and client-side file exporter. |
+| `/scratchpad` | `ScratchpadPage` | Renders the persistent Code Studio editor, JSON diagnostic bar, and instant multi-extension file exporter. |
 
 ---
 
 ## Storage Keys
 
-| Key | Storage Engine | Purpose |
-| :--- | :--- | :--- |
-| `anous_scratchpad_content` | `localStorage` | Auto-saves the raw text or code buffer on every keystroke so work persists across reloads and browser restarts. |
-| `anous_scratchpad_filename` | `localStorage` | Persists the base filename (e.g., `snippet`) used when exporting a downloadable file. |
-| `anous_scratchpad_ext` | `localStorage` | Persists the active extension pill selection (`.txt`, `.json`, `.env`, `.md`, `.js`, `.ts`, `.html`, `.css`, or `custom`). |
-| `anous_recent_tools` | `localStorage` | Records `'scratchpad'` via `recordRecentProject('scratchpad')` so the tool surfaces in the Hub Home Recent bar. |
+| Key | Storage Engine | Default Value | Purpose |
+| :--- | :--- | :--- | :--- |
+| `anous_scratchpad_content` | `localStorage` | `''` | Auto-saves the raw editor buffer on every `content` change. |
+| `anous_scratchpad_filename` | `localStorage` | `'untitled'` | Persists the base filename used to construct `resolvedFullFilename`. |
+| `anous_scratchpad_ext` | `localStorage` | `'.txt'` | Persists the selected extension pill (`.json`, `.env`, `.txt`, `.md`, `.js`, `.ts`, `.html`, `.css`, or `'custom'`). |
+| `anous_recent_tools` | `localStorage` | `[]` | Records `'scratchpad'` on mount via `recordRecentProject('scratchpad')`. |
