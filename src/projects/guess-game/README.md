@@ -1,30 +1,18 @@
-# Number Guess (`src/projects/guess-game`)
+# Number Guess (0–99)
 
-Range-finding numeric deduction game (`0`–`99`) mounted at `/guess-game`.
+## Overview
 
----
+Number Guess is a numeric deduction game where the player has 10 attempts to identify a randomly generated integer between `0` and `99`. It provides directional hints, close-range proximity alerts when a guess is within 10 units of the target, a color-coded remaining attempts progress bar, and a chronological guess history strip.
 
 ## Files
 
-| File | Description |
-| :--- | :--- |
-| `GuessGamePage.tsx` | Main game component managing target generation, input sanitization, proximity evaluation, attempt progress bar, and guess history chips. |
-| `README.md` | Module documentation. |
+- `GuessGamePage.tsx`: Implements target number generation, numeric input validation, proximity evaluation (`<= 10`), attempt progress visualization, and directional guess history chips.
+- `README.md`: Module documentation for the Number Guess workspace.
 
----
+## Routes & Endpoints
 
-## Rules & State Flow
+- `/guess-game`: Client route rendering `GuessGamePage`.
 
-1. **Target Initialization**: On mount and on `RESET`, a random integer in the inclusive range `0` to `99` is generated via `Math.floor(Math.random() * 100)`.
-2. **Attempt Budget**: The player has `MAX_TRIES = 10` attempts to identify the target integer.
-3. **Input Validation**:
-   - Non-numeric characters are stripped on input; up to 2 digits are accepted.
-   - Submitting an empty input or a number outside `0`–`99` displays a validation diagnostic without consuming an attempt.
-4. **Proximity Telemetry**:
-   - **Exact Match (`value === randomNumber`)**: Marks the round as won (`hit = false`), locks further guesses until reset, and highlights the status panel in green (`#10B981`).
-   - **Close Range (`Math.abs(randomNumber - value) <= 10`)**: Signals that the guess is within 10 units of the target (`Close — Too High (Within 10)` or `Close — Too Low (Within 10)`).
-   - **Standard Range (`> 10` units away)**: Signals `Too High` or `Too Low`.
-   - **Limit Reached (`tries >= 10`)**: Reveals the target number and disables further input until `RESET`.
-5. **Visual Telemetry**:
-   - **Remaining Attempts Progress Bar**: Dynamically transitions from green (`> 50%` remaining) to amber (`25%–50%`) to red (`<= 25%`).
-   - **Previous Guesses Strip**: Renders each submitted guess in order with a directional indicator (`Up` arrow if the guess was too low, `Down` arrow if too high, or a `Check` icon on an exact match).
+## Storage Keys
+
+- `anous_recent_tools` (`localStorage`): Records `'guess-game'` via `recordRecentProject('guess-game')` when the module mounts (all game state is held in React component memory).

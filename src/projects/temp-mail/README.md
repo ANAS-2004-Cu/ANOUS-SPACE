@@ -1,46 +1,34 @@
-# Temp-Mail Suite (`src/projects/temp-mail`)
+# Temp-Mail Client
 
-Multi-provider disposable email client mounted at `/temp-mail` with support for four providers: **Mail.TM**, **GuerrillaMail**, **TempMail.lol**, and **Maildrop.cc**.
+## Overview
 
----
+Temp-Mail Client is a multi-provider disposable email workspace supporting `Mail.TM`, `GuerrillaMail`, `TempMail.lol`, and `Maildrop.cc`. It provides custom and random address creation, domain selection, inbox management, sandboxed HTML and plain-text message viewing, and authenticated attachment downloads.
 
-## Files & Routes
+## Files
 
-| File | Route | Responsibility |
-| :--- | :--- | :--- |
-| `TempMailHubPage.tsx` | `/temp-mail` | Provider switcher, active address card (`Copy` and `Open Inbox`), username generator, domain selector trigger, and account creation flow. |
-| `TempMailInboxPage.tsx` | `/temp-mail/inbox` | Unified inbox view for `Mail.TM`, `TempMail.lol`, and `Maildrop.cc` (`?provider=...`). |
-| `GuerrillaInboxPage.tsx` | `/temp-mail/guerrilla-inbox` | Session-aware inbox view for `GuerrillaMail` with automatic session re-initialization and reset support. |
-| `EmailDetailPage.tsx` | `/temp-mail/detail` | Full message viewer (`?id=...&provider=...`) with sandboxed HTML `<iframe>` vs. Plain Text toggle, clipboard copy, deletion, and attachment downloads. |
-| `DomainSelectModal.tsx` | *(Modal)* | Accessible modal dialog for choosing available domains on `Mail.TM` and `GuerrillaMail`. |
-| `tempMailService.ts` | *(Service)* | API client functions, data models, token hydration, and local message caching for all 4 providers. |
+- `TempMailHubPage.tsx`: Provider switcher, active account card, random username generator, and new address creation form.
+- `TempMailInboxPage.tsx`: Unified inbox list view for `Mail.TM`, `TempMail.lol`, and `Maildrop.cc` accounts.
+- `GuerrillaInboxPage.tsx`: Session-managed inbox view for `GuerrillaMail` with session expiration recovery and reset controls.
+- `EmailDetailPage.tsx`: Message reader providing sandboxed HTML `<iframe>` rendering, plain-text toggle, clipboard copy, message deletion, and `Mail.TM` attachment downloads.
+- `DomainSelectModal.tsx`: Modal dialog for selecting available domains on `Mail.TM` and `GuerrillaMail`.
+- `tempMailService.ts`: Multi-provider API client handling REST/GraphQL requests, Bearer token hydration, and local inbox caching.
+- `README.md`: Module documentation for the Temp-Mail suite.
 
----
+## Routes & Endpoints
 
-## Supported Providers & Architecture
+- `/temp-mail`: Client route for provider selection and disposable account creation (`TempMailHubPage`).
+- `/temp-mail/inbox`: Client route for `Mail.TM`, `TempMail.lol`, and `Maildrop.cc` inboxes (`TempMailInboxPage`).
+- `/temp-mail/guerrilla-inbox`: Client route for the `GuerrillaMail` inbox (`GuerrillaInboxPage`).
+- `/temp-mail/detail`: Client route for reading an individual message (`EmailDetailPage`).
+- `/api/guerrilla`: Serverless CORS proxy forwarding requests to `https://api.guerrillamail.com/ajax.php`.
+- `/api/maildrop`: Serverless CORS proxy forwarding GraphQL queries and mutations to `https://api.maildrop.cc/graphql`.
+- `/api/tempmail-lol`: Serverless CORS proxy forwarding inbox creation and message polling requests to `https://api.tempmail.lol`.
 
-| Provider | Upstream API | Proxy Endpoint | Auth Mechanism |
-| :--- | :--- | :--- | :--- |
-| **Mail.TM** | `https://api.mail.tm` | Direct CORS REST | Hydra REST (`/accounts`, `/token`, `/messages`) with `Bearer` JWT header auto-hydrated from `localStorage`. |
-| **GuerrillaMail** | `https://api.guerrillamail.com/ajax.php` | `/api/guerrilla` | Session token (`sid_token`) passed as query parameter. |
-| **TempMail.lol** | `https://api.tempmail.lol` | `/api/tempmail-lol` | Bearer-style `token` query parameter (`/v2/inbox/create`, `/v2/inbox?token=...`). |
-| **Maildrop.cc** | `https://api.maildrop.cc/graphql` | `/api/maildrop` | Passwordless GraphQL queries (`inbox`, `message`) and `delete` mutation keyed by mailbox name. |
+## Storage Keys
 
----
-
-## Browser Storage Keys
-
-| Storage Key | Scope | Provider | Stored Payload |
-| :--- | :--- | :--- | :--- |
-| `mailtm_data` | `localStorage` | Mail.TM | `{ email, password, token, id }` (with automatic fallback read from legacy `mailgw_data`). |
-| `guerrilla_data` | `localStorage` | GuerrillaMail | `{ email_addr, sid_token, email_user }`. |
-| `guerrilla_cached_emails` | `sessionStorage` | GuerrillaMail | Cached array of `GuerrillaEmailResponse` items preserved across route transitions. |
-| `tempmail_lol_data` | `localStorage` | TempMail.lol | `{ address, token, emails: Email[] }`. Because TempMail.lol clears server messages once fetched, incoming messages are merged and persisted locally in `localStorage`. |
-| `maildrop_data` | `localStorage` | Maildrop.cc | `{ email, mailbox }`. |
-
----
-
-## Security & Rendering Notes
-
-- **HTML Email Sandboxing**: `EmailDetailPage.tsx` renders HTML email bodies inside an `<iframe sandbox="allow-popups allow-popups-to-escape-sandbox">` using `srcDoc`. Scripts and same-origin parent access are blocked while allowing external links to open safely in a new tab.
-- **Authenticated Attachments**: `downloadMailTmAttachment` in `tempMailService.ts` hydrates the `Mail.TM` Bearer token, fetches the attachment endpoint with `responseType: 'blob'`, and triggers a browser file download.
+- `mailtm_data` (`localStorage`): Stores `{ email, password, token, id }` for the active `Mail.TM` account (with fallback read support for legacy `mailgw_data`).
+- `guerrilla_data` (`localStorage`): Stores `{ email_addr, sid_token, email_user }` for the active `GuerrillaMail` session.
+- `guerrilla_cached_emails` (`sessionStorage`): Caches fetched `GuerrillaMail` message headers across route navigation.
+- `tempmail_lol_data` (`localStorage`): Stores `{ address, token, emails }` for `TempMail.lol`, persisting fetched messages locally after the upstream server clears them on read.
+- `maildrop_data` (`localStorage`): Stores `{ email, mailbox }` for the active passwordless `Maildrop.cc` inbox.
+- `anous_recent_tools` (`localStorage`): Records `'temp-mail'` via `recordRecentProject('temp-mail')` when the module mounts.

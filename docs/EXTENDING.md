@@ -1,150 +1,115 @@
 # Extending `ANOUS-SPACE`
 
-This guide explains how to add new external project showcases, build new self-contained internal micro-apps, and configure private entries inside the Private Vault.
+This guide documents the `ProjectItem` schema in `src/data/projects.ts` and provides step-by-step checklists for registering an external showcase link or mounting a new self-contained internal module.
 
 ---
 
-## 1. Adding an External Showcase Project
+## 1. The `ProjectItem` Interface (`src/data/projects.ts`)
 
-External showcase projects appear on the Hub Home (`/`) under `All` and `Projects` (and in `CommandPalette` search results) and open an external URL in a new browser tab when clicked.
-
-You only need to edit **one file**: `src/data/projects.ts`.
-
-### Step-by-Step
-
-Open `src/data/projects.ts` and append a new `ProjectItem` object with `type: 'external'` and `category: 'Projects'` to `PUBLIC_PROJECTS`:
+All cards displayed on the Hub Home (`/`) and indexed by `CommandPalette` conform to the `ProjectItem` interface defined in `src/data/projects.ts`:
 
 ```ts
-// src/data/projects.ts
-{
-  id: 'my-saas-platform',
-  title: 'Real-Time Analytics Dashboard',
-  description:
-    'Event ingestion pipeline and multi-tenant telemetry dashboard built with Next.js and ClickHouse.',
-  category: 'Projects',
-  type: 'external',
-  externalUrl: 'https://analytics.example.com',
-  badge: 'Production',
-  featured: false, // Set to true to span 2 columns on desktop Bento grids
-  keywords: ['analytics', 'dashboard', 'saas', 'clickhouse', 'nextjs'],
+export type ProjectCategory = 'Tools' | 'Games' | 'Projects' | 'Private';
+
+export interface ProjectItem {
+  id: string;
+  title: string;
+  description: string;
+  category: ProjectCategory;
+  type: 'internal' | 'external';
+  to?: string;
+  externalUrl?: string;
+  badge?: string;
+  featured?: boolean;
+  keywords?: string[];
 }
 ```
 
-Card clicks automatically open `externalUrl` with `window.open(url, '_blank', 'noopener,noreferrer')` and display the `Live Demo` action footer.
+---
+
+## 2. Checklist: Registering an External Project Showcase
+
+External project cards appear under the `All` and `Projects` tabs on the Hub Home and open in a new browser tab when selected.
+
+- [ ] **Step 1**: Open `src/data/projects.ts`.
+- [ ] **Step 2**: Append a new object to `PUBLIC_PROJECTS` with `type: 'external'`, `category: 'Projects'`, and `externalUrl` set to the target URL:
+
+```ts
+{
+  id: 'analytics-platform',
+  title: 'Real-Time Telemetry Platform',
+  description: 'Event ingestion pipeline and multi-tenant analytics dashboard.',
+  category: 'Projects',
+  type: 'external',
+  externalUrl: 'https://example.com',
+  badge: 'Showcase',
+  featured: false,
+  keywords: ['analytics', 'telemetry', 'dashboard', 'web'],
+}
+```
 
 ---
 
-## 2. Adding a New Self-Contained Internal Micro-App
+## 3. Checklist: Mounting a New Internal Module
 
-Adding an internal tool or game involves **three steps**:
+Internal modules live inside `src/projects/<module-name>/` and render within the application router.
 
-### Step 1: Create the Feature Directory (`src/projects/<feature-name>/`)
+- [ ] **Step 1: Create the isolated module directory**
+  Create `src/projects/<module-name>/` containing your main page component and a module `README.md` (following the 4-section `Overview`, `Files`, `Routes & Endpoints`, and `Storage Keys` format).
 
-Create a new directory under `src/projects/` containing your page component and a local `README.md`:
-
-```text
-src/projects/jwt-debugger/
-├── JwtDebuggerPage.tsx
-└── README.md
-```
-
-Use `AppHeader` and `recordRecentProject` inside your page component so navigation, the 2-second Vault trigger, `Ctrl+K` search, and the Hub `Recent` bar work automatically:
+- [ ] **Step 2: Integrate `AppHeader` and `recordRecentProject`**
+  In your module's root component, render `AppHeader` from `../../shared/ui/AppHeader` and record the module visit on mount using `recordRecentProject('<module-id>')` from `../../shared/utils/recentTools`:
 
 ```tsx
-// src/projects/jwt-debugger/JwtDebuggerPage.tsx
 import React, { useEffect } from 'react';
 import { AppHeader } from '../../shared/ui/AppHeader';
 import { recordRecentProject } from '../../shared/utils/recentTools';
 
-export interface JwtDebuggerPageProps {
+export interface MyModulePageProps {
   onOpenCommandPalette: () => void;
 }
 
-export const JwtDebuggerPage: React.FC<JwtDebuggerPageProps> = ({ onOpenCommandPalette }) => {
+export const MyModulePage: React.FC<MyModulePageProps> = ({ onOpenCommandPalette }) => {
   useEffect(() => {
-    recordRecentProject('jwt-debugger');
+    recordRecentProject('my-module');
   }, []);
 
   return (
     <div className="workspace-shell">
-      <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="JWT Debugger" />
-
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {/* Feature UI */}
+      <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="My Module" />
+      <main style={{ flex: 1 }}>
+        {/* Module content */}
       </main>
     </div>
   );
 };
 ```
 
-### Step 2: Register Metadata in `src/data/projects.ts`
-
-Add an entry with `type: 'internal'` and `to: '/jwt-debugger'` to `PUBLIC_PROJECTS`:
+- [ ] **Step 3: Register the module in `src/data/projects.ts`**
+  Append a `ProjectItem` entry to `PUBLIC_PROJECTS` with `type: 'internal'` and `to: '/my-module'`:
 
 ```ts
-// src/data/projects.ts
 {
-  id: 'jwt-debugger',
-  title: 'JWT Inspector & Decoder',
-  description: 'Client-side JSON Web Token header and payload decoder with expiration checks.',
-  category: 'Tools', // 'Tools' | 'Games' | 'Projects'
+  id: 'my-module',
+  title: 'My Module Title',
+  description: 'Concise summary of the module functionality.',
+  category: 'Tools',
   type: 'internal',
-  to: '/jwt-debugger',
-  badge: 'Security',
-  keywords: ['jwt', 'token', 'auth', 'decode', 'base64'],
+  to: '/my-module',
+  badge: 'Utility',
+  keywords: ['custom', 'keyword', 'search'],
 }
 ```
 
-### Step 3: Mount the Route in `src/App.tsx`
-
-Import your page component in `src/App.tsx` and register its `<Route>` inside `<Routes>`:
+- [ ] **Step 4: Register the route in `src/App.tsx`**
+  Import `MyModulePage` in `src/App.tsx` and add a `<Route>` entry inside `<Routes>`:
 
 ```tsx
-// src/App.tsx
-import { JwtDebuggerPage } from './projects/jwt-debugger/JwtDebuggerPage';
-
-// Inside <Routes>:
 <Route
-  path="/jwt-debugger"
-  element={<JwtDebuggerPage onOpenCommandPalette={openCommandPalette} />}
+  path="/my-module"
+  element={<MyModulePage onOpenCommandPalette={openCommandPalette} />}
 />
 ```
 
----
-
-## 3. Adding Private Vault Entries (`PRIVATE_APPS_JSON`)
-
-Private Vault items are **never** hardcoded in `src/data/projects.ts`. Instead, they are supplied at runtime by `/api/vault` from the `PRIVATE_APPS_JSON` environment variable in Vercel.
-
-Set `PRIVATE_APPS_JSON` in your Vercel project settings to a valid JSON array. Each item supports either an external `url` or an internal `to` route:
-
-```json
-[
-  {
-    "id": "staging-dashboard",
-    "title": "Staging Infrastructure Console",
-    "description": "Private staging cluster metrics and deployment controls.",
-    "url": "https://staging-internal.example.com",
-    "badge": "Infra"
-  },
-  {
-    "id": "private-scratchpad",
-    "title": "Internal Scratchpad",
-    "description": "Direct link to workspace scratchpad.",
-    "to": "/scratchpad",
-    "badge": "Internal"
-  }
-]
-```
-
----
-
-## 4. UI & Styling Guidelines for New Modules
-
-When building new components inside `ANOUS-SPACE`, adhere to the core design tokens in `src/styles/global.css`:
-
-- **Backgrounds**: Use `#0E1015` (`var(--bg-app)`) for the page background and deep inset inputs, and `#161922` (`var(--bg-surface)`) for cards and panels.
-- **Borders**: Use `1px solid #252A37` (`var(--border-subtle)`) with `#363D4F` (`var(--border-hover)`) on interactive hover states.
-- **Accent Color**: Reserve `#3B82F6` (`var(--accent)`) for primary action buttons, active tab indicators, and focused interactive states.
-- **Typography**: Apply `className="mono"` (`JetBrains Mono`) to all code editors, numeric counters, timestamps, email addresses, and keyboard shortcut badges.
-- **Restraint**: Do not introduce background images, backdrop blur filters, neon drop-shadows, decorative gradients, or emojis in UI copy.
+- [ ] **Step 5: Add the module link to the root `README.md`**
+  Add a row to the **Modules Index** table in `/README.md` linking to `./src/projects/<module-name>/README.md`.
