@@ -1,0 +1,311 @@
+/* ==========================================================================
+   Temp-Mail Client
+   ========================================================================== */
+
+.provider-tabs {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  box-shadow: var(--surface-highlight), var(--shadow-sm);
+}
+
+.provider-tab {
+  flex: 1 1 112px;
+  padding: 9px 10px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-recessed);
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.provider-tab:hover:not(.provider-tab--active) {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.provider-tab:active {
+  transform: scale(0.97);
+}
+
+.provider-tab--active {
+  background-color: var(--tone-slate-subtle);
+  border-color: var(--tone-slate-border);
+  color: var(--tone-slate);
+  font-weight: 600;
+}
+
+.active-address-well {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  flex-wrap: wrap;
+}
+
+.active-address-text {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  word-break: break-all;
+  flex: 1;
+  min-width: 180px;
+}
+
+.address-preview-well {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.address-preview-value {
+  font-size: 13px;
+  color: var(--tone-slate);
+  word-break: break-all;
+}
+
+.domain-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.domain-modal-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+}
+
+.inbox-toolbar {
+  padding: 12px 16px;
+}
+
+.inbox-session-error-btn {
+  width: 100%;
+  background-color: var(--status-danger-subtle);
+  border: 1px solid var(--status-danger-border);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+}
+
+.inbox-loading-well {
+  padding: 48px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.message-row {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  box-shadow: var(--surface-highlight), var(--shadow-sm);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    transform var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.message-row:hover {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--surface-highlight), var(--shadow-md);
+}
+
+.message-row__sender {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.message-row__subject {
+  font-size: 13px;
+  color: var(--tone-slate);
+  font-weight: 500;
+}
+
+.message-row__preview {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.message-row__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.message-row__confirm-btn {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--tone-slate-subtle);
+  border: 1px solid var(--tone-slate-border);
+  color: var(--tone-slate);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.email-detail-subject {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.email-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.email-detail-iframe {
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-recessed);
+}
+
+.email-detail-plain {
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.attachment-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.attachment-pill:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-surface-hover);
+}
+
+.inbox-address-text {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.inbox-session-error-btn {
+  color: var(--status-danger);
+  font-size: 13px;
+}
+
+.inbox-error-icon {
+  flex-shrink: 0;
+}
+
+.icon-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+.email-detail-frame-wrap {
+  overflow: hidden;
+  min-height: 320px;
+}
+
+.email-detail-iframe {
+  width: 100%;
+  height: 400px;
+  border: none;
+  border-radius: 0;
+  background-color: var(--bg-recessed);
+  display: block;
+}
+
+.email-detail-plain {
+  min-height: 320px;
+  user-select: text;
+  background-color: var(--bg-recessed);
+}
+
+.attachment-row-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  text-align: left;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.attachment-row-btn:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-surface-hover);
+}
+
+.attachment-row-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.fixed-domain-well {
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+

@@ -10,16 +10,12 @@ import { ToolAccent, ToolEmblem, getToolAccent } from './ToolEmblem';
 
 function accentToTone(accent: ToolAccent): BadgeTone {
   switch (accent) {
-    case 'cyan':
-      return 'cyan';
-    case 'violet':
-      return 'violet';
-    case 'amber':
-      return 'amber';
-    case 'emerald':
-      return 'emerald';
-    case 'indigo':
-      return 'indigo';
+    case 'slate':
+      return 'slate';
+    case 'ochre':
+      return 'ochre';
+    case 'sage':
+      return 'sage';
     default:
       return 'accent';
   }
@@ -149,32 +145,23 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
               onClick={handleTriggerVault}
               className="cmd-item cmd-item--vault"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <FiLock size={14} strokeWidth={1.6} color="var(--cat-emerald-accent)" />
+              <div className="ui-row ui-row--md">
+                <FiLock size={14} strokeWidth={1.6} color="var(--tone-sage)" />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  <div className="cmd-item__title">
                     {isUnlocked ? 'Manage Private Vault' : 'Unlock Private Vault'}
                   </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
+                  <div className="ui-field__hint">
                     Enter passphrase to access private tools and links
                   </div>
                 </div>
               </div>
-              <FiCornerDownLeft size={13} strokeWidth={1.6} color="var(--cat-emerald-accent)" />
+              <FiCornerDownLeft size={13} strokeWidth={1.6} color="var(--tone-sage)" />
             </button>
           )}
 
           {filteredItems.length === 0 && !isVaultTrigger ? (
-            <div
-              style={{
-                padding: '28px 16px',
-                textAlign: 'center',
-                color: 'var(--text-muted)',
-                fontSize: 13,
-              }}
-            >
-              No matching tools or projects found.
-            </div>
+            <div className="cmd-empty">No matching tools or projects found.</div>
           ) : (
             filteredItems.map((item, idx) => {
               const active = idx === selectedIndex;
@@ -189,42 +176,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                   onClick={() => handleSelectItem(item)}
                   className="cmd-item"
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0, flex: 1 }}>
-                    <span
-                      className="workspace-card__icon"
-                      style={{ width: 28, height: 28 }}
-                    >
+                  <div className="ui-row ui-row--md ui-flex-1">
+                    <span className="workspace-card__icon workspace-card__icon--sm">
                       <ToolEmblem id={item.id} size={14} />
                     </span>
 
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 500,
-                            color: 'var(--text-primary)',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {item.title}
-                        </span>
+                    <div className="ui-flex-1">
+                      <div className="ui-row">
+                        <span className="cmd-item__title ui-truncate">{item.title}</span>
                         <Badge tone={accentToTone(accent)}>{item.category}</Badge>
                       </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: 'var(--text-muted)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          marginTop: 2,
-                        }}
-                      >
-                        {item.description}
-                      </div>
+                      <div className="cmd-item__desc ui-truncate">{item.description}</div>
                     </div>
                   </div>
                   {item.type === 'external' ? (

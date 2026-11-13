@@ -19,16 +19,7 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
 }) => {
   return (
     <Modal open={visible} onClose={onClose} title="Select Domain">
-      <div
-        style={{
-          maxHeight: '60vh',
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-          padding: 6,
-        }}
-      >
+      <div className="domain-modal-list">
         {domains.map((item, index) => {
           const isSelected = selectedDomain === item;
           return (

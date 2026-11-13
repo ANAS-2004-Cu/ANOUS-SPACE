@@ -20,26 +20,18 @@ export const MonthlyLedgerTable: React.FC<MonthlyLedgerTableProps> = ({
 }) => {
   return (
     <Surface
-      accent="emerald"
+      accent="sage"
       padded
       className="animate-enter"
       style={{ ['--stagger-index' as string]: 4 }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
+      <div className="ui-stack ui-stack--md">
+        <div className="ui-row--between">
           <div>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+            <h2 className="gameya-panel-title">
               الجدول التفصيلي لحركة الصندوق والأقساط شهرياً
             </h2>
-            <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>
+            <p className="ui-section-subtitle">
               يوضح الرصيد المستثمر بعد القسط، المديونية المتراكمة، وعائد نهاية كل شهر من الشهر 1 إلى
               الشهر {safeDuration}
             </p>
@@ -71,7 +63,7 @@ export const MonthlyLedgerTable: React.FC<MonthlyLedgerTableProps> = ({
                 {rows.map((row) => {
                   const badgeTone: BadgeTone =
                     row.actionTone === 'payout'
-                      ? 'emerald'
+                      ? 'sage'
                       : row.actionTone === 'debt'
                       ? 'warning'
                       : 'neutral';
@@ -81,60 +73,40 @@ export const MonthlyLedgerTable: React.FC<MonthlyLedgerTableProps> = ({
                       key={row.monthNumber}
                       data-payout={row.actionTone === 'payout'}
                     >
-                      <td className="mono" style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
-                        #{row.monthNumber}
-                      </td>
-                      <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                        {row.monthLabel}
-                      </td>
+                      <td className="mono gameya-table-cell-bold">#{row.monthNumber}</td>
+                      <td className="gameya-table-cell-medium">{row.monthLabel}</td>
                       <td>
-                        <Badge
-                          tone={badgeTone}
-                          pill
-                          style={{ fontFamily: 'var(--font-arabic)', fontSize: 11.5 }}
-                        >
+                        <Badge tone={badgeTone} pill className="gameya-badge-arabic">
                           {row.actionLabel}
                         </Badge>
                       </td>
                       <td
-                        className="mono"
-                        style={{
-                          fontWeight: 700,
-                          color:
-                            row.accumulatedDebt > 0
-                              ? 'var(--status-danger)'
-                              : 'var(--text-muted)',
-                        }}
+                        className={`mono ${
+                          row.accumulatedDebt > 0
+                            ? 'gameya-table-cell-debt'
+                            : 'gameya-table-cell-muted'
+                        }`}
                       >
                         {formatMoney(row.accumulatedDebt)}
                       </td>
-                      <td
-                        className="mono"
-                        style={{ fontWeight: 600, color: 'var(--text-primary)' }}
-                      >
+                      <td className="mono gameya-table-cell-medium">
                         {formatMoney(row.investedAfterInstallment)}
                       </td>
                       <td
-                        className="mono"
-                        style={{
-                          fontWeight: 700,
-                          color:
-                            row.monthlyInterest > 0
-                              ? 'var(--status-success)'
-                              : 'var(--text-muted)',
-                        }}
+                        className={`mono ${
+                          row.monthlyInterest > 0
+                            ? 'gameya-table-cell-sage'
+                            : 'gameya-table-cell-muted'
+                        }`}
                       >
                         +{formatMoney(row.monthlyInterest)}
                       </td>
                       <td
-                        className="mono"
-                        style={{
-                          fontWeight: 700,
-                          color:
-                            row.endOfMonthBalance > 0
-                              ? 'var(--status-success)'
-                              : 'var(--text-primary)',
-                        }}
+                        className={`mono ${
+                          row.endOfMonthBalance > 0
+                            ? 'gameya-table-cell-sage'
+                            : 'gameya-table-cell-bold'
+                        }`}
                       >
                         {formatMoney(row.endOfMonthBalance)}
                       </td>

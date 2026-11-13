@@ -142,10 +142,10 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
     }
   };
 
-  const iframeText = isLight ? '#0F172A' : '#F1F5F9';
-  const iframeBg = isLight ? '#FFFFFF' : '#080B11';
-  const iframeBorder = isLight ? '#E2E8F0' : '#1E293B';
-  const iframeLink = isLight ? '#2563EB' : '#3B82F6';
+  const iframeText = isLight ? '#1C1917' : '#F4F1EC';
+  const iframeBg = isLight ? '#FFFFFF' : '#0E0E11';
+  const iframeBorder = isLight ? 'rgba(28, 25, 23, 0.09)' : 'rgba(255, 255, 255, 0.08)';
+  const iframeLink = isLight ? '#C25938' : '#D97757';
 
   const htmlWrapper = `<!doctype html>
 <html>
@@ -182,19 +182,12 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
       subtitle={email?.subject || 'Message Detail'}
-      accent="violet"
+      accent="slate"
       width="medium"
     >
       <div
-        className="animate-enter"
-        style={{
-          ['--stagger-index' as string]: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 10,
-          flexWrap: 'wrap',
-        }}
+        className="ui-row--between animate-enter"
+        style={{ ['--stagger-index' as string]: 0 }}
       >
         <Button variant="secondary" size="sm" onClick={handleBack}>
           <FiArrowLeft size={13} />
@@ -202,7 +195,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
         </Button>
 
         {email && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div className="ui-row ui-row--wrap">
             <Button variant="secondary" size="sm" onClick={() => setShowHtml(!showHtml)}>
               {showHtml ? <FiFileText size={13} /> : <FiCode size={13} />}
               <span>View {showHtml ? 'Plain Text' : 'HTML'}</span>
@@ -220,12 +213,10 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       </div>
 
       {loading ? (
-        <Surface accent="violet" padded={false}>
-          <div className="ui-empty-state">
-            <div className="spinner" style={{ width: 22, height: 22 }} />
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-              Loading email content...
-            </span>
+        <Surface accent="slate" padded={false}>
+          <div className="inbox-loading-well">
+            <div className="spinner" />
+            <span className="ui-section-subtitle">Loading email content...</span>
           </div>
         </Surface>
       ) : !email ? (
@@ -242,91 +233,51 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       ) : (
         <>
           <Surface
-            accent="violet"
+            accent="slate"
             padded
             className="animate-enter"
             style={{ ['--stagger-index' as string]: 1 }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <h1 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
-                {email.subject || '(No subject)'}
-              </h1>
+            <div className="ui-stack ui-stack--md">
+              <h1 className="email-detail-subject">{email.subject || '(No subject)'}</h1>
 
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  flexWrap: 'wrap',
-                  paddingTop: 12,
-                  borderTop: '1px solid var(--border-subtle)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <div className="ui-row--between email-detail-meta">
+                <div className="ui-row ui-row--md ui-flex-1">
                   <div className="avatar-circle">{senderInitial}</div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {email.fromName || 'Unknown'}
-                    </div>
-                    <div
-                      className="mono"
-                      style={{
-                        fontSize: 12,
-                        color: 'var(--text-secondary)',
-                        wordBreak: 'break-all',
-                      }}
-                    >
+                  <div className="ui-flex-1">
+                    <div className="message-row__sender">{email.fromName || 'Unknown'}</div>
+                    <div className="mono ui-section-subtitle" style={{ wordBreak: 'break-all' }}>
                       {email.fromAddress}
                     </div>
                   </div>
                 </div>
 
-                <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                  {formatDate(email.receivedAt)}
-                </span>
+                <span className="mono ui-meta-label">{formatDate(email.receivedAt)}</span>
               </div>
 
               {email.toAddresses.length > 0 && (
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>To: </span>
+                <div className="ui-section-subtitle">
+                  <span className="ui-meta-label">To: </span>
                   <span className="mono">{email.toAddresses.join(', ')}</span>
                 </div>
               )}
             </div>
           </Surface>
 
-          <Surface padded={false} style={{ overflow: 'hidden', minHeight: 320 }}>
+          <Surface padded={false} className="email-detail-frame-wrap">
             {showHtml ? (
               <iframe
                 title="Email Content"
-                style={{
-                  width: '100%',
-                  height: 400,
-                  border: 'none',
-                  backgroundColor: 'var(--bg-recessed)',
-                  display: 'block',
-                }}
+                className="email-detail-iframe"
                 srcDoc={htmlWrapper}
                 sandbox="allow-popups allow-popups-to-escape-sandbox"
               />
             ) : (
               <div
-                className="mono"
+                className="mono email-detail-plain"
                 onContextMenu={(e) => {
                   e.preventDefault();
                   copyToClipboard(email.text);
-                }}
-                style={{
-                  padding: 20,
-                  color: 'var(--text-primary)',
-                  fontSize: 13,
-                  lineHeight: 1.65,
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  userSelect: 'text',
-                  backgroundColor: 'var(--bg-recessed)',
-                  minHeight: 320,
                 }}
               >
                 {email.text || 'No content available'}
@@ -336,11 +287,11 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
 
           {email.attachments.length > 0 && adapter.downloadAttachment && (
             <Surface padded>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+              <div className="ui-stack ui-stack--sm">
+                <div className="ui-section-title">
                   Attachments ({email.attachments.length})
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div className="ui-stack ui-stack--sm">
                   {email.attachments.map((attachment) => (
                     <button
                       key={attachment.id}
@@ -359,38 +310,20 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                           });
                         }
                       }}
-                      className="ui-surface--recessed"
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 12,
-                        padding: '10px 14px',
-                        textAlign: 'left',
-                      }}
+                      className="ui-surface--recessed attachment-row-btn"
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                      <div className="ui-row ui-row--md ui-flex-1">
                         <FiPaperclip
                           size={14}
                           strokeWidth={1.6}
-                          color="var(--accent)"
-                          style={{ flexShrink: 0 }}
+                          className="attachment-row-icon"
                         />
-                        <div style={{ minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: 'var(--text-primary)',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
+                        <div className="ui-flex-1">
+                          <div className="message-row__sender ui-truncate">
                             {attachment.filename}
                           </div>
                           {attachment.size > 0 && (
-                            <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            <div className="mono ui-meta-label">
                               {(attachment.size / 1024).toFixed(0)} KB
                             </div>
                           )}
@@ -399,8 +332,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                       <FiDownload
                         size={14}
                         strokeWidth={1.6}
-                        color="var(--accent)"
-                        style={{ flexShrink: 0 }}
+                        className="attachment-row-icon"
                       />
                     </button>
                   ))}

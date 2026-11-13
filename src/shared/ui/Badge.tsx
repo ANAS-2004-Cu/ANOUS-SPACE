@@ -3,14 +3,12 @@ import React from 'react';
 export type BadgeTone =
   | 'neutral'
   | 'accent'
+  | 'sage'
+  | 'ochre'
+  | 'slate'
   | 'success'
   | 'warning'
-  | 'danger'
-  | 'cyan'
-  | 'violet'
-  | 'amber'
-  | 'emerald'
-  | 'indigo';
+  | 'danger';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   tone?: BadgeTone;

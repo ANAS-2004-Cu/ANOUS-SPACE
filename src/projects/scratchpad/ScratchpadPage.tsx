@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React from 'react';
 import {
   FiCopy,
   FiTrash2,
@@ -15,285 +15,61 @@ import { Surface } from '../../shared/ui/Surface';
 import { Button } from '../../shared/ui/Button';
 import { Input } from '../../shared/ui/Input';
 import { Badge } from '../../shared/ui/Badge';
-import { useAlert } from '../../shared/context/AlertContext';
-import { copyToClipboard } from '../../shared/utils/clipboard';
-import { recordRecentProject } from '../../shared/utils/recentTools';
-import { isJsonLikeContent, parseJsonWithDiagnostic } from './jsonUtils';
-
-const SCRATCHPAD_STORAGE_KEY = 'anous_scratchpad_content';
-const SCRATCHPAD_FILENAME_KEY = 'anous_scratchpad_filename';
-const SCRATCHPAD_EXT_KEY = 'anous_scratchpad_ext';
-
-const PRESET_EXTENSIONS = [
-  '.json',
-  '.env',
-  '.txt',
-  '.md',
-  '.js',
-  '.ts',
-  '.html',
-  '.css',
-  'custom',
-] as const;
+import { PRESET_EXTENSIONS, useScratchpad } from './useScratchpad';
 
 export interface ScratchpadPageProps {
   onOpenCommandPalette: () => void;
 }
 
 export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPalette }) => {
-  const { showToast } = useAlert();
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const gutterRef = useRef<HTMLDivElement>(null);
-
-  const [content, setContent] = useState<string>(() => {
-    try {
-      return window.localStorage.getItem(SCRATCHPAD_STORAGE_KEY) || '';
-    } catch {
-      return '';
-    }
-  });
-
-  const [filename, setFilename] = useState<string>(() => {
-    try {
-      return window.localStorage.getItem(SCRATCHPAD_FILENAME_KEY) || 'untitled';
-    } catch {
-      return 'untitled';
-    }
-  });
-
-  const [selectedExt, setSelectedExt] = useState<string>(() => {
-    try {
-      return window.localStorage.getItem(SCRATCHPAD_EXT_KEY) || '.txt';
-    } catch {
-      return '.txt';
-    }
-  });
-
-  const [customExt, setCustomExt] = useState<string>('.yaml');
-  const [copied, setCopied] = useState(false);
-  const [confirmClear, setConfirmClear] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [jsonStatus, setJsonStatus] = useState<{
-    type: 'valid' | 'invalid';
-    message: string;
-  } | null>(null);
-
-  useEffect(() => {
-    recordRecentProject('scratchpad');
-  }, []);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(SCRATCHPAD_STORAGE_KEY, content);
-    } catch {
-      // ignore storage quota errors
-    }
-  }, [content]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(SCRATCHPAD_FILENAME_KEY, filename);
-    } catch {
-      // ignore
-    }
-  }, [filename]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(SCRATCHPAD_EXT_KEY, selectedExt);
-    } catch {
-      // ignore
-    }
-  }, [selectedExt]);
-
-  const looksLikeJson = useMemo(
-    () => isJsonLikeContent(content, selectedExt),
-    [content, selectedExt]
-  );
-
-  const stats = useMemo(() => {
-    const chars = content.length;
-    const lines = content ? content.split(/\r\n|\r|\n/).length : 1;
-    const words = content.trim() ? content.trim().split(/\s+/).length : 0;
-    const bytes = new Blob([content]).size;
-    return { chars, lines, words, bytes };
-  }, [content]);
-
-  const lineNumbers = useMemo(() => {
-    const count = Math.max(1, stats.lines);
-    return Array.from({ length: count }, (_, i) => i + 1);
-  }, [stats.lines]);
-
-  const resolvedExtension = useMemo(() => {
-    if (selectedExt !== 'custom') return selectedExt;
-    const cleaned = customExt.trim();
-    if (!cleaned) return '.txt';
-    return cleaned.startsWith('.') ? cleaned : `.${cleaned}`;
-  }, [selectedExt, customExt]);
-
-  const resolvedFullFilename = useMemo(() => {
-    const base = filename.trim() || 'untitled';
-    if (base.endsWith(resolvedExtension)) return base;
-    return `${base}${resolvedExtension}`;
-  }, [filename, resolvedExtension]);
-
-  const handleScrollSync = () => {
-    if (textareaRef.current && gutterRef.current) {
-      gutterRef.current.scrollTop = textareaRef.current.scrollTop;
-    }
-  };
-
-  const handleCopy = async () => {
-    if (!content) return;
-    await copyToClipboard(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
-  };
-
-  useEffect(() => {
-    if (!confirmClear) return;
-    const timer = window.setTimeout(() => setConfirmClear(false), 3000);
-    return () => window.clearTimeout(timer);
-  }, [confirmClear]);
-
-  const handleClear = () => {
-    if (!content) return;
-    if (!confirmClear) {
-      setConfirmClear(true);
-      return;
-    }
-    setContent('');
-    setJsonStatus(null);
-    setConfirmClear(false);
-    showToast({
-      title: 'Scratchpad Cleared',
-      message: 'Editor content has been cleared.',
-      type: 'info',
-    });
-  };
-
-  const readImportedFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = typeof ev.target?.result === 'string' ? ev.target.result : '';
-      setContent(text);
-      setJsonStatus(null);
-
-      const dotIndex = file.name.lastIndexOf('.');
-      if (dotIndex > 0) {
-        const base = file.name.slice(0, dotIndex);
-        const ext = file.name.slice(dotIndex).toLowerCase();
-        setFilename(base);
-        if ((PRESET_EXTENSIONS as readonly string[]).includes(ext)) {
-          setSelectedExt(ext);
-        } else {
-          setSelectedExt('custom');
-          setCustomExt(ext);
-        }
-      } else {
-        setFilename(file.name);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      readImportedFile(file);
-    }
-    e.target.value = '';
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      readImportedFile(file);
-    }
-  };
-
-  const handleFormatJson = () => {
-    if (!content.trim()) return;
-    const res = parseJsonWithDiagnostic(content);
-    if (res.ok) {
-      setContent(JSON.stringify(res.data, null, 2));
-      setSelectedExt('.json');
-      setJsonStatus({ type: 'valid', message: 'Formatted valid JSON (2-space indent).' });
-    } else {
-      setJsonStatus({ type: 'invalid', message: res.error });
-    }
-  };
-
-  const handleMinifyJson = () => {
-    if (!content.trim()) return;
-    const res = parseJsonWithDiagnostic(content);
-    if (res.ok) {
-      setContent(JSON.stringify(res.data));
-      setSelectedExt('.json');
-      setJsonStatus({ type: 'valid', message: 'Minified valid JSON.' });
-    } else {
-      setJsonStatus({ type: 'invalid', message: res.error });
-    }
-  };
-
-  const handleValidateJson = () => {
-    if (!content.trim()) {
-      setJsonStatus({ type: 'invalid', message: 'Buffer is empty.' });
-      return;
-    }
-    const res = parseJsonWithDiagnostic(content);
-    if (res.ok) {
-      setJsonStatus({ type: 'valid', message: 'Valid JSON syntax confirmed.' });
-    } else {
-      setJsonStatus({ type: 'invalid', message: res.error });
-    }
-  };
-
-  const handleDownloadFile = () => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', resolvedFullFilename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  };
-
-  const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const target = e.currentTarget;
-      const start = target.selectionStart;
-      const end = target.selectionEnd;
-      const nextValue = content.substring(0, start) + '  ' + content.substring(end);
-      setContent(nextValue);
-      requestAnimationFrame(() => {
-        target.selectionStart = target.selectionEnd = start + 2;
-      });
-    }
-  };
+  const {
+    fileInputRef,
+    textareaRef,
+    gutterRef,
+    content,
+    filename,
+    selectedExt,
+    customExt,
+    copied,
+    confirmClear,
+    isDragging,
+    jsonStatus,
+    looksLikeJson,
+    stats,
+    lineNumbers,
+    resolvedFullFilename,
+    setFilename,
+    setSelectedExt,
+    setCustomExt,
+    setIsDragging,
+    updateContent,
+    handleScrollSync,
+    handleCopy,
+    handleClear,
+    handleFileChange,
+    handleDrop,
+    handleFormatJson,
+    handleMinifyJson,
+    handleValidateJson,
+    handleDownloadFile,
+    handleEditorKeyDown,
+  } = useScratchpad();
 
   return (
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
       subtitle="Scratchpad"
-      accent="cyan"
+      accent="slate"
       width="wide"
     >
       <ToolBanner
         toolId="scratchpad"
-        accent="cyan"
+        accent="slate"
         eyebrow="Text & Code Utility"
         title="Quick Scratchpad & File Maker"
         description="Persistent text and code scratchpad with JSON formatting, file import, and multi-extension export."
         actions={
-          <Badge tone="cyan" pill>
+          <Badge tone="slate" pill>
             Auto-Saved Locally
           </Badge>
         }
@@ -318,23 +94,16 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
       >
         {/* Top Toolbar */}
         <div className="editor-toolbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Badge tone="cyan">
+          <div className="ui-row ui-row--md">
+            <Badge tone="slate">
               <FiFileText size={12} />
               <span>{resolvedFullFilename}</span>
             </Badge>
-            <span className="mono hide-on-mobile" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              Drag &amp; drop supported
-            </span>
+            <span className="mono ui-meta-label hide-on-mobile">Drag &amp; drop supported</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
+          <div className="ui-row ui-row--wrap">
+            <input ref={fileInputRef} type="file" onChange={handleFileChange} hidden />
             <Button
               type="button"
               variant="secondary"
@@ -372,18 +141,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
         {/* JSON Studio Bar */}
         {looksLikeJson && (
           <div className="editor-json-bar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span
-                className="mono"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: 'var(--cat-cyan-accent)',
-                }}
-              >
+            <div className="ui-row ui-row--md ui-row--wrap">
+              <span className="mono editor-json-bar__label">
                 <FiCode size={13} strokeWidth={1.6} />
                 <span>JSON Tools</span>
               </span>
@@ -400,7 +159,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="ui-row ui-row--sm">
               <Button type="button" variant="secondary" size="sm" onClick={handleFormatJson}>
                 Format
               </Button>
@@ -425,10 +184,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
           <textarea
             ref={textareaRef}
             value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              if (jsonStatus) setJsonStatus(null);
-            }}
+            onChange={(e) => updateContent(e.target.value)}
             onScroll={handleScrollSync}
             onKeyDown={handleEditorKeyDown}
             placeholder="Paste code, JSON, .env variables, or markdown notes here... (or drag & drop a file)"
@@ -439,49 +195,39 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
 
         {/* Status Bar */}
         <div className="editor-statusbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div className="ui-row ui-row--md">
             <span>Ln {stats.lines}</span>
             <span>Words {stats.words}</span>
             <span>Chars {stats.chars}</span>
             <span>{stats.bytes} B</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div className="ui-row ui-row--md">
             <span>UTF-8</span>
             <span>Spaces: 2</span>
-            <span style={{ color: 'var(--status-success)' }}>Auto-Saved</span>
+            <span className="editor-statusbar__saved">Auto-Saved</span>
           </div>
         </div>
       </section>
 
       {/* File Exporter Dock */}
       <Surface
-        accent="cyan"
+        accent="slate"
         padded
         className="animate-enter"
         style={{ ['--stagger-index' as string]: 2 }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
-              flexWrap: 'wrap',
-            }}
-          >
+        <div className="ui-stack ui-stack--lg">
+          <div className="ui-row--between">
             <div>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-                Export File
-              </h2>
-              <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>
+              <h2 className="ui-section-title">Export File</h2>
+              <p className="ui-section-subtitle">
                 Choose a filename and extension to download your notes as a file.
               </p>
             </div>
-            <Badge tone="cyan">{resolvedFullFilename}</Badge>
+            <Badge tone="slate">{resolvedFullFilename}</Badge>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <div className="ui-row ui-row--sm ui-row--wrap">
             {PRESET_EXTENSIONS.map((ext) => {
               const active = selectedExt === ext;
               return (
@@ -499,15 +245,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
             })}
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              flexWrap: 'wrap',
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 180 }}>
+          <div className="ui-row ui-row--wrap">
+            <div className="editor-filename-input">
               <Input
                 type="text"
                 mono
@@ -519,7 +258,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
             </div>
 
             {selectedExt === 'custom' && (
-              <div style={{ width: 120 }}>
+              <div className="editor-custom-ext">
                 <Input
                   type="text"
                   mono

@@ -1,0 +1,382 @@
+/* ==========================================================================
+   Tic-Tac-Toe (Matte Stone Board Tiles, Hover Previews & Win Line)
+   ========================================================================== */
+
+.ttt-board-shell {
+  position: relative;
+  width: clamp(270px, 80vw, 348px);
+  aspect-ratio: 1 / 1;
+  padding: 12px;
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--inset-well);
+}
+
+.ttt-board-well {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.ttt-cell {
+  position: relative;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--surface-highlight), var(--shadow-sm);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.ttt-cell:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background-color: var(--bg-surface-hover);
+  transform: translateY(-2px);
+}
+
+.ttt-cell:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.ttt-cell__ghost {
+  opacity: 0;
+  transform: scale(0.88);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  pointer-events: none;
+}
+
+.ttt-cell__ghost--x {
+  color: var(--accent);
+}
+
+.ttt-cell__ghost--o {
+  color: var(--tone-ochre);
+}
+
+.ttt-cell:hover:not(:disabled) .ttt-cell__ghost {
+  opacity: 0.28;
+  transform: scale(1);
+}
+
+.ttt-cell--x {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background-color: var(--bg-surface);
+}
+
+.ttt-cell--o {
+  color: var(--tone-ochre);
+  border-color: var(--tone-ochre-border);
+  background-color: var(--bg-surface);
+}
+
+.ttt-cell--win {
+  background-color: var(--tone-sage-subtle);
+  border-color: var(--tone-sage-border);
+  color: var(--tone-sage);
+}
+
+.ttt-cell--oldest {
+  border-style: dashed;
+  border-color: var(--tone-ochre-border);
+  opacity: 0.72;
+}
+
+.ttt-cell__oldest-tag {
+  position: absolute;
+  bottom: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--tone-ochre);
+}
+
+.ttt-win-overlay {
+  position: absolute;
+  inset: 12px;
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  pointer-events: none;
+  z-index: 4;
+}
+
+@keyframes winStrikeDraw {
+  from {
+    stroke-dashoffset: 450;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.ttt-win-line {
+  stroke: var(--tone-sage);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 450;
+  stroke-dashoffset: 0;
+  animation: winStrikeDraw 340ms var(--ease-spring) both;
+}
+
+@keyframes markerPop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.25;
+  }
+  70% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes strokeDraw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.marker-pop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: markerPop 240ms var(--ease-spring-pop) forwards;
+}
+
+.marker-svg path,
+.marker-svg circle {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: strokeDraw 240ms var(--ease-spring) both;
+}
+
+.ttt-status-banner {
+  width: 100%;
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ttt-status-banner--win {
+  border-color: var(--tone-sage-border);
+  color: var(--tone-sage);
+}
+
+.ttt-status-banner--x {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.ttt-status-banner--o {
+  border-color: var(--tone-ochre-border);
+  color: var(--tone-ochre);
+}
+
+.ttt-status-banner--draw {
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Guess Game (0–99 Number Bounds & Attempts)
+   ========================================================================== */
+
+.guess-number-tile {
+  width: 102px;
+  height: 102px;
+  border-radius: var(--radius-xl);
+  background-color: var(--bg-recessed);
+  border: 1.5px solid var(--border-strong);
+  box-shadow: var(--inset-well);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  transition: border-color 200ms ease, background-color 200ms ease;
+}
+
+.guess-number-tile--won {
+  border-color: var(--tone-sage);
+  background-color: var(--tone-sage-subtle);
+  color: var(--tone-sage);
+}
+
+.guess-number-tile--close {
+  border-color: var(--tone-ochre);
+  background-color: var(--tone-ochre-subtle);
+  color: var(--tone-ochre);
+}
+
+.guess-number-tile--danger {
+  border-color: var(--status-danger);
+  background-color: var(--status-danger-subtle);
+  color: var(--status-danger);
+}
+
+.guess-number-tile--idle {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.guess-number-tile__caption {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.guess-number-tile__value {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.guess-range-track {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  box-shadow: var(--inset-well);
+}
+
+.guess-range-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--radius-full);
+  transition: left 280ms var(--ease-spring), width 280ms var(--ease-spring), background-color 220ms ease;
+}
+
+.guess-range-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.guess-input-field {
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.08em;
+  height: 42px;
+}
+
+.guess-progress-track {
+  width: 100%;
+  height: 8px;
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  box-shadow: var(--inset-well);
+}
+
+.guess-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 300ms var(--ease-spring), background-color 220ms ease;
+}
+
+.guess-history-chip {
+  padding: 4px 10px;
+  font-size: 12px;
+  animation: fadeUpScale 220ms var(--ease-spring-pop) both;
+}
+
+.ttt-board-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.ttt-header-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ttt-footer-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.ttt-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.ttt-legend-x {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.ttt-legend-o {
+  color: var(--tone-ochre);
+  font-weight: 700;
+}
+
+.guess-copy-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.guess-range-section {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.guess-range-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.guess-range-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.guess-range-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+

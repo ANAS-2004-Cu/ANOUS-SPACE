@@ -218,17 +218,17 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
       subtitle="Temp-Mail"
-      accent="violet"
+      accent="slate"
       width="medium"
     >
       <ToolBanner
         toolId="temp-mail"
-        accent="violet"
+        accent="slate"
         eyebrow="Disposable Email · 7 Providers"
         title="Temp-Mail Client"
         description="Create temporary email addresses across Mail.TM, Mail.gw, GuerrillaMail, and more."
         actions={
-          <Badge tone="violet" pill>
+          <Badge tone="slate" pill>
             {PROVIDER_ORDER.length} Providers
           </Badge>
         }
@@ -252,23 +252,21 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       )}
 
       <Surface
-        accent="violet"
+        accent="slate"
         padded
         className="animate-enter"
         style={{ ['--stagger-index' as string]: 3 }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-            Create New {activeMeta.label} Address
-          </h2>
+        <div className="ui-stack ui-stack--lg">
+          <h2 className="ui-section-title">Create New {activeMeta.label} Address</h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="ui-stack ui-stack--md">
             <div className="ui-field">
               <label htmlFor="tempmail-username" className="ui-field__label">
                 Username / Alias
               </label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <div style={{ flex: 1 }}>
+              <div className="ui-row">
+                <div className="ui-flex-1">
                   <Input
                     id="tempmail-username"
                     type="text"
@@ -302,13 +300,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                 <button
                   type="button"
                   onClick={() => setDomainModalOpen(!domainModalOpen)}
-                  className="ui-input ui-input--mono"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    textAlign: 'left',
-                  }}
+                  className="ui-input ui-input--mono domain-select-trigger"
                 >
                   <span>{selectedDomain ? `@${selectedDomain}` : 'Loading domains...'}</span>
                   {domainModalOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
@@ -334,12 +326,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                   as="div"
                   variant="recessed"
                   padded={false}
-                  className="mono"
-                  style={{
-                    padding: '9px 12px',
-                    fontSize: 13,
-                    color: 'var(--text-secondary)',
-                  }}
+                  className="mono fixed-domain-well"
                 >
                   @{activeMeta.fixedDomain}
                 </Surface>
@@ -350,26 +337,10 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
               as="div"
               variant="recessed"
               padded={false}
-              style={{
-                padding: '12px 14px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 4,
-              }}
+              className="address-preview-well"
             >
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
-                Address Preview
-              </span>
-              <span
-                className="mono"
-                style={{
-                  fontSize: 13,
-                  color: 'var(--cat-violet-accent)',
-                  wordBreak: 'break-all',
-                }}
-              >
-                {getPreviewEmail()}
-              </span>
+              <span className="ui-meta-label">Address Preview</span>
+              <span className="mono address-preview-value">{getPreviewEmail()}</span>
             </Surface>
           </div>
 

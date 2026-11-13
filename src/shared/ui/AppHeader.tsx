@@ -14,7 +14,7 @@ export interface AppHeaderProps {
 export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenCommandPalette,
   subtitle,
-  accent = 'cobalt',
+  accent = 'terracotta',
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -65,8 +65,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="icon-btn"
-              style={{ width: 30, height: 30 }}
+              className="icon-btn icon-btn--sm"
               aria-label="Back to hub"
               title="Back to hub"
             >

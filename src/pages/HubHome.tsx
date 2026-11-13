@@ -24,16 +24,13 @@ export interface HubHomeProps {
 
 function accentToBadgeTone(accent: ToolAccent): BadgeTone {
   switch (accent) {
-    case 'cyan':
-      return 'cyan';
-    case 'violet':
-      return 'violet';
-    case 'amber':
-      return 'amber';
-    case 'emerald':
-      return 'emerald';
-    case 'indigo':
-      return 'indigo';
+    case 'slate':
+      return 'slate';
+    case 'ochre':
+      return 'ochre';
+    case 'sage':
+      return 'sage';
+    case 'terracotta':
     default:
       return 'accent';
   }
@@ -157,7 +154,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
   return (
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
-      accent="cobalt"
+      accent="terracotta"
       footer={
         <footer className="workspace-footer">
           <span>© 2026 Anas Gamal</span>
@@ -170,7 +167,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
         </footer>
       }
     >
-      {/* Elevated Workspace Hero */}
+      {/* Warm Editorial Workspace Hero */}
       <section className="hub-hero animate-enter" style={{ ['--stagger-index' as string]: 0 }}>
         <div className="hub-hero__copy">
           <span className="hub-hero__eyebrow">Anas Gamal · Workspace</span>
@@ -180,12 +177,12 @@ export const HubHome: React.FC<HubHomeProps> = ({
             workspace.
           </p>
           <div className="hub-hero__shortcuts hide-on-mobile">
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span className="hub-hero__shortcut-item">
               <span className="kbd-badge">1–{Math.min(9, keyboardLaunchables.length)}</span>
               <span>Quick Launch</span>
             </span>
             <span>·</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span className="hub-hero__shortcut-item">
               <span className="kbd-badge">Ctrl K</span>
               <span>Search</span>
             </span>
@@ -221,26 +218,13 @@ export const HubHome: React.FC<HubHomeProps> = ({
                   className="recent-chip animate-enter"
                   style={{ ['--stagger-index' as string]: idx + 1 }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                    <span className="workspace-card__icon" style={{ width: 30, height: 30 }}>
+                  <div className="ui-row ui-row--md ui-flex-1">
+                    <span className="workspace-card__icon workspace-card__icon--md">
                       <ToolEmblem id={tool.id} size={15} />
                     </span>
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: 'var(--text-primary)',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {tool.title}
-                      </div>
-                      <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                        {tool.to}
-                      </div>
+                    <div className="ui-flex-1">
+                      <div className="recent-chip__title ui-truncate">{tool.title}</div>
+                      <div className="mono recent-chip__path">{tool.to}</div>
                     </div>
                   </div>
                   <FiArrowRight size={14} className="recent-chip__arrow" />
@@ -266,7 +250,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
             ariaLabel="Filter workspace tools by category"
           />
 
-          <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          <span className="mono ui-meta-label">
             {filteredTools.length} {filteredTools.length === 1 ? 'item' : 'items'}
           </span>
         </div>
@@ -296,17 +280,15 @@ export const HubHome: React.FC<HubHomeProps> = ({
                 >
                   <div className="workspace-card__body">
                     <div className="workspace-card__top">
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div className="ui-row">
                         <span className="workspace-card__icon">
                           <ToolEmblem id={item.id} size={17} />
                         </span>
                         <Badge tone={badgeTone}>{item.badge || item.category}</Badge>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                          {item.category}
-                        </span>
+                      <div className="ui-row ui-row--sm">
+                        <span className="mono workspace-card__category">{item.category}</span>
                         {shortcutKey && (
                           <span
                             className="kbd-badge hide-on-mobile"
@@ -349,7 +331,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
               <FiExternalLink size={12} />
               <span>External Projects</span>
             </span>
-            <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            <span className="mono ui-meta-label">
               {visibleExternalProjects.length}{' '}
               {visibleExternalProjects.length === 1 ? 'link' : 'links'}
             </span>
@@ -360,6 +342,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
               const shortcutIndex = filteredTools.length + idx;
               const shortcutKey = shortcutIndex < 9 ? String(shortcutIndex + 1) : null;
               const accent = getToolAccent(project.id);
+              const badgeTone = accentToBadgeTone(accent);
 
               return (
                 <button
@@ -370,33 +353,14 @@ export const HubHome: React.FC<HubHomeProps> = ({
                   className="external-project-card animate-enter"
                   style={{ ['--stagger-index' as string]: idx + 2 }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 14,
-                      minWidth: 0,
-                      flex: 1,
-                    }}
-                  >
-                    <span
-                      className="workspace-card__icon"
-                      style={{ width: 40, height: 40, marginTop: 2 }}
-                    >
+                  <div className="external-project-card__lead">
+                    <span className="workspace-card__icon workspace-card__icon--lg">
                       <ToolEmblem id={project.id} size={20} />
                     </span>
 
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 6,
-                        minWidth: 0,
-                        flex: 1,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <Badge tone="indigo">{project.badge || 'External'}</Badge>
+                    <div className="ui-stack ui-stack--xs ui-flex-1">
+                      <div className="ui-row ui-row--wrap">
+                        <Badge tone={badgeTone}>{project.badge || 'External'}</Badge>
                         {shortcutKey && (
                           <span
                             className="kbd-badge hide-on-mobile"

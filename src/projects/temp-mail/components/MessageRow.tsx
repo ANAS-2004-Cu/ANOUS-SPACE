@@ -51,62 +51,25 @@ export const MessageRow: React.FC<MessageRowProps> = ({
           onOpen(message.id);
         }
       }}
+      data-accent="slate"
       className="message-row animate-enter"
       style={{ ['--stagger-index' as string]: Math.min(index, 8) }}
     >
       <div className="avatar-circle">{initial}</div>
 
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            color: 'var(--text-primary)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {senderDisplay}
-        </div>
-        <div
-          style={{
-            fontSize: 13,
-            color: 'var(--cat-violet-accent)',
-            fontWeight: 500,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
+      <div className="ui-stack ui-stack--xs ui-flex-1">
+        <div className="message-row__sender ui-truncate">{senderDisplay}</div>
+        <div className="message-row__subject ui-truncate">
           {message.subject || '(No subject)'}
         </div>
-        <div
-          style={{
-            fontSize: 12,
-            color: 'var(--text-secondary)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
+        <div className="message-row__preview ui-truncate">
           {message.preview || '(No content)'}
         </div>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          gap: 8,
-          flexShrink: 0,
-        }}
-      >
-        <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-          {formatMessageDate(message.receivedAt)}
-        </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="message-row__meta">
+        <span className="mono ui-meta-label">{formatMessageDate(message.receivedAt)}</span>
+        <div className="ui-row">
           {message.hasAttachments && (
             <FiPaperclip size={13} strokeWidth={1.6} color="var(--text-secondary)" />
           )}
@@ -119,8 +82,7 @@ export const MessageRow: React.FC<MessageRowProps> = ({
                 onDelete(message.id, e);
               }}
               aria-label="Confirm Delete Email"
-              className="ui-btn ui-btn--danger ui-btn--sm"
-              style={{ height: 24, padding: '0 8px', fontSize: 11 }}
+              className="ui-btn ui-btn--danger ui-btn--sm message-row__confirm-btn"
             >
               Confirm?
             </button>
@@ -132,14 +94,7 @@ export const MessageRow: React.FC<MessageRowProps> = ({
                 setConfirmingDelete(true);
               }}
               aria-label="Delete Email"
-              className="icon-btn"
-              style={{
-                width: 26,
-                height: 26,
-                border: 'none',
-                backgroundColor: 'transparent',
-                color: 'var(--status-danger)',
-              }}
+              className="icon-btn icon-btn--ghost-danger"
             >
               <FiTrash2 size={14} strokeWidth={1.6} />
             </button>

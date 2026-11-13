@@ -1,0 +1,288 @@
+/* ==========================================================================
+   Gameya Calculator (RTL Arabic + Natural Sage)
+   ========================================================================== */
+
+.gameya-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.gameya-hero-well {
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  box-shadow: var(--inset-well);
+}
+
+.gameya-hero-well--profit {
+  border-color: var(--tone-sage-border);
+}
+
+.gameya-hero-amount {
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gameya-hero-amount--profit {
+  color: var(--tone-sage);
+}
+
+.gameya-hero-amount--loss {
+  color: var(--status-danger);
+}
+
+.gameya-kpis-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.gameya-kpi-well {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gameya-kpi-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gameya-kpi-value--sage {
+  color: var(--tone-sage);
+}
+
+.gameya-turns-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 10px;
+}
+
+.gameya-turn-card {
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  text-align: right;
+  font-family: inherit;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    transform var(--transition-base);
+}
+
+.gameya-turn-card:hover {
+  border-color: var(--tone-sage-border);
+  transform: translateY(-2px);
+}
+
+.gameya-turn-card:active {
+  transform: scale(0.97);
+}
+
+.gameya-turn-card--selected {
+  background-color: var(--tone-sage-subtle);
+  border-color: var(--tone-sage);
+}
+
+.gameya-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.gameya-table {
+  width: 100%;
+  min-width: 740px;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: right;
+}
+
+.gameya-table th {
+  padding: 11px 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background-color: var(--bg-recessed);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.gameya-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color var(--transition-fast);
+}
+
+.gameya-table tbody tr:hover td {
+  background-color: var(--bg-surface-hover);
+}
+
+.gameya-table tr[data-payout='true'] td {
+  background-color: var(--tone-sage-subtle);
+}
+
+.gameya-rule-box {
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+.gameya-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 8px;
+}
+
+.gameya-panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gameya-date-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 10px;
+}
+
+.gameya-input-bold {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.gameya-year-input {
+  text-align: center;
+  font-weight: 700;
+}
+
+.gameya-summary-well {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+}
+
+.gameya-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gameya-summary-label {
+  color: var(--text-secondary);
+}
+
+.gameya-summary-val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.gameya-sage-text {
+  color: var(--tone-sage);
+  font-weight: 700;
+}
+
+.gameya-sage-icon {
+  color: var(--tone-sage);
+}
+
+.gameya-hero-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.gameya-hero-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.gameya-kpi-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.gameya-kpi-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.gameya-turn-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.gameya-turn-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gameya-turn-title--selected {
+  color: var(--tone-sage);
+}
+
+.gameya-turn-profit {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.gameya-turn-profit--positive {
+  color: var(--tone-sage);
+}
+
+.gameya-table-cell-bold {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gameya-table-cell-medium {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.gameya-table-cell-debt {
+  font-weight: 700;
+  color: var(--status-danger);
+}
+
+.gameya-table-cell-muted {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.gameya-table-cell-sage {
+  font-weight: 700;
+  color: var(--tone-sage);
+}
+
+.gameya-badge-arabic {
+  font-family: var(--font-arabic);
+  font-size: 11.5px;
+}
+

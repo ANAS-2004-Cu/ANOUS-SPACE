@@ -20,47 +20,26 @@ export const ActiveAddressCard: React.FC<ActiveAddressCardProps> = ({
   return (
     <Surface
       variant="accent"
-      accent="violet"
+      accent="slate"
       padded
       className="animate-enter"
       style={{ ['--stagger-index' as string]: 2 }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="ui-stack ui-stack--md">
+        <div className="ui-row">
           <span className="live-dot" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-            Active {providerMeta.label} Inbox
-          </span>
+          <span className="ui-section-title">Active {providerMeta.label} Inbox</span>
         </div>
 
         <Surface
           as="div"
           variant="recessed"
           padded={false}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            padding: '12px 14px',
-            flexWrap: 'wrap',
-          }}
+          className="active-address-well"
         >
-          <span
-            className="mono"
-            style={{
-              fontSize: 13.5,
-              fontWeight: 500,
-              color: 'var(--text-primary)',
-              wordBreak: 'break-all',
-              flex: 1,
-              minWidth: 180,
-            }}
-          >
-            {address}
-          </span>
+          <span className="mono active-address-text">{address}</span>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="ui-row">
             <Button
               variant="secondary"
               size="sm"

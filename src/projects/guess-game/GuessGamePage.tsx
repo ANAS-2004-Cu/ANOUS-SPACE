@@ -71,36 +71,42 @@ function getFeedbackCopy(
 
 const HINT_META: Record<
   HintLevel,
-  { tone: BadgeTone; color: string; label: string }
+  { tone: BadgeTone; color: string; tileClass: string; label: string }
 > = {
   idle: {
-    tone: 'accent',
-    color: 'var(--accent)',
+    tone: 'ochre',
+    color: 'var(--tone-ochre)',
+    tileClass: 'guess-number-tile--idle',
     label: 'Range 00–99',
   },
   far: {
-    tone: 'accent',
-    color: 'var(--accent)',
+    tone: 'slate',
+    color: 'var(--tone-slate)',
+    tileClass: 'guess-number-tile--idle',
     label: 'More than 25 away',
   },
   close: {
-    tone: 'warning',
-    color: 'var(--status-warning)',
+    tone: 'ochre',
+    color: 'var(--tone-ochre)',
+    tileClass: 'guess-number-tile--close',
     label: 'Getting close (within 25)',
   },
   'very-close': {
     tone: 'danger',
     color: 'var(--status-danger)',
+    tileClass: 'guess-number-tile--danger',
     label: 'Very close (within 10)',
   },
   won: {
-    tone: 'success',
-    color: 'var(--status-success)',
+    tone: 'sage',
+    color: 'var(--tone-sage)',
+    tileClass: 'guess-number-tile--won',
     label: 'Solved',
   },
   lost: {
     tone: 'danger',
     color: 'var(--status-danger)',
+    tileClass: 'guess-number-tile--danger',
     label: 'Game Over',
   },
 };
@@ -146,20 +152,12 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
   const progressRatio = remaining / MAX_TRIES;
   const progressBarColor =
     progressRatio > 0.5
-      ? 'var(--status-success)'
+      ? 'var(--tone-sage)'
       : progressRatio > 0.25
-      ? 'var(--status-warning)'
+      ? 'var(--tone-ochre)'
       : 'var(--status-danger)';
 
   const isGameEnded = feedback === 'victory' || feedback === 'limit';
-  const tileBg =
-    hintLevel === 'won'
-      ? 'var(--status-success-subtle)'
-      : hintLevel === 'very-close' || hintLevel === 'lost'
-      ? 'var(--status-danger-subtle)'
-      : hintLevel === 'close'
-      ? 'var(--status-warning-subtle)'
-      : 'var(--bg-recessed)';
 
   const directionIcon =
     feedback === 'victory' ? (
@@ -176,12 +174,12 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
       subtitle="Number Guess (0–99)"
-      accent="amber"
+      accent="ochre"
       width="narrow"
     >
       <ToolBanner
         toolId="guess-game"
-        accent="amber"
+        accent="ochre"
         eyebrow="Puzzle · 10 Tries"
         title="Number Guess (0–99)"
         description="Guess the hidden number between 0 and 99 within 10 tries using higher/lower hints and narrowed range tracking."
@@ -190,21 +188,13 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
       {/* Status & Narrowed Range Card */}
       <Surface
         variant="elevated"
-        accent="amber"
+        accent="ochre"
         padded
         className="animate-enter"
         style={{ ['--stagger-index' as string]: 1 }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 200 }}>
+        <div className="ui-row--between ui-row--lg">
+          <div className="ui-stack ui-stack--sm ui-flex-1">
             <div>
               <Badge tone={hint.tone}>
                 {directionIcon}
@@ -212,39 +202,15 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
               </Badge>
             </div>
 
-            <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-primary)' }}>
-              {statusInfo.title}
-            </h2>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-              {statusInfo.detail}
-            </p>
+            <h2 className="guess-copy-title">{statusInfo.title}</h2>
+            <p className="ui-section-subtitle">{statusInfo.detail}</p>
           </div>
 
-          <div
-            className="guess-number-tile"
-            style={{
-              borderColor: hint.color,
-              backgroundColor: tileBg,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 10,
-                color: 'var(--text-muted)',
-                letterSpacing: '0.08em',
-                marginBottom: 2,
-              }}
-            >
+          <div className={`guess-number-tile ${hint.tileClass}`}>
+            <span className="guess-number-tile__caption">
               {isGameEnded ? 'ANSWER' : lastGuess ? 'LAST' : 'SECRET'}
             </span>
-            <span
-              style={{
-                fontSize: 34,
-                fontWeight: 700,
-                color: hint.color,
-                lineHeight: 1.1,
-              }}
-            >
+            <span className="guess-number-tile__value">
               {isGameEnded
                 ? String(target).padStart(2, '0')
                 : lastGuess
@@ -255,12 +221,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
         </div>
 
         {/* Dynamic 0-99 Possible Range Indicator */}
-        <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 7 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-            <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
-              Possible Range
-            </span>
-            <span className="mono" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+        <div className="guess-range-section">
+          <div className="guess-range-label-row">
+            <span className="guess-range-label">Possible Range</span>
+            <span className="mono guess-range-value">
               {minBound === maxBound
                 ? String(minBound).padStart(2, '0')
                 : `${String(minBound).padStart(2, '0')} – ${String(maxBound).padStart(2, '0')}`}
@@ -280,15 +244,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
               }}
             />
           </div>
-          <div
-            className="mono"
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: 10.5,
-              color: 'var(--text-muted)',
-            }}
-          >
+          <div className="mono guess-range-ticks">
             <span>00</span>
             <span>50</span>
             <span>99</span>
@@ -298,26 +254,23 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
 
       {/* Input & Guess History Card */}
       <Surface
-        accent="amber"
+        accent="ochre"
         padded
         className="animate-enter"
         style={{ ['--stagger-index' as string]: 2 }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <label
-              htmlFor="guess-number-input"
-              style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}
-            >
+        <div className="ui-stack ui-stack--lg">
+          <div className="ui-row--between">
+            <label htmlFor="guess-number-input" className="ui-field__label">
               Your Guess (0 – 99)
             </label>
-            <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            <span className="mono ui-meta-label">
               {remaining} {remaining === 1 ? 'try' : 'tries'} left
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{ flex: 1 }}>
+          <div className="ui-row ui-row--md">
+            <div className="ui-flex-1">
               <Input
                 id="guess-number-input"
                 ref={inputRef}
@@ -338,13 +291,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                     handleCheckPress();
                   }
                 }}
-                style={{
-                  fontSize: 18,
-                  fontWeight: 700,
-                  textAlign: 'center',
-                  letterSpacing: '0.08em',
-                  height: 42,
-                }}
+                className="guess-input-field"
               />
             </div>
 
@@ -360,10 +307,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
             </Button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Remaining Tries</span>
-              <span className="mono" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+          <div className="ui-stack ui-stack--xs">
+            <div className="guess-range-label-row">
+              <span className="ui-section-subtitle">Remaining Tries</span>
+              <span className="mono guess-range-value">
                 {remaining} / {MAX_TRIES}
               </span>
             </div>
@@ -379,25 +326,15 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
           </div>
 
           {guessHistory.length > 0 && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                paddingTop: 14,
-                borderTop: '1px solid var(--border-subtle)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-                  Previous Guesses
-                </span>
-                <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            <div className="ui-stack ui-stack--sm ui-divider-top">
+              <div className="ui-row--between">
+                <span className="guess-range-label">Previous Guesses</span>
+                <span className="mono ui-meta-label">
                   {guessHistory.length} {guessHistory.length === 1 ? 'guess' : 'guesses'}
                 </span>
               </div>
 
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="ui-row ui-row--wrap">
                 {guessHistory.map((item, idx) => {
                   const isCorrect = item.result === 'correct';
                   const isLow = item.result === 'low';
@@ -405,12 +342,12 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                   const isClose = !isCorrect && item.distance > 10 && item.distance <= 25;
 
                   const tone: BadgeTone = isCorrect
-                    ? 'success'
+                    ? 'sage'
                     : isVeryClose
                     ? 'danger'
                     : isClose
-                    ? 'warning'
-                    : 'accent';
+                    ? 'ochre'
+                    : 'slate';
 
                   return (
                     <Badge
@@ -418,7 +355,6 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                       tone={tone}
                       pill
                       className="guess-history-chip"
-                      style={{ padding: '4px 10px', fontSize: 12 }}
                       title={
                         isCorrect
                           ? 'Correct guess'
@@ -446,14 +382,8 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
 
       {/* Bottom Actions */}
       <div
-        className="animate-enter"
-        style={{
-          ['--stagger-index' as string]: 3,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 10,
-        }}
+        className="ui-row--between animate-enter"
+        style={{ ['--stagger-index' as string]: 3 }}
       >
         <Button variant="secondary" onClick={() => navigate('/')}>
           <FiHome size={14} strokeWidth={1.6} />

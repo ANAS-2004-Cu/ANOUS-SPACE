@@ -31,11 +31,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           </div>
         )}
         <input ref={ref} id={id} className={inputClasses} {...rest} />
-        {error && (
-          <span style={{ fontSize: 12, color: 'var(--status-danger)', lineHeight: 1.4 }}>
-            {error}
-          </span>
-        )}
+        {error && <span className="ui-field__error">{error}</span>}
       </div>
     );
   }

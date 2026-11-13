@@ -208,14 +208,14 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
       subtitle="حاسبة استثمار الجمعيات"
-      accent="emerald"
+      accent="sage"
       width="wide"
       dir="rtl"
       mainClassName="rtl-arabic"
     >
       <ToolBanner
         toolId="gameya-calculator"
-        accent="emerald"
+        accent="sage"
         dir="rtl"
         eyebrow="محاكاة مالية · عائد مركب شهري"
         title="حاسبة استثمار الجمعيات بالعائد الشهري المركب"

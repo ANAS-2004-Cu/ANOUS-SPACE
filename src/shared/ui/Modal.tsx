@@ -55,8 +55,7 @@ export const Modal: React.FC<ModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="icon-btn"
-              style={{ width: 28, height: 28 }}
+              className="icon-btn icon-btn--sm"
               aria-label="Close modal"
             >
               <FiX size={15} />

@@ -64,25 +64,15 @@ export const ParamsPanel: React.FC<ParamsPanelProps> = ({
 }) => {
   return (
     <Surface
-      accent="emerald"
+      accent="sage"
       padded
       className="animate-enter"
       style={{ ['--stagger-index' as string]: 1 }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingBottom: 10,
-            borderBottom: '1px solid var(--border-subtle)',
-          }}
-        >
-          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
-            بيانات الجمعية والعائد
-          </span>
-          <Badge tone="emerald" pill>
+      <div className="ui-stack ui-stack--lg">
+        <div className="gameya-panel-header">
+          <span className="gameya-panel-title">بيانات الجمعية والعائد</span>
+          <Badge tone="sage" pill>
             تحديث فوري
           </Badge>
         </div>
@@ -90,10 +80,10 @@ export const ParamsPanel: React.FC<ParamsPanelProps> = ({
         {/* 1. بداية الجمعية */}
         <div className="ui-field">
           <span className="ui-field__label">
-            <FiCalendar size={14} color="var(--cat-emerald-accent)" />
+            <FiCalendar size={14} className="gameya-sage-icon" />
             <span>بداية الجمعية (الشهر والسنة)</span>
           </span>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 10 }}>
+          <div className="gameya-date-grid">
             <Select
               value={startMonth}
               onChange={(e) => onStartMonthChange(Number(e.target.value))}
@@ -114,13 +104,13 @@ export const ParamsPanel: React.FC<ParamsPanelProps> = ({
               value={startYear}
               onChange={(e) => onStartYearChange(Number(e.target.value) || 2026)}
               aria-label="سنة البداية"
-              style={{ textAlign: 'center', fontWeight: 700 }}
+              className="gameya-year-input"
             />
           </div>
         </div>
 
         {/* 2. مدة الجمعية بالشهور */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="ui-stack ui-stack--sm">
           <Input
             id="gameya-duration"
             label="مدة الجمعية بالشهور"
@@ -134,35 +124,26 @@ export const ParamsPanel: React.FC<ParamsPanelProps> = ({
               const val = Number(e.target.value);
               onDurationChange(Number.isNaN(val) ? 2 : val);
             }}
-            style={{ fontWeight: 700, fontSize: 15 }}
+            className="gameya-input-bold"
           />
 
           <Surface
             as="div"
             variant="recessed"
             padded={false}
-            style={{
-              padding: '10px 12px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-              fontSize: 12.5,
-            }}
+            className="gameya-summary-well"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-              <span style={{ color: 'var(--text-secondary)' }}>فترة الجمعية:</span>
-              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+            <div className="gameya-summary-row">
+              <span className="gameya-summary-label">فترة الجمعية:</span>
+              <span className="gameya-summary-val">
                 من {startLabel} إلى {endLabel} ({safeDuration} شهور)
               </span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-              <span style={{ color: 'var(--text-secondary)' }}>
+            <div className="gameya-summary-row">
+              <span className="gameya-summary-label">
                 إجمالي قبض الجمعية (المدة × القسط):
               </span>
-              <span
-                className="mono"
-                style={{ color: 'var(--cat-emerald-accent)', fontWeight: 700 }}
-              >
+              <span className="mono gameya-sage-text">
                 {formatMoney(totalAssociationAmount)}
               </span>
             </div>
@@ -174,7 +155,7 @@ export const ParamsPanel: React.FC<ParamsPanelProps> = ({
           id="gameya-installment"
           label={
             <>
-              <FiDollarSign size={14} color="var(--cat-emerald-accent)" />
+              <FiDollarSign size={14} className="gameya-sage-icon" />
               <span>قيمة القسط الشهري / الاسم (ج.م)</span>
             </>
           }
@@ -184,26 +165,21 @@ export const ParamsPanel: React.FC<ParamsPanelProps> = ({
           step={100}
           value={installment}
           onChange={(e) => onInstallmentChange(Math.max(0, Number(e.target.value) || 0))}
-          style={{ fontWeight: 700, fontSize: 15 }}
+          className="gameya-input-bold"
         />
 
         {/* 4. نسبة العائد السنوي المتوقعة % */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="ui-stack ui-stack--xs">
           <Input
             id="gameya-rate"
             label={
               <>
-                <FiPercent size={14} color="var(--cat-emerald-accent)" />
+                <FiPercent size={14} className="gameya-sage-icon" />
                 <span>نسبة العائد السنوي المتوقعة %</span>
               </>
             }
             hint={
-              <span
-                className="mono"
-                style={{ color: 'var(--cat-emerald-accent)', fontWeight: 600 }}
-              >
-                {monthlyRatePercent}% شهرياً
-              </span>
+              <span className="mono gameya-sage-text">{monthlyRatePercent}% شهرياً</span>
             }
             type="number"
             mono
@@ -212,17 +188,17 @@ export const ParamsPanel: React.FC<ParamsPanelProps> = ({
             step={0.5}
             value={annualRate}
             onChange={(e) => onAnnualRateChange(Math.max(0, Number(e.target.value) || 0))}
-            style={{ fontWeight: 700, fontSize: 15 }}
+            className="gameya-input-bold"
           />
-          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+          <span className="ui-section-subtitle">
             يُحسب العائد شهرياً بشكل مركب (العائد السنوي ÷ 12) ويُضاف لرصيد الصندوق آخر كل شهر.
           </span>
         </div>
 
         {/* 5. نظام القبض */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="ui-stack ui-stack--sm">
           <span className="ui-field__label">
-            <FiLayers size={14} color="var(--cat-emerald-accent)" />
+            <FiLayers size={14} className="gameya-sage-icon" />
             <span>نظام القبض</span>
           </span>
 
@@ -251,7 +227,7 @@ export const ParamsPanel: React.FC<ParamsPanelProps> = ({
               ))}
             </Select>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="ui-stack ui-stack--sm">
               <Select
                 label={`شهر الدفعة الأولى (50% = ${formatMoney(totalAssociationAmount / 2)})`}
                 value={safeFirstHalf}

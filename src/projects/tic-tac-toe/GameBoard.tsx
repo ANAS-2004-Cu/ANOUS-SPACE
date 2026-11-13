@@ -120,11 +120,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               )}
 
               {showGhost && previewPlayer === 'X' && (
-                <span
-                  className="ttt-cell__ghost"
-                  style={{ color: 'var(--accent)' }}
-                  aria-hidden="true"
-                >
+                <span className="ttt-cell__ghost ttt-cell__ghost--x" aria-hidden="true">
                   <svg width="38" height="38" viewBox="0 0 42 42" fill="none">
                     <path
                       d="M10 10L32 32M32 10L10 32"
@@ -137,11 +133,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               )}
 
               {showGhost && previewPlayer === 'O' && (
-                <span
-                  className="ttt-cell__ghost"
-                  style={{ color: 'var(--cat-amber-secondary)' }}
-                  aria-hidden="true"
-                >
+                <span className="ttt-cell__ghost ttt-cell__ghost--o" aria-hidden="true">
                   <svg width="38" height="38" viewBox="0 0 42 42" fill="none">
                     <circle
                       cx="21"

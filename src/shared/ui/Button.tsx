@@ -29,7 +29,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button disabled={disabled || loading} className={classes} {...rest}>
-      {loading && <span className="spinner" style={{ width: 13, height: 13 }} />}
+      {loading && <span className="spinner spinner--sm" />}
       {children}
     </button>
   );

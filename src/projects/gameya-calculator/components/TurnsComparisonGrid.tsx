@@ -18,33 +18,23 @@ export const TurnsComparisonGrid: React.FC<TurnsComparisonGridProps> = ({
 }) => {
   return (
     <Surface
-      accent="emerald"
+      accent="sage"
       padded
       className="animate-enter"
       style={{ ['--stagger-index' as string]: 3 }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 10,
-            flexWrap: 'wrap',
-          }}
-        >
+      <div className="ui-stack ui-stack--md">
+        <div className="ui-row--between">
           <div>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>
+            <h2 className="gameya-panel-title">
               مقارنة صافي الربح حسب شهر القبض (من الشهر 1 إلى الشهر {safeDuration})
             </h2>
-            <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>
+            <p className="ui-section-subtitle">
               اضغط على أي شهر لمعاينة تفاصيله؛ كلما كان القبض مبكراً زاد الرصيد المستثمر وتضاعف
               العائد المركب
             </p>
           </div>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            الشهر المحدد حالياً: الشهر {selectedMonth}
-          </span>
+          <span className="ui-meta-label">الشهر المحدد حالياً: الشهر {selectedMonth}</span>
         </div>
 
         <div className="gameya-turns-grid">
@@ -60,44 +50,35 @@ export const TurnsComparisonGrid: React.FC<TurnsComparisonGridProps> = ({
                   .filter(Boolean)
                   .join(' ')}
               >
-                <div
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 6,
-                  }}
-                >
+                <div className="gameya-turn-top">
                   <span
-                    style={{
-                      fontSize: 12.5,
-                      fontWeight: 700,
-                      color: isSelected ? 'var(--cat-emerald-accent)' : 'var(--text-primary)',
-                    }}
+                    className={[
+                      'gameya-turn-title',
+                      isSelected ? 'gameya-turn-title--selected' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                   >
                     الشهر {item.monthNumber}
                   </span>
-                  {isSelected && <FiCheckCircle size={14} color="var(--cat-emerald-accent)" />}
+                  {isSelected && <FiCheckCircle size={14} className="gameya-sage-icon" />}
                 </div>
 
-                <span style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
-                  {item.monthLabel}
-                </span>
+                <span className="ui-meta-label">{item.monthLabel}</span>
 
                 <div
-                  className="mono"
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: hasProfit ? 'var(--cat-emerald-accent)' : 'var(--text-muted)',
-                    marginTop: 2,
-                  }}
+                  className={[
+                    'mono',
+                    'gameya-turn-profit',
+                    hasProfit ? 'gameya-turn-profit--positive' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   {formatMoney(item.netProfit)}
                 </div>
 
-                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                <span className="gameya-kpi-hint">
                   صافي داخل الصندوق:{' '}
                   <span className="mono">{formatMoney(item.netEntered)}</span>
                 </span>

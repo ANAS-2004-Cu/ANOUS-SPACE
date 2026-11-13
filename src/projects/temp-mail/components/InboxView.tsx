@@ -39,24 +39,16 @@ export const InboxView: React.FC<InboxViewProps> = ({
   onResetSession,
 }) => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div className="ui-stack ui-stack--md">
       {/* Shared Inbox Toolbar */}
       <Surface
-        accent="violet"
+        accent="slate"
         padded={false}
-        className="animate-enter"
-        style={{ padding: '12px 16px', ['--stagger-index' as string]: 0 }}
+        className="inbox-toolbar animate-enter"
+        style={{ ['--stagger-index' as string]: 0 }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <div className="ui-row--between">
+          <div className="ui-row ui-row--md ui-flex-1">
             <Button
               variant="secondary"
               size="sm"
@@ -67,31 +59,20 @@ export const InboxView: React.FC<InboxViewProps> = ({
               <span>Providers</span>
             </Button>
 
-            <Badge tone="violet" pill>
+            <Badge tone="slate" pill>
               {providerLabel}
             </Badge>
 
             {address && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              <div className="ui-row ui-flex-1">
                 <span className="live-dot" />
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 13,
-                    color: 'var(--text-primary)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {address}
-                </span>
+                <span className="mono inbox-address-text ui-truncate">{address}</span>
                 {sessionError && <Badge tone="danger">Session Error</Badge>}
               </div>
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="ui-row">
             {toolbarExtra}
             <Button
               variant="secondary"
@@ -100,10 +81,7 @@ export const InboxView: React.FC<InboxViewProps> = ({
               disabled={refreshing}
               aria-label="Refresh Inbox"
             >
-              <FiRefreshCw
-                size={13}
-                style={refreshing ? { animation: 'spin 0.8s linear infinite' } : undefined}
-              />
+              <FiRefreshCw size={13} className={refreshing ? 'icon-spin' : undefined} />
               <span>Refresh</span>
             </Button>
           </div>
@@ -115,32 +93,19 @@ export const InboxView: React.FC<InboxViewProps> = ({
         <button
           type="button"
           onClick={onResetSession}
-          className="animate-enter"
-          style={{
-            width: '100%',
-            backgroundColor: 'var(--status-danger-subtle)',
-            border: '1px solid var(--status-danger-border)',
-            borderRadius: 'var(--radius-lg)',
-            padding: '10px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            color: 'var(--status-danger)',
-            fontSize: 13,
-            textAlign: 'left',
-          }}
+          className="inbox-session-error-btn animate-enter"
         >
-          <FiAlertTriangle size={15} strokeWidth={1.6} style={{ flexShrink: 0 }} />
+          <FiAlertTriangle size={15} strokeWidth={1.6} className="inbox-error-icon" />
           <span>Session error detected. Click here to reset your session.</span>
         </button>
       )}
 
       {/* Message List / Loading / Empty State */}
       {loading && !refreshing ? (
-        <Surface accent="violet" padded={false}>
-          <div className="ui-empty-state">
-            <div className="spinner" style={{ width: 22, height: 22 }} />
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Loading emails...</span>
+        <Surface accent="slate" padded={false}>
+          <div className="inbox-loading-well">
+            <div className="spinner" />
+            <span className="ui-section-subtitle">Loading emails...</span>
           </div>
         </Surface>
       ) : emails.length === 0 ? (
@@ -161,7 +126,7 @@ export const InboxView: React.FC<InboxViewProps> = ({
           }
         />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="ui-stack ui-stack--sm">
           {emails.map((item, idx) => (
             <MessageRow
               key={item.id}

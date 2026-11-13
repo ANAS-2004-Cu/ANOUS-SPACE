@@ -35,12 +35,11 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
               .filter(Boolean)
               .join(' ')}
           >
-            <span style={{ whiteSpace: 'nowrap' }}>{meta.label}</span>
+            <span>{meta.label}</span>
             {hasAccount && (
               <span
-                className="live-dot"
+                className="live-dot live-dot--sm"
                 title="Active inbox ready"
-                style={{ width: 6, height: 6 }}
               />
             )}
           </button>

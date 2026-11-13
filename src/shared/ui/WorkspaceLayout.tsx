@@ -18,7 +18,7 @@ export interface WorkspaceLayoutProps {
 export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({
   onOpenCommandPalette,
   subtitle,
-  accent = 'cobalt',
+  accent = 'terracotta',
   width = 'full',
   dir,
   mainClassName = '',
@@ -30,7 +30,6 @@ export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = ({
 
   return (
     <div className="workspace-stage" data-accent={accent}>
-      <div className="workspace-stage__spotlight" aria-hidden="true" />
       <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle={subtitle} accent={accent} />
       <div className="workspace-shell">
         <main dir={dir} className={mainClasses}>

@@ -1,22 +1,20 @@
 import React from 'react';
 
-export type ToolAccent = 'cobalt' | 'cyan' | 'violet' | 'amber' | 'emerald' | 'indigo';
+export type ToolAccent = 'terracotta' | 'slate' | 'ochre' | 'sage';
 
 export function getToolAccent(id: string): ToolAccent {
   switch (id) {
     case 'scratchpad':
-      return 'cyan';
     case 'temp-mail':
-      return 'violet';
+      return 'slate';
     case 'tic-tac-toe':
     case 'guess-game':
-      return 'amber';
+      return 'ochre';
     case 'gameya-calculator':
-      return 'emerald';
-    case 'ecommerce-showcase':
-      return 'indigo';
+    case 'gameya-calc':
+      return 'sage';
     default:
-      return 'cobalt';
+      return 'terracotta';
   }
 }
 
@@ -28,7 +26,6 @@ export interface ToolEmblemProps {
 export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
   switch (id) {
     case 'scratchpad':
-      // Code editor window with syntax brackets
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect
@@ -51,7 +48,6 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'temp-mail':
-      // Clean envelope with unread dot
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect
@@ -75,7 +71,6 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'tic-tac-toe':
-      // 3x3 board with X and O
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
@@ -96,7 +91,6 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'guess-game':
-      // Clean numeric range / dial glyph for 0-99 guessing
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect
@@ -126,7 +120,7 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'gameya-calculator':
-      // Ascending financial ledger bars
+    case 'gameya-calc':
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="4" y="13.5" width="3.5" height="6.5" rx="1" stroke="currentColor" strokeWidth="1.65" />
@@ -143,7 +137,6 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'ecommerce-showcase':
-      // Isometric storefront box
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
@@ -163,7 +156,6 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     default:
-      // Modular grid icon
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="4" y="4" width="7" height="7" rx="1.8" stroke="currentColor" strokeWidth="1.75" />
@@ -178,11 +170,10 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
 export const HeroGeometry: React.FC = () => (
   <svg
     className="hub-hero__geometry"
-    viewBox="0 0 200 120"
+    viewBox="0 0 204 122"
     fill="none"
     aria-hidden="true"
   >
-    {/* Clean architectural tile cluster inspired by Vercel / Linear */}
     <rect
       x="22"
       y="20"
@@ -219,21 +210,20 @@ export const HeroGeometry: React.FC = () => (
       width="52"
       height="32"
       rx="8"
-      stroke="var(--border-strong)"
+      stroke="var(--tone-sage-border)"
       strokeWidth="1.2"
-      fill="var(--bg-recessed)"
+      fill="var(--tone-sage-subtle)"
     />
     <rect
       x="108"
       y="74"
-      width="44"
+      width="46"
       height="32"
       rx="8"
-      stroke="var(--cat-cyan-border)"
+      stroke="var(--tone-slate-border)"
       strokeWidth="1.2"
-      fill="var(--cat-cyan-subtle)"
+      fill="var(--tone-slate-subtle)"
     />
-    {/* Crisp interior marks */}
     <path
       d="M93 39L101 31L109 39L101 47Z"
       stroke="var(--accent)"

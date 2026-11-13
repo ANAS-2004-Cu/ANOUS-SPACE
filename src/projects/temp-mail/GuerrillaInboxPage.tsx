@@ -180,7 +180,7 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
       subtitle="GuerrillaMail Inbox"
-      accent="violet"
+      accent="slate"
       width="medium"
     >
       <InboxView

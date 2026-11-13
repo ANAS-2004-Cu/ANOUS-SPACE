@@ -112,7 +112,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
       subtitle={`${meta.label} Inbox`}
-      accent="violet"
+      accent="slate"
       width="medium"
     >
       <InboxView

@@ -46,7 +46,7 @@ export const VaultModal: React.FC = () => {
       title={
         <>
           {isUnlocked ? (
-            <FiUnlock size={15} color="var(--cat-emerald-accent)" />
+            <FiUnlock size={15} color="var(--tone-sage)" />
           ) : (
             <FiLock size={15} color="var(--text-secondary)" />
           )}
@@ -56,12 +56,12 @@ export const VaultModal: React.FC = () => {
     >
       <div className="ui-modal-body">
         {isUnlocked ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+          <div className="ui-stack ui-stack--lg">
+            <p className="ui-modal-copy">
               Private Vault is currently unlocked for this browser session. Restricted tools are
               accessible under the Private filter on the workspace hub.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <div className="ui-row" style={{ justifyContent: 'flex-end' }}>
               <Button variant="secondary" size="sm" onClick={closeVaultModal}>
                 Close
               </Button>
@@ -78,8 +78,8 @@ export const VaultModal: React.FC = () => {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+          <form onSubmit={handleSubmit} className="ui-stack ui-stack--lg">
+            <p className="ui-modal-copy">
               Enter administrator credentials to unlock private workspace items.
             </p>
             <Input
@@ -94,7 +94,7 @@ export const VaultModal: React.FC = () => {
               placeholder="Vault password"
               error={error}
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <div className="ui-row" style={{ justifyContent: 'flex-end' }}>
               <Button type="button" variant="secondary" size="sm" onClick={closeVaultModal}>
                 Cancel
               </Button>
