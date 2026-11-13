@@ -1,98 +1,106 @@
-# Hub Architecture (`ANOUS-SPACE`)
+# Hub System Architecture (`ANOUS-SPACE`)
 
-This document explains how the `ANOUS-SPACE` host shell, shared UI/context primitives, isolated `src/projects/*` modules, and the `/api/vault` endpoint fit together.
+[![Layer](https://img.shields.io/badge/Architecture-Modular_Host_Shell-3B82F6?style=flat-square)](../README.md)
+[![Isolation](https://img.shields.io/badge/Boundary-Strict_Module_Isolation-10B981?style=flat-square)](#2-the-module-isolation-rule)
+[![Security](https://img.shields.io/badge/Vault-Session_Scoped_Guard-F43F5E?style=flat-square)](#4-private-vault--guarded-internal-routes)
+
+This document details how the `ANOUS-SPACE` host shell, shared UI and context layer (`src/shared/`), isolated micro-applications (`src/projects/*`), and serverless endpoints (`api/*`) interact.
 
 ---
 
-## 1. System Interaction Diagram
+## 1. System Topology
 
 ```mermaid
 flowchart TD
-  subgraph Shell["Hub Shell & Global Providers (src/)"]
-    App["App.tsx (Router + Ctrl+K Listener)"]
-    Hub["pages/HubHome.tsx (Hero + Bento Grid + 1-9 Keys)"]
-    Registry["data/projects.ts (PUBLIC_PROJECTS)"]
+  subgraph Shell["Host Shell & Global Router (src/)"]
+    App["App.tsx (BrowserRouter + Ctrl+K Listener + VaultGuard)"]
+    Hub["pages/HubHome.tsx (Bento Grid + Category Filter + 1-9 Shortcuts)"]
+    Registry["data/projects.ts (PUBLIC_PROJECTS Registry)"]
   end
 
-  subgraph Shared["Shared Layer (src/shared/)"]
+  subgraph Shared["Shared Boundary Layer (src/shared/)"]
     Contexts["ThemeContext / VaultContext / AlertContext"]
     UI["AppHeader / CommandPalette / VaultModal / AlertModal / Button"]
     Utils["storage.ts / clipboard.ts / recentTools.ts"]
   end
 
-  subgraph Modules["Isolated Feature Modules (src/projects/*)"]
+  subgraph PublicModules["Public Feature Modules (src/projects/*)"]
     Scratchpad["scratchpad/ScratchpadPage.tsx"]
     TempMail["temp-mail/* (Hub, Inboxes, Detail, Service)"]
     TicTacToe["tic-tac-toe/TicTacToePage.tsx"]
     GuessGame["guess-game/GuessGamePage.tsx"]
   end
 
-  subgraph Serverless["Serverless API Layer (api/)"]
-    VaultAPI["POST /api/vault"]
-    MailProxies["/api/guerrilla, /api/maildrop, /api/tempmail-lol"]
+  subgraph GuardedModules["Vault-Guarded Private Modules"]
+    PrivateRoute["VaultGuard Wrapper (isUnlocked === true)"]
+    PrivateApp["Restricted Internal Micro-Apps (src/projects/*)"]
+  end
+
+  subgraph Serverless["Serverless Edge / API Layer (api/)"]
+    VaultAPI["POST /api/vault (Password Auth & Private Manifest)"]
+    MailProxies["/api/guerrilla · /api/maildrop · /api/tempmail-lol"]
   end
 
   App --> Contexts
   App --> UI
   App --> Hub
-  App --> Modules
+  App --> PublicModules
+  App --> PrivateRoute
+  PrivateRoute --> PrivateApp
   Hub --> Registry
   Hub --> Shared
-  Modules --> Shared
+  PublicModules --> Shared
+  PrivateApp --> Shared
   Contexts --> VaultAPI
   TempMail --> MailProxies
 ```
 
 ---
 
-## 2. Module Isolation Rule
+## 2. The Module Isolation Rule
 
-To keep the repository maintainable as new utilities and games are added, `ANOUS-SPACE` enforces a strict architectural boundary:
+To keep the repository clean and prevent cross-tool coupling as new utilities and games are mounted, `ANOUS-SPACE` enforces three non-negotiable rules:
 
-1. **Self-Contained Modules**: Every internal micro-application lives inside `src/projects/<module-name>/` with its own views, helper services, and `README.md`.
-2. **No Sibling Imports**: A module inside `src/projects/<module-a>/` must **never** import from `src/projects/<module-b>/`.
-3. **Shared Layer Only**: Modules inside `src/projects/*` may import only from `src/shared/` (`AppHeader`, `Button`, `AlertContext`, `VaultContext`, `ThemeContext`, `storage`, `clipboard`, `recentTools`).
+1. **Self-Contained Feature Directories**: Every internal micro-application resides inside `src/projects/<module-name>/` with its own view components, domain services, and a dedicated `README.md`.
+2. **Zero Sibling Imports**: A module in `src/projects/<module-a>/` must **never** import files, types, or helpers from `src/projects/<module-b>/`.
+3. **Shared Layer Boundary Only**: Modules inside `src/projects/*` may import only from `src/shared/` (`AppHeader`, `Button`, `ThemeContext`, `AlertContext`, `VaultContext`, `storage`, `clipboard`, and `recentTools`).
 
----
-
-## 3. Hub Shell & Shared Contexts (`src/shared/`)
-
-### `ThemeContext` (`src/shared/context/ThemeContext.tsx`)
-- Manages the active visual theme (`'dark'` | `'light'`), persists selection in `localStorage['anous_theme']`, and synchronizes `document.documentElement.setAttribute('data-theme', theme)`.
-- Toggled directly from the sun/moon icon button in `AppHeader`.
-
-### `VaultContext` (`src/shared/context/VaultContext.tsx`) & `VaultModal` (`src/shared/ui/VaultModal.tsx`)
-- Sends `POST /api/vault` with `{ password }`. Upon verification against server-side credentials, normalizes the returned private entries into `ProjectItem[]` objects under category `'Private'`.
-- Persists `{ unlocked: true, projects }` in `window.sessionStorage['anous_vault_session']` so closing the browser tab automatically purges the session and locks the Vault.
-
-### `AlertContext` (`src/shared/context/AlertContext.tsx`) & `AlertModal` (`src/shared/ui/AlertModal.tsx`)
-- Exposes `useAlert().showAlert(title, message, actions)` for accessible confirmation and notification dialogs supporting `'default'`, `'cancel'`, and `'destructive'` action buttons.
-
-### `CommandPalette` (`src/shared/ui/CommandPalette.tsx`) & Keyboard Shortcuts
-- Global modal search toggled via `Ctrl+K` (`Cmd+K`) or the header `Search` button.
-- Searches `PUBLIC_PROJECTS` (and `privateProjects` when unlocked) across titles, descriptions, categories, badges, and keywords.
-- Typing `"vault"` surfaces a direct action row to unlock or manage the Private Vault.
-- On `HubHome` (`/`), pressing number keys `1`–`9` (when no modal or input is focused) launches the corresponding visible card immediately.
-
-### `AppHeader` (`src/shared/ui/AppHeader.tsx`)
-- Renders the persistent top navigation bar across the Hub and all internal modules.
-- Holding pointer press on `ANAS GAMAL` for **2000ms** triggers `openVaultModal()`, providing a clean touch-friendly way to access the Private Vault on mobile devices.
+> [!IMPORTANT]
+> If two modules ever need the same utility or UI component, promote that primitive into `src/shared/ui/` or `src/shared/utils/` rather than importing across `src/projects/*` siblings.
 
 ---
 
-## 4. Theme & Design Tokens (`src/styles/global.css`)
+## 3. Shared Contexts & UI Primitives (`src/shared/`)
 
-All surfaces, borders, and typography tokens are defined as CSS custom properties on `:root` (`[data-theme='dark']`) and `[data-theme='light']`:
+| Primitive | File | Responsibility |
+| :--- | :--- | :--- |
+| **`ThemeContext`** | `src/shared/context/ThemeContext.tsx` | Manages `'dark'` and `'light'` themes, persists user preference in `localStorage['anous_theme']`, and updates `document.documentElement.setAttribute('data-theme', theme)`. |
+| **`VaultContext`** | `src/shared/context/VaultContext.tsx` | Authenticates against `POST /api/vault`, normalizes returned private descriptors (supporting both external URLs and internal `/...` routes), and stores session state in `sessionStorage['anous_vault_session']`. |
+| **`AlertContext`** | `src/shared/context/AlertContext.tsx` | Provides `useAlert().showAlert(title, message, actions)` for accessible modal alerts and destructive confirmations. |
+| **`AppHeader`** | `src/shared/ui/AppHeader.tsx` | Persistent top navigation bar across the Hub and all modules; hosts the Dark/Light theme switcher, `Ctrl+K` Search button, active `Vault` lock pill, and the **2000ms long-press** Vault trigger on `ANAS GAMAL`. |
+| **`CommandPalette`** | `src/shared/ui/CommandPalette.tsx` | Global `Ctrl+K` modal search indexing `PUBLIC_PROJECTS` (plus `privateProjects` when unlocked) and handling the `"vault"` command trigger. |
 
-| Token | Dark Mode | Light Mode | Purpose |
-| :--- | :--- | :--- | :--- |
-| `--bg-app` | `#0E1015` | `#F8FAFC` | Main canvas with subtle dot-grid and radial top spotlight |
-| `--bg-surface` | `#161922` | `#FFFFFF` | Card, modal, and panel surface |
-| `--bg-elevated` | `#1C202B` | `#F1F5F9` | Highlighted list rows and elevated controls |
-| `--border-subtle` | `#252A37` | `#E2E8F0` | Crisp `1px solid` structural borders |
-| `--text-primary` | `#F3F4F6` | `#0F172A` | Primary headings and values |
-| `--text-secondary` | `#9CA3AF` | `#475569` | Body copy and secondary labels |
-| `--text-muted` | `#6B7280` | `#64748B` | Telemetry, shortcut badges, and timestamps |
-| `--accent-tools` | `#3B82F6` | `#3B82F6` | Royal Blue accent for `Tools` cards and primary actions |
-| `--accent-games` | `#10B981` | `#10B981` | Emerald accent for `Games` cards |
-| `--accent-projects` | `#8B5CF6` | `#8B5CF6` | Violet accent for 2-column `Projects` showcase cards |
+---
+
+## 4. Private Vault & Guarded Internal Routes
+
+`ANOUS-SPACE` supports two classes of Private Vault entries returned by `/api/vault`:
+- **External Private Links (`type: 'external'`)**: Staging deployments or external dashboards that open in a new tab.
+- **Guarded Internal Modules (`type: 'internal'`)**: Self-contained micro-apps inside `src/projects/<private-module>/` whose `url` or `to` begins with `/`:
+  - Omitted from `PUBLIC_PROJECTS` in `src/data/projects.ts` so they never appear on the public Hub Home or Command Palette when locked.
+  - Wrapped in `<VaultGuard>` inside `src/App.tsx`, which checks `useVault().isUnlocked` synchronously from `sessionStorage` and immediately redirects unauthorized direct URL visits to `/`.
+  - Excluded from persistent `localStorage['anous_recent_tools']` so locked browsers retain zero trace of private module IDs.
+
+---
+
+## 5. Theme Tokens & Per-Route Atmospheres
+
+While global CSS variables in `src/styles/global.css` define the Hub shell's base tokens, each internal workspace wraps its view in `.route-theme-canvas` to project a distinct visual identity:
+
+| Workspace | Route | Dark Canvas | Light Canvas | Primary Accent |
+| :--- | :--- | :--- | :--- | :--- |
+| **Hub Home** | `/` | `#0B0F19` (Midnight Navy) | `#F4F6FA` (Warm Paper) | Category-Coded (`#3B82F6` / `#10B981` / `#8B5CF6` / `#F43F5E`) |
+| **Quick Scratchpad** | `/scratchpad` | `#0D1117` (GitHub Obsidian) | `#F6F8FA` (Daylight IDE) | Electric Blue (`#3B82F6`) & Emerald (`#10B981`) |
+| **Temp-Mail Suite** | `/temp-mail/*` | `#0F1322` (Indigo Slate) | `#F2F4FB` (Soft Indigo) | Provider-Coded (`#6366F1` / `#10B981` / `#F59E0B` / `#06B6D4`) |
+| **Tic-Tac-Toe Arena** | `/tic-tac-toe` | `#13141B` (Charcoal Tabletop) | `#F4F4F7` (Warm Alabaster) | Sky-Blue `X` (`#38BDF8`) vs. Coral-Orange `O` (`#FB923C`) |
+| **Number Guess** | `/guess-game` | `#0C1624` → `#241313` (Thermal) | `#EFF6FF` → `#FEF2F2` | Proximity-Reactive (`#38BDF8` → `#F59E0B` → `#FB7185` → `#10B981`) |

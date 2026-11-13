@@ -1,12 +1,16 @@
-# Extending `ANOUS-SPACE`
+# Developer Playbook: Extending `ANOUS-SPACE`
 
-This guide documents the `ProjectItem` schema in `src/data/projects.ts` and provides step-by-step checklists for registering an external showcase link or mounting a new self-contained internal module.
+[![Registry](https://img.shields.io/badge/Registry-src%2Fdata%2Fprojects.ts-3B82F6?style=flat-square)](#1-the-projectitem-schema)
+[![Router](https://img.shields.io/badge/Router-src%2FApp.tsx-10B981?style=flat-square)](#3-mounting-a-new-public-internal-module)
+[![Vault](https://img.shields.io/badge/Vault-Guarded_Private_Modules-F43F5E?style=flat-square)](#4-mounting-a-vault-guarded-private-module)
+
+This playbook provides copy-paste-ready patterns for registering external project showcases, mounting new public internal modules, or adding restricted Private Vault micro-apps.
 
 ---
 
-## 1. The `ProjectItem` Interface (`src/data/projects.ts`)
+## 1. The `ProjectItem` Schema
 
-All cards displayed on the Hub Home (`/`) and indexed by `CommandPalette` conform to the `ProjectItem` interface defined in `src/data/projects.ts`:
+All cards rendered in the Hub Bento Grid (`/`) and indexed by `CommandPalette` (`Ctrl+K`) implement the `ProjectItem` interface in `src/data/projects.ts`:
 
 ```ts
 export type ProjectCategory = 'Tools' | 'Games' | 'Projects' | 'Private';
@@ -27,42 +31,44 @@ export interface ProjectItem {
 
 ---
 
-## 2. Checklist: Registering an External Project Showcase
+## 2. Registering an External Project Showcase
 
-External project cards appear under the `All` and `Projects` tabs on the Hub Home and open in a new browser tab when selected.
+External project cards appear under the `All` and `Projects` tabs on the Hub Home (spanning 2 columns on desktop) and open in a new browser tab.
 
-- [ ] **Step 1**: Open `src/data/projects.ts`.
-- [ ] **Step 2**: Append a new object to `PUBLIC_PROJECTS` with `type: 'external'`, `category: 'Projects'`, and `externalUrl` set to the target URL:
+1. Open `src/data/projects.ts`.
+2. Append a new entry to `PUBLIC_PROJECTS` with `category: 'Projects'` and `type: 'external'`:
 
 ```ts
 {
-  id: 'analytics-platform',
-  title: 'Real-Time Telemetry Platform',
-  description: 'Event ingestion pipeline and multi-tenant analytics dashboard.',
+  id: 'telemetry-cloud',
+  title: 'Real-Time Telemetry Cloud',
+  description: 'High-throughput event ingestion pipeline and multi-tenant observability dashboard.',
   category: 'Projects',
   type: 'external',
   externalUrl: 'https://example.com',
   badge: 'Showcase',
-  featured: false,
-  keywords: ['analytics', 'telemetry', 'dashboard', 'web'],
+  featured: true,
+  keywords: ['telemetry', 'analytics', 'cloud', 'showcase'],
 }
 ```
 
 ---
 
-## 3. Checklist: Mounting a New Internal Module
+## 3. Mounting a New Public Internal Module
 
-Internal modules live inside `src/projects/<module-name>/` and render within the application router.
+Public internal modules live in `src/projects/<module-name>/` and are accessible to all visitors.
 
-- [ ] **Step 1: Create the isolated module directory**
-  Create `src/projects/<module-name>/` containing your main page component and a module `README.md` (following the 4-section `Overview`, `Files`, `Routes & Endpoints`, and `Storage Keys` format).
+> [!IMPORTANT]
+> **Architectural Guardrail**: Every module inside `src/projects/<module-name>/` must import **only** from `src/shared/` (never from sibling directories in `src/projects/*`) and must include its own `README.md` following the 4-section module blueprint (`Overview`, `Files`, `Routes & Endpoints`, `Storage Keys`).
 
-- [ ] **Step 2: Integrate `AppHeader` and `recordRecentProject`**
-  In your module's root component, render `AppHeader` from `../../shared/ui/AppHeader` and record the module visit on mount using `recordRecentProject('<module-id>')` from `../../shared/utils/recentTools`:
+### Step 1 — Create the Module Component (`src/projects/<module-name>/MyModulePage.tsx`)
+
+Wrap the module in `.route-theme-canvas` (for custom dark/light background atmosphere) and `.workspace-shell`, include `<AppHeader />`, and register the visit via `recordRecentProject`:
 
 ```tsx
 import React, { useEffect } from 'react';
 import { AppHeader } from '../../shared/ui/AppHeader';
+import { useTheme } from '../../shared/context/ThemeContext';
 import { recordRecentProject } from '../../shared/utils/recentTools';
 
 export interface MyModulePageProps {
@@ -70,46 +76,67 @@ export interface MyModulePageProps {
 }
 
 export const MyModulePage: React.FC<MyModulePageProps> = ({ onOpenCommandPalette }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   useEffect(() => {
     recordRecentProject('my-module');
   }, []);
 
   return (
-    <div className="workspace-shell">
-      <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="My Module" />
-      <main style={{ flex: 1 }}>
-        {/* Module content */}
-      </main>
+    <div
+      className="route-theme-canvas"
+      style={{ backgroundColor: isLight ? '#F4F6FA' : '#0B0F19' }}
+    >
+      <div className="workspace-shell">
+        <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="My Module" />
+        <main style={{ flex: 1 }}>
+          {/* Module UI */}
+        </main>
+      </div>
     </div>
   );
 };
 ```
 
-- [ ] **Step 3: Register the module in `src/data/projects.ts`**
-  Append a `ProjectItem` entry to `PUBLIC_PROJECTS` with `type: 'internal'` and `to: '/my-module'`:
+### Step 2 — Register in `PUBLIC_PROJECTS` (`src/data/projects.ts`)
 
 ```ts
 {
   id: 'my-module',
-  title: 'My Module Title',
-  description: 'Concise summary of the module functionality.',
+  title: 'My Custom Utility',
+  description: 'One-line explanation of what this utility solves.',
   category: 'Tools',
   type: 'internal',
   to: '/my-module',
   badge: 'Utility',
-  keywords: ['custom', 'keyword', 'search'],
+  keywords: ['utility', 'custom', 'tool'],
 }
 ```
 
-- [ ] **Step 4: Register the route in `src/App.tsx`**
-  Import `MyModulePage` in `src/App.tsx` and add a `<Route>` entry inside `<Routes>`:
+### Step 3 — Mount the Route (`src/App.tsx`) & Link Module Docs (`README.md`)
+
+Add the `<Route path="/my-module" ... />` entry in `src/App.tsx`, create `src/projects/my-module/README.md`, and add a row to the **Public Modules Index** table in the root `README.md`.
+
+---
+
+## 4. Mounting a Vault-Guarded Private Module
+
+When building a private internal tool that must remain invisible to public visitors:
+
+1. **Create the isolated module** in `src/projects/<private-module>/` with its own 4-section `README.md`.
+2. **Do NOT add it to `PUBLIC_PROJECTS`** in `src/data/projects.ts` and **do NOT list it in the root `README.md`**.
+3. **Wrap the route in `<VaultGuard>`** inside `src/App.tsx`:
 
 ```tsx
 <Route
-  path="/my-module"
-  element={<MyModulePage onOpenCommandPalette={openCommandPalette} />}
+  path="/my-private-tool"
+  element={
+    <VaultGuard>
+      <MyPrivateToolPage onOpenCommandPalette={openCommandPalette} />
+    </VaultGuard>
+  }
 />
 ```
 
-- [ ] **Step 5: Add the module link to the root `README.md`**
-  Add a row to the **Modules Index** table in `/README.md` linking to `./src/projects/<module-name>/README.md`.
+4. **Include the route descriptor** (`{ id, title, description, url: '/my-private-tool' }`) in the `/api/vault` response payload so it appears automatically in the `Private` tab and `CommandPalette` whenever the Vault session is unlocked.

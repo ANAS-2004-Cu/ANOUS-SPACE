@@ -1,21 +1,42 @@
 # Quick Scratchpad & File Maker
 
+[![Category](https://img.shields.io/badge/Category-Tools-3B82F6?style=flat-square)](../../../README.md)
+[![Route](https://img.shields.io/badge/Route-%2Fscratchpad-161B22?style=flat-square)](#routes--endpoints)
+[![Atmosphere](https://img.shields.io/badge/Atmosphere-Code_Studio_IDE-0D1117?style=flat-square)](#overview)
+
 ## Overview
 
-When you need to inspect a raw API payload, pretty-print a tangled JSON response, or draft a quick `.env` or `.ts` file, spinning up a full desktop editor is unnecessary friction. **Quick Scratchpad & File Maker** drops you straight into a focused, GitHub-dark Code Studio (`#0D1117`) complete with a synchronized line-number gutter, live emerald/rose JSON syntax diagnostics, drag-and-drop file loading, and one-click `Blob` file export across any extension.
+Spinning up a full desktop IDE just to inspect a raw webhook payload, format a minified JSON response, or save a quick `.env` file is unnecessary friction. **Quick Scratchpad & File Maker** provides an instant, auto-saving browser code studio styled in GitHub-dark obsidian (`#0D1117` in Dark Mode / `#F6F8FA` in Light Mode).
+
+It pairs a synchronized line-number gutter and monospace editor window (`#161B22`) with real-time JSON syntax diagnostics, drag-and-drop local file loading, live character/word/byte telemetry, and instant client-side `Blob` file export across nine preset or custom file extensions.
+
+> [!TIP]
+> **Smart JSON Mode & Instant Export**: Whenever `.json` is selected in the extension pill bar—or when the buffer begins with `{` or `[`—the top IDE toolbar automatically activates live syntax validation (`JSON VALID` in emerald `#10B981` vs. `JSON INVALID` in rose `#F43F5E`) alongside one-click **Format** (`2-space pretty print`) and **Minify** actions.
+
+---
 
 ## Files
 
-- `ScratchpadPage.tsx`: Implements the Code Studio IDE window (`#161B22`), top window toolbar with active filename tab, synchronized scroll line-number gutter, live line/word/byte status footer, smart JSON formatter/minifier/validator, and pill-based multi-extension file exporter.
-- `README.md`: Module documentation for the Scratchpad workspace.
+| File | Responsibility |
+| :--- | :--- |
+| `ScratchpadPage.tsx` | Renders the Code Studio IDE container, top window toolbar with active filename tab, synchronized scroll line-number gutter, drag-and-drop `FileReader` importer, JSON formatter/minifier, IDE status footer, and pill-based multi-extension `Blob` downloader. |
+| `README.md` | Module documentation for the Quick Scratchpad & File Maker workspace. |
+
+---
 
 ## Routes & Endpoints
 
-- `/scratchpad`: Client route rendering `ScratchpadPage`.
+| Route | Component | Responsibility |
+| :--- | :--- | :--- |
+| `/scratchpad` | `ScratchpadPage` | Main interactive editor, JSON diagnostic workspace, and client-side file exporter. |
+
+---
 
 ## Storage Keys
 
-- `anous_scratchpad_content` (`localStorage`): Auto-saves the raw text or code buffer on every keystroke so work survives tab closes and reloads.
-- `anous_scratchpad_filename` (`localStorage`): Remembers the target base filename used when exporting a file.
-- `anous_scratchpad_ext` (`localStorage`): Remembers the selected extension pill preset (`.json`, `.env`, `.txt`, `.md`, `.js`, `.ts`, `.html`, `.css`, or `custom`).
-- `anous_recent_tools` (`localStorage`): Records `'scratchpad'` via `recordRecentProject('scratchpad')` when the workspace opens.
+| Key | Storage Engine | Purpose |
+| :--- | :--- | :--- |
+| `anous_scratchpad_content` | `localStorage` | Auto-saves the raw text or code buffer on every keystroke so work persists across reloads and browser restarts. |
+| `anous_scratchpad_filename` | `localStorage` | Persists the base filename (e.g., `snippet`) used when exporting a downloadable file. |
+| `anous_scratchpad_ext` | `localStorage` | Persists the active extension pill selection (`.txt`, `.json`, `.env`, `.md`, `.js`, `.ts`, `.html`, `.css`, or `custom`). |
+| `anous_recent_tools` | `localStorage` | Records `'scratchpad'` via `recordRecentProject('scratchpad')` so the tool surfaces in the Hub Home Recent bar. |
