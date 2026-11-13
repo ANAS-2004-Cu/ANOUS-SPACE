@@ -16,9 +16,6 @@ export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
   'mail.tm': {
     id: 'mail.tm',
     label: 'Mail.TM',
-    tagline: 'Full Mailbox',
-    description:
-      'Custom domain addresses with full HTML rendering and file attachment downloads.',
     accent: '#5278A8',
     tint: 'rgba(82, 120, 168, 0.14)',
     border: 'rgba(82, 120, 168, 0.36)',
@@ -28,9 +25,6 @@ export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
   guerrillamail: {
     id: 'guerrillamail',
     label: 'GuerrillaMail',
-    tagline: '11 Domains',
-    description:
-      'Instant disposable aliases with 11 selectable domains and quick session reset.',
     accent: '#4D8B6E',
     tint: 'rgba(77, 139, 110, 0.14)',
     border: 'rgba(77, 139, 110, 0.36)',
@@ -40,9 +34,6 @@ export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
   'tempmail.lol': {
     id: 'tempmail.lol',
     label: 'TempMail.lol',
-    tagline: 'Instant Alias',
-    description:
-      'Zero-setup temporary address with automatic browser-side message history.',
     accent: '#BD883E',
     tint: 'rgba(189, 136, 62, 0.14)',
     border: 'rgba(189, 136, 62, 0.36)',
@@ -52,9 +43,6 @@ export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
   'maildrop.cc': {
     id: 'maildrop.cc',
     label: 'Maildrop.cc',
-    tagline: 'Open Inbox',
-    description:
-      'Quick custom @maildrop.cc addresses with no registration or password required.',
     accent: '#BA5E4E',
     tint: 'rgba(186, 94, 78, 0.14)',
     border: 'rgba(186, 94, 78, 0.36)',

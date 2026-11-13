@@ -12,8 +12,13 @@ import {
 } from '../storage';
 import { fetchBlob, fetchJson, generateRandomToken } from './http';
 
-const MAILTM_API_URL = 'https://api.mail.tm';
+const MAILTM_PROXY_URL = '/api/mailtm';
 const FALLBACK_DOMAINS = ['dollicons.com', 'mail.tm'];
+
+function mailTmUrl(path: string): string {
+  const safePath = path.startsWith('/') ? path : `/${path}`;
+  return `${MAILTM_PROXY_URL}?path=${encodeURIComponent(safePath)}`;
+}
 
 interface MailTmDomainMember {
   domain?: string;
@@ -91,7 +96,7 @@ export const mailTmAdapter: MailProviderAdapter = {
     try {
       const data = await fetchJson<
         MailTmDomainMember[] | { 'hydra:member'?: MailTmDomainMember[] }
-      >(`${MAILTM_API_URL}/domains`);
+      >(mailTmUrl('/domains'));
       const members = Array.isArray(data) ? data : data?.['hydra:member'];
       if (Array.isArray(members)) {
         const domains = members
@@ -123,13 +128,13 @@ export const mailTmAdapter: MailProviderAdapter = {
     const address = `${cleanUser}@${chosenDomain}`;
     const password = generateRandomToken(12);
 
-    await fetchJson(`${MAILTM_API_URL}/accounts`, {
+    await fetchJson(mailTmUrl('/accounts'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address, password }),
     });
 
-    const auth = await fetchJson<{ token: string; id: string }>(`${MAILTM_API_URL}/token`, {
+    const auth = await fetchJson<{ token: string; id: string }>(mailTmUrl('/token'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address, password }),
@@ -156,7 +161,7 @@ export const mailTmAdapter: MailProviderAdapter = {
     const token = await getStoredToken();
     const data = await fetchJson<
       MailTmRawMessage[] | { 'hydra:member'?: MailTmRawMessage[] }
-    >(`${MAILTM_API_URL}/messages?page=1`, {
+    >(mailTmUrl('/messages?page=1'), {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -166,7 +171,7 @@ export const mailTmAdapter: MailProviderAdapter = {
 
   async fetchMessageDetail(id: string): Promise<EmailDetail> {
     const token = await getStoredToken();
-    const data = await fetchJson<MailTmRawMessage>(`${MAILTM_API_URL}/messages/${id}`, {
+    const data = await fetchJson<MailTmRawMessage>(mailTmUrl(`/messages/${id}`), {
       headers: { Authorization: `Bearer ${token}` },
     });
     return normalizeDetail(data);
@@ -174,7 +179,7 @@ export const mailTmAdapter: MailProviderAdapter = {
 
   async deleteMessage(id: string): Promise<void> {
     const token = await getStoredToken();
-    await fetchJson(`${MAILTM_API_URL}/messages/${id}`, {
+    await fetchJson(mailTmUrl(`/messages/${id}`), {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -182,11 +187,11 @@ export const mailTmAdapter: MailProviderAdapter = {
 
   async downloadAttachment(downloadUrl: string, filename: string): Promise<void> {
     const token = await getStoredToken();
-    const fullUrl = downloadUrl.startsWith('http')
-      ? downloadUrl
-      : `${MAILTM_API_URL}${downloadUrl.startsWith('/') ? '' : '/'}${downloadUrl}`;
+    const relativePath = downloadUrl.startsWith('https://api.mail.tm')
+      ? downloadUrl.replace('https://api.mail.tm', '')
+      : downloadUrl;
 
-    const blob = await fetchBlob(fullUrl, {
+    const blob = await fetchBlob(mailTmUrl(relativePath), {
       headers: { Authorization: `Bearer ${token}` },
     });
 

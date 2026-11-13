@@ -198,14 +198,14 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       }}
     >
       <div className="workspace-shell">
-        <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="Temp-Mail Client" />
+        <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="Temp-Mail" />
 
         <main
           style={{
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            gap: 18,
+            gap: 16,
             maxWidth: 740,
             width: '100%',
             margin: '0 auto',
@@ -244,14 +244,9 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                 : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
-                Create New {activeMeta.label} Address
-              </h2>
-              <span className="mono" style={{ fontSize: 11, color: textMuted }}>
-                Instant Mailbox
-              </span>
-            </div>
+            <h2 style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
+              Create New {activeMeta.label} Address
+            </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
@@ -377,7 +372,6 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                 </div>
               )}
 
-              {/* Preview */}
               <div
                 style={{
                   padding: '12px 14px',
@@ -412,60 +406,6 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
             >
               Create {activeMeta.label} Address
             </Button>
-          </section>
-
-          {/* Provider Guide */}
-          <section
-            style={{
-              backgroundColor: cardBg,
-              border: `1px solid ${cardBorder}`,
-              borderRadius: 12,
-              padding: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-            }}
-          >
-            <h3 style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
-              Provider Overview
-            </h3>
-            <p style={{ fontSize: 13, color: textSecondary, lineHeight: 1.6 }}>
-              Switch between four independent disposable email services so you always have a
-              working inbox for sign-up confirmations, one-time codes, or quick testing.
-            </p>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: 10,
-                marginTop: 4,
-              }}
-            >
-              {PROVIDER_ORDER.map((providerId) => {
-                const meta = PROVIDERS_META[providerId];
-                return (
-                  <div
-                    key={providerId}
-                    style={{
-                      padding: '10px 12px',
-                      borderRadius: 8,
-                      backgroundColor: wellBg,
-                      border: `1px solid ${cardBorder}`,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 4,
-                    }}
-                  >
-                    <span style={{ fontSize: 12, fontWeight: 600, color: meta.accent }}>
-                      {meta.label}
-                    </span>
-                    <span style={{ fontSize: 12, color: textSecondary, lineHeight: 1.5 }}>
-                      {meta.description}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
           </section>
         </main>
       </div>

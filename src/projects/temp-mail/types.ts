@@ -7,8 +7,6 @@ export type MailProviderId =
 export interface ProviderMeta {
   id: MailProviderId;
   label: string;
-  tagline: string;
-  description: string;
   accent: string;
   tint: string;
   border: string;

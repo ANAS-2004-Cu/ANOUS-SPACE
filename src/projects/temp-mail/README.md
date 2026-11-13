@@ -43,9 +43,9 @@ src/projects/temp-mail/
 
 | Provider | Endpoint / Proxy | Capabilities |
 | :--- | :--- | :--- |
-| `Mail.TM` | `https://api.mail.tm` | Domain list, account creation, JWT auth, inbox polling, message detail, delete, attachments |
+| `Mail.TM` | `/api/mailtm` → `https://api.mail.tm` | Domain list, account creation, JWT auth, inbox polling, message detail, delete, attachments |
 | `GuerrillaMail` | `/api/guerrilla` → `https://api.guerrillamail.com/ajax.php` | Session init, custom alias/domain, inbox check, message detail, session forget |
-| `TempMail.lol` | `https://api.tempmail.lol` (fallback `/api/tempmail-lol`) | Inbox creation with optional prefix, inbox polling, local message caching |
+| `TempMail.lol` | `/api/tempmail-lol` → `https://api.tempmail.lol` | Inbox creation with optional prefix, inbox polling, local message caching |
 | `Maildrop.cc` | `/api/maildrop` → `https://api.maildrop.cc/graphql` | Passwordless GraphQL inbox query, message detail query, delete mutation |
 
 ## Storage Keys

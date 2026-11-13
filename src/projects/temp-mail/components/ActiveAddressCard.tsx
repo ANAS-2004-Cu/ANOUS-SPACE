@@ -29,7 +29,7 @@ export const ActiveAddressCard: React.FC<ActiveAddressCardProps> = ({
         backgroundColor: cardBg,
         border: `1px solid ${providerMeta.border}`,
         borderRadius: 12,
-        padding: 20,
+        padding: 18,
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
@@ -38,33 +38,10 @@ export const ActiveAddressCard: React.FC<ActiveAddressCardProps> = ({
           : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 8,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="live-pulse-dot" />
-          <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
-            Active {providerMeta.label} Inbox
-          </span>
-        </div>
-        <span
-          className="mono"
-          style={{
-            fontSize: 11,
-            color: '#4D8B6E',
-            backgroundColor: 'rgba(77, 139, 110, 0.14)',
-            border: '1px solid rgba(77, 139, 110, 0.36)',
-            borderRadius: 999,
-            padding: '2px 8px',
-            fontWeight: 600,
-          }}
-        >
-          READY
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span className="live-pulse-dot" />
+        <span style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
+          Active {providerMeta.label} Inbox
         </span>
       </div>
 

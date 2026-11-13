@@ -11,7 +11,6 @@ import {
 } from '../storage';
 import { fetchJson } from './http';
 
-const TEMPMAIL_LOL_DIRECT = 'https://api.tempmail.lol';
 const TEMPMAIL_LOL_PROXY = '/api/tempmail-lol';
 
 interface TempMailLolRawMessage {
@@ -99,26 +98,14 @@ export const tempMailLolAdapter: MailProviderAdapter = {
     const cleanPrefix = (username || '').trim();
     const payload = cleanPrefix.length > 0 ? { prefix: cleanPrefix } : {};
 
-    let data: { address?: string; token?: string } | null = null;
-    try {
-      data = await fetchJson<{ address?: string; token?: string }>(
-        `${TEMPMAIL_LOL_DIRECT}/v2/inbox/create`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
-    } catch {
-      data = await fetchJson<{ address?: string; token?: string }>(
-        `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent('/v2/inbox/create')}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
-    }
+    const data = await fetchJson<{ address?: string; token?: string }>(
+      `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent('/v2/inbox/create')}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }
+    );
 
     if (!data?.address || !data?.token) {
       throw new Error('Failed to create TempMail.lol address.');
@@ -144,18 +131,11 @@ export const tempMailLolAdapter: MailProviderAdapter = {
       throw new Error('No active TempMail.lol session found.');
     }
 
-    let rawData: { emails?: TempMailLolRawMessage[] } | null = null;
-    try {
-      rawData = await fetchJson<{ emails?: TempMailLolRawMessage[] }>(
-        `${TEMPMAIL_LOL_DIRECT}/v2/inbox?token=${encodeURIComponent(stored.token)}`
-      );
-    } catch {
-      rawData = await fetchJson<{ emails?: TempMailLolRawMessage[] }>(
-        `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent(
-          '/v2/inbox'
-        )}&token=${encodeURIComponent(stored.token)}`
-      );
-    }
+    const rawData = await fetchJson<{ emails?: TempMailLolRawMessage[] }>(
+      `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent(
+        '/v2/inbox'
+      )}&token=${encodeURIComponent(stored.token)}`
+    );
 
     const incoming = Array.isArray(rawData?.emails)
       ? rawData.emails.map((item, idx) => normalizeMessage(item, idx, stored.address))

@@ -111,21 +111,121 @@ export default defineConfig({
             }
           });
         });
+
+        server.middlewares.use('/api/mailtm', (req: any, res: any) => {
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+          let body = '';
+          req.on('data', (chunk: unknown) => {
+            body += String(chunk);
+          });
+          req.on('end', async () => {
+            try {
+              const urlObj = new URL(req.url || '', 'http://localhost');
+              const path = urlObj.searchParams.get('path') || '/domains';
+              const safePath = path.startsWith('/') ? path : `/${path}`;
+              const targetUrl = `https://api.mail.tm${safePath}`;
+
+              const headers: Record<string, string> = {
+                Accept: req.headers?.accept || 'application/json',
+                'User-Agent': 'Mozilla/5.0 (compatible; AnousSpace/1.0)',
+              };
+              if (req.headers?.authorization) {
+                headers['Authorization'] = String(req.headers.authorization);
+              }
+
+              const fetchOptions: RequestInit = {
+                method: req.method || 'GET',
+                headers,
+              };
+              if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+                headers['Content-Type'] = 'application/json';
+                fetchOptions.body = body || '{}';
+              }
+
+              const upstream = await fetch(targetUrl, fetchOptions);
+              const contentType =
+                upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+              res.statusCode = upstream.status;
+              res.setHeader('Content-Type', contentType);
+              if (upstream.status === 204) {
+                res.end();
+                return;
+              }
+              const bytes = new Uint8Array(await upstream.arrayBuffer());
+              res.end(bytes);
+            } catch {
+              res.statusCode = 502;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'Failed to reach Mail.TM upstream API' }));
+            }
+          });
+        });
+
+        server.middlewares.use('/api/guerrilla', async (req: any, res: any) => {
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+          try {
+            const queryIndex = req.url?.indexOf('?') ?? -1;
+            const queryString = queryIndex !== -1 ? req.url.slice(queryIndex) : '';
+            const targetUrl = `https://api.guerrillamail.com/ajax.php${queryString}`;
+            const upstream = await fetch(targetUrl, {
+              method: req.method || 'GET',
+              headers: {
+                Accept: 'application/json',
+                'User-Agent': 'Mozilla/5.0 (compatible; AnousSpace/1.0)',
+              },
+            });
+            const text = await upstream.text();
+            res.statusCode = upstream.status;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.end(text);
+          } catch {
+            res.statusCode = 502;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: 'Failed to reach GuerrillaMail upstream API' }));
+          }
+        });
+
+        server.middlewares.use('/api/maildrop', (req: any, res: any) => {
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+          let body = '';
+          req.on('data', (chunk: any) => {
+            body += chunk;
+          });
+          req.on('end', async () => {
+            try {
+              const upstream = await fetch('https://api.maildrop.cc/graphql', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: 'application/json',
+                  'User-Agent': 'Mozilla/5.0 (compatible; AnousSpace/1.0)',
+                },
+                body: body || '{}',
+              });
+              const text = await upstream.text();
+              res.statusCode = upstream.status;
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.end(text);
+            } catch {
+              res.statusCode = 502;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: 'Failed to reach Maildrop GraphQL API' }));
+            }
+          });
+        });
       },
     },
   ],
-  server: {
-    proxy: {
-      '/api/guerrilla': {
-        target: 'https://api.guerrillamail.com/ajax.php',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/guerrilla/, ''),
-      },
-      '/api/maildrop': {
-        target: 'https://api.maildrop.cc/graphql',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/maildrop/, ''),
-      },
-    },
-  },
 });
