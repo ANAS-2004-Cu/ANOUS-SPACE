@@ -56,9 +56,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
 
   const handleSelectItem = (item: ProjectItem) => {
     onClose();
-    if (item.type === 'internal' && item.to) {
-      recordRecentProject(item.id);
-      navigate(item.to);
+    const internalTarget =
+      item.to || (item.externalUrl && item.externalUrl.startsWith('/') ? item.externalUrl : undefined);
+    if (item.type === 'internal' || internalTarget) {
+      if (item.category !== 'Private') {
+        recordRecentProject(item.id);
+      }
+      navigate(internalTarget || '/');
     } else if (item.externalUrl) {
       window.open(item.externalUrl, '_blank', 'noopener,noreferrer');
     }

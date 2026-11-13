@@ -39,6 +39,12 @@ export default defineConfig({
 
               const defaultDevPrivateApps = [
                 {
+                  id: 'gameya-calc',
+                  title: 'حاسبة استثمار الجمعيات',
+                  description: 'حساب صافي ربح استثمار قبض الجمعية في صندوق عائد شهري مركب',
+                  url: '/gameya-calculator',
+                },
+                {
                   id: 'private-env-manager',
                   title: 'Internal Config & Endpoints',
                   description: 'Private workspace endpoints and deployment notes.',

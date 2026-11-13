@@ -32,22 +32,37 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    let privateApps: unknown[] = [];
+    const builtinPrivateApps = [
+      {
+        id: 'gameya-calc',
+        title: 'حاسبة استثمار الجمعيات',
+        description: 'حساب صافي ربح استثمار قبض الجمعية في صندوق عائد شهري مركب',
+        url: '/gameya-calculator',
+      },
+    ];
+
+    let envPrivateApps: any[] = [];
     const rawPrivateApps = process.env.PRIVATE_APPS_JSON;
     if (rawPrivateApps) {
       try {
         const parsed = JSON.parse(rawPrivateApps);
         if (Array.isArray(parsed)) {
-          privateApps = parsed;
+          envPrivateApps = parsed;
         }
       } catch {
-        privateApps = [];
+        envPrivateApps = [];
       }
     }
 
+    const existingIds = new Set(envPrivateApps.map((app: any) => app?.id || app?.url));
+    const mergedApps = [
+      ...builtinPrivateApps.filter((b) => !existingIds.has(b.id) && !existingIds.has(b.url)),
+      ...envPrivateApps,
+    ];
+
     res.status(200).json({
       unlocked: true,
-      apps: privateApps,
+      apps: mergedApps,
     });
   } catch {
     res.status(400).json({ error: 'Invalid request payload.' });

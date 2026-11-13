@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ProjectItem } from '../../data/projects';
 
@@ -29,41 +29,58 @@ const VaultContext = createContext<VaultContextValue | undefined>(undefined);
 
 function normalizePrivateApps(rawApps: RawPrivateApp[]): ProjectItem[] {
   return rawApps.map((app, index) => {
-    const externalUrl = app.externalUrl || app.url;
-    const isInternal = Boolean(app.to && !externalUrl);
+    const rawTarget = (app.to || app.url || app.externalUrl || '').trim();
+    const isInternalRoute = Boolean(app.to || rawTarget.startsWith('/'));
     return {
       id: app.id || `private-app-${index + 1}`,
       title: app.title || app.name || `Private Resource ${index + 1}`,
       description: app.description || 'Restricted workspace tool or private deployment.',
       category: 'Private',
-      type: isInternal ? 'internal' : 'external',
-      to: app.to,
-      externalUrl: externalUrl || '#',
-      badge: app.badge || 'Private',
-      keywords: ['private', 'vault', (app.title || app.name || '').toLowerCase()],
+      type: isInternalRoute ? 'internal' : 'external',
+      to: isInternalRoute ? rawTarget : undefined,
+      externalUrl: isInternalRoute ? undefined : rawTarget || '#',
+      badge: app.badge || 'Vault',
+      keywords: [
+        'private',
+        'vault',
+        (app.id || '').toLowerCase(),
+        (app.title || app.name || '').toLowerCase(),
+        (app.description || '').toLowerCase(),
+      ],
     };
   });
 }
 
 export const VaultProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
-  const [privateProjects, setPrivateProjects] = useState<ProjectItem[]>([]);
-  const [vaultModalOpen, setVaultModalOpen] = useState<boolean>(false);
-
-  useEffect(() => {
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
     try {
       const saved = window.sessionStorage.getItem(VAULT_SESSION_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.unlocked) {
-          setIsUnlocked(true);
-          setPrivateProjects(Array.isArray(parsed.projects) ? parsed.projects : []);
+        return Boolean(parsed && parsed.unlocked);
+      }
+    } catch {
+      // ignore corrupted session data
+    }
+    return false;
+  });
+
+  const [privateProjects, setPrivateProjects] = useState<ProjectItem[]>(() => {
+    try {
+      const saved = window.sessionStorage.getItem(VAULT_SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.unlocked && Array.isArray(parsed.projects)) {
+          return normalizePrivateApps(parsed.projects);
         }
       }
     } catch {
       // ignore corrupted session data
     }
-  }, []);
+    return [];
+  });
+
+  const [vaultModalOpen, setVaultModalOpen] = useState<boolean>(false);
 
   const openVaultModal = useCallback(() => setVaultModalOpen(true), []);
   const closeVaultModal = useCallback(() => setVaultModalOpen(false), []);

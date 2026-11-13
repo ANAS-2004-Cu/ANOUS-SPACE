@@ -207,10 +207,14 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
   const handleOpenProject = useCallback(
     (item: ProjectItem) => {
-      if (item.type === 'internal' && item.to) {
-        const updated = recordRecentProject(item.id);
-        setRecentIds(updated);
-        navigate(item.to);
+      const internalTarget =
+        item.to || (item.externalUrl && item.externalUrl.startsWith('/') ? item.externalUrl : undefined);
+      if (item.type === 'internal' || internalTarget) {
+        if (item.category !== 'Private') {
+          const updated = recordRecentProject(item.id);
+          setRecentIds(updated);
+        }
+        navigate(internalTarget || '/');
       } else if (item.externalUrl) {
         window.open(item.externalUrl, '_blank', 'noopener,noreferrer');
       }

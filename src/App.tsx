@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './shared/context/ThemeContext';
 import { AlertProvider } from './shared/context/AlertContext';
-import { VaultProvider } from './shared/context/VaultContext';
+import { VaultProvider, useVault } from './shared/context/VaultContext';
 import { VaultModal } from './shared/ui/VaultModal';
 import { CommandPalette } from './shared/ui/CommandPalette';
 import { HubHome } from './pages/HubHome';
@@ -13,6 +13,15 @@ import { GuerrillaInboxPage } from './projects/temp-mail/GuerrillaInboxPage';
 import { EmailDetailPage } from './projects/temp-mail/EmailDetailPage';
 import { TicTacToePage } from './projects/tic-tac-toe/TicTacToePage';
 import { GuessGamePage } from './projects/guess-game/GuessGamePage';
+import { GameyaCalculatorPage } from './projects/gameya-calculator/GameyaCalculatorPage';
+
+const VaultGuard: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { isUnlocked } = useVault();
+  if (!isUnlocked) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
 const AppRoutes: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -79,6 +88,14 @@ const AppRoutes: React.FC = () => {
         <Route
           path="/guess-game"
           element={<GuessGamePage onOpenCommandPalette={openCommandPalette} />}
+        />
+        <Route
+          path="/gameya-calculator"
+          element={
+            <VaultGuard>
+              <GameyaCalculatorPage onOpenCommandPalette={openCommandPalette} />
+            </VaultGuard>
+          }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
