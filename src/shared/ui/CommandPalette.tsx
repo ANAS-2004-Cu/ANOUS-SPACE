@@ -108,7 +108,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(9, 10, 14, 0.78)',
+        backgroundColor: 'var(--bg-backdrop)',
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
@@ -121,8 +121,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
         style={{
           width: '100%',
           maxWidth: 560,
-          backgroundColor: '#161922',
-          border: '1px solid #252A37',
+          backgroundColor: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          boxShadow: 'var(--card-top-highlight), var(--card-shadow-hover)',
           borderRadius: 10,
           overflow: 'hidden',
         }}
@@ -135,11 +136,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
             alignItems: 'center',
             gap: 10,
             padding: '12px 14px',
-            borderBottom: '1px solid #252A37',
-            backgroundColor: '#11131A',
+            borderBottom: '1px solid var(--border-subtle)',
+            backgroundColor: 'var(--bg-input)',
           }}
         >
-          <FiSearch size={15} color="#6B7280" />
+          <FiSearch size={15} color="var(--text-muted)" />
           <input
             ref={inputRef}
             type="text"
@@ -151,7 +152,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
               backgroundColor: 'transparent',
               border: 'none',
               fontSize: 13,
-              color: '#F3F4F6',
+              color: 'var(--text-primary)',
             }}
           />
           <span className="kbd-badge">ESC</span>
@@ -168,24 +169,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                 justifyContent: 'space-between',
                 padding: '10px 12px',
                 borderRadius: 7,
-                backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                backgroundColor: 'var(--accent-subtle)',
                 border: '1px solid rgba(59, 130, 246, 0.35)',
                 marginBottom: 6,
                 textAlign: 'left',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <FiLock size={14} color="#3B82F6" />
+                <FiLock size={14} color="var(--accent)" />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#F3F4F6' }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
                     {isUnlocked ? 'Manage Private Vault' : 'Unlock Private Vault'}
                   </div>
-                  <div style={{ fontSize: 11, color: '#9CA3AF' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                     Authenticate with /api/vault to access restricted tools
                   </div>
                 </div>
               </div>
-              <FiCornerDownLeft size={13} color="#3B82F6" />
+              <FiCornerDownLeft size={13} color="var(--accent)" />
             </button>
           )}
 
@@ -194,7 +195,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
               style={{
                 padding: '28px 16px',
                 textAlign: 'center',
-                color: '#6B7280',
+                color: 'var(--text-muted)',
                 fontSize: 13,
               }}
             >
@@ -216,7 +217,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                     gap: 12,
                     padding: '10px 12px',
                     borderRadius: 7,
-                    backgroundColor: active ? '#1C202B' : 'transparent',
+                    backgroundColor: active ? 'var(--bg-elevated)' : 'transparent',
                     textAlign: 'left',
                   }}
                 >
@@ -226,7 +227,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                         style={{
                           fontSize: 13,
                           fontWeight: 500,
-                          color: '#F3F4F6',
+                          color: 'var(--text-primary)',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
@@ -238,9 +239,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                         className="mono"
                         style={{
                           fontSize: 10,
-                          color: '#9CA3AF',
-                          backgroundColor: '#0E1015',
-                          border: '1px solid #252A37',
+                          color: 'var(--text-secondary)',
+                          backgroundColor: 'var(--bg-app)',
+                          border: '1px solid var(--border-subtle)',
                           borderRadius: 4,
                           padding: '1px 6px',
                         }}
@@ -251,7 +252,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                     <div
                       style={{
                         fontSize: 12,
-                        color: '#6B7280',
+                        color: 'var(--text-muted)',
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -262,9 +263,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                     </div>
                   </div>
                   {item.type === 'external' ? (
-                    <FiArrowUpRight size={14} color="#6B7280" />
+                    <FiArrowUpRight size={14} color="var(--text-muted)" />
                   ) : (
-                    <FiCornerDownLeft size={13} color={active ? '#3B82F6' : '#6B7280'} />
+                    <FiCornerDownLeft
+                      size={13}
+                      color={active ? 'var(--accent)' : 'var(--text-muted)'}
+                    />
                   )}
                 </button>
               );
@@ -278,10 +282,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '8px 14px',
-            borderTop: '1px solid #252A37',
-            backgroundColor: '#11131A',
+            borderTop: '1px solid var(--border-subtle)',
+            backgroundColor: 'var(--bg-input)',
             fontSize: 11,
-            color: '#6B7280',
+            color: 'var(--text-muted)',
           }}
         >
           <span>Navigate with Up/Down arrows</span>

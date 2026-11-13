@@ -36,8 +36,8 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
     >
       <div
         style={{
-          backgroundColor: '#161922',
-          border: '1px solid #252A37',
+          backgroundColor: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: 10,
           width: '100%',
           maxWidth: 420,
@@ -54,16 +54,16 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '14px 16px',
-            borderBottom: '1px solid #252A37',
+            borderBottom: '1px solid var(--border-subtle)',
           }}
         >
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#F3F4F6' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
             Select Domain
           </span>
           <button
             type="button"
             onClick={onClose}
-            style={{ color: '#9CA3AF', display: 'inline-flex', padding: 4 }}
+            style={{ color: 'var(--text-secondary)', display: 'inline-flex', padding: 4 }}
             aria-label="Close modal"
           >
             <FiX size={16} />
@@ -87,7 +87,7 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
                   padding: '10px 12px',
                   borderRadius: 6,
                   backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
-                  color: isSelected ? '#F3F4F6' : '#9CA3AF',
+                  color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
                   fontSize: 13,
                   textAlign: 'left',
                 }}

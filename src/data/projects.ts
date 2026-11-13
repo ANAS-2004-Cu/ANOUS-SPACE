@@ -23,7 +23,7 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     type: 'internal',
     to: '/scratchpad',
     badge: 'Utility',
-    featured: true,
+    featured: false,
     keywords: ['notes', 'json', 'editor', 'download', 'file', 'env', 'code'],
   },
   {
@@ -35,7 +35,32 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     type: 'internal',
     to: '/temp-mail',
     badge: 'Network',
+    featured: false,
     keywords: ['email', 'inbox', 'disposable', 'mailtm', 'guerrilla', 'maildrop'],
+  },
+  {
+    id: 'tic-tac-toe',
+    title: 'Tic-Tac-Toe (Classic & 3-Marker)',
+    description:
+      'Standard 3×3 grid and no-draw FIFO 3-marker tactical variant with single-player AI and two-player pass-and-play.',
+    category: 'Games',
+    type: 'internal',
+    to: '/tic-tac-toe',
+    badge: 'Board',
+    featured: false,
+    keywords: ['xo', 'tictactoe', '3-marker', 'fifo', 'ai', 'game2', 'game3'],
+  },
+  {
+    id: 'guess-game',
+    title: 'Number Guess (0–99)',
+    description:
+      'Range-finding numeric deduction game with 10 attempts, proximity telemetry within 10 units, and attempt history.',
+    category: 'Games',
+    type: 'internal',
+    to: '/guess-game',
+    badge: 'Logic',
+    featured: false,
+    keywords: ['number', 'guess', 'game1', 'puzzle'],
   },
   {
     id: 'ecommerce-showcase',
@@ -48,27 +73,5 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     badge: 'Showcase',
     featured: true,
     keywords: ['store', 'shop', 'commerce', 'web', 'portfolio', 'live demo'],
-  },
-  {
-    id: 'tic-tac-toe',
-    title: 'Tic-Tac-Toe (Classic & 3-Marker)',
-    description:
-      'Standard 3×3 grid and no-draw FIFO 3-marker tactical variant with single-player AI and two-player pass-and-play.',
-    category: 'Games',
-    type: 'internal',
-    to: '/tic-tac-toe',
-    badge: 'Board',
-    keywords: ['xo', 'tictactoe', '3-marker', 'fifo', 'ai', 'game2', 'game3'],
-  },
-  {
-    id: 'guess-game',
-    title: 'Number Guess (0–99)',
-    description:
-      'Range-finding numeric deduction game with 10 attempts, proximity telemetry within 10 units, and attempt history.',
-    category: 'Games',
-    type: 'internal',
-    to: '/guess-game',
-    badge: 'Logic',
-    keywords: ['number', 'guess', 'game1', 'puzzle'],
   },
 ];

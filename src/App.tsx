@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './shared/context/ThemeContext';
 import { AlertProvider } from './shared/context/AlertContext';
 import { VaultProvider } from './shared/context/VaultContext';
 import { VaultModal } from './shared/ui/VaultModal';
@@ -38,7 +39,15 @@ const AppRoutes: React.FC = () => {
   return (
     <>
       <Routes>
-        <Route path="/" element={<HubHome onOpenCommandPalette={openCommandPalette} />} />
+        <Route
+          path="/"
+          element={
+            <HubHome
+              onOpenCommandPalette={openCommandPalette}
+              commandPaletteOpen={commandPaletteOpen}
+            />
+          }
+        />
         <Route
           path="/scratchpad"
           element={<ScratchpadPage onOpenCommandPalette={openCommandPalette} />}
@@ -83,11 +92,13 @@ const AppRoutes: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AlertProvider>
-        <VaultProvider>
-          <AppRoutes />
-        </VaultProvider>
-      </AlertProvider>
+      <ThemeProvider>
+        <AlertProvider>
+          <VaultProvider>
+            <AppRoutes />
+          </VaultProvider>
+        </AlertProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 };

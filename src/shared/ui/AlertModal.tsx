@@ -32,7 +32,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(9, 10, 14, 0.78)',
+        backgroundColor: 'var(--bg-backdrop)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -45,8 +45,9 @@ export const AlertModal: React.FC<AlertModalProps> = ({
         style={{
           width: '100%',
           maxWidth: 420,
-          backgroundColor: '#161922',
-          border: '1px solid #252A37',
+          backgroundColor: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          boxShadow: 'var(--card-top-highlight), var(--card-shadow-hover)',
           borderRadius: 10,
           padding: 20,
           display: 'flex',
@@ -55,9 +56,16 @@ export const AlertModal: React.FC<AlertModalProps> = ({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 style={{ fontSize: 15, fontWeight: 600, color: '#F3F4F6' }}>{title}</h3>
+        <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</h3>
         {message && (
-          <p style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+          <p
+            style={{
+              fontSize: 13,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.5,
+              whiteSpace: 'pre-wrap',
+            }}
+          >
             {message}
           </p>
         )}

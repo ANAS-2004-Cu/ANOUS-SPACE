@@ -44,7 +44,7 @@ export const VaultModal: React.FC = () => {
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(9, 10, 14, 0.8)',
+        backgroundColor: 'var(--bg-backdrop)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -57,8 +57,9 @@ export const VaultModal: React.FC = () => {
         style={{
           width: '100%',
           maxWidth: 400,
-          backgroundColor: '#161922',
-          border: '1px solid #252A37',
+          backgroundColor: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
+          boxShadow: 'var(--card-top-highlight), var(--card-shadow-hover)',
           borderRadius: 10,
           padding: 20,
         }}
@@ -74,15 +75,17 @@ export const VaultModal: React.FC = () => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {isUnlocked ? (
-              <FiUnlock size={15} color="#3B82F6" />
+              <FiUnlock size={15} color="var(--accent)" />
             ) : (
-              <FiLock size={15} color="#9CA3AF" />
+              <FiLock size={15} color="var(--text-secondary)" />
             )}
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#F3F4F6' }}>Private Vault</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+              Private Vault
+            </span>
           </div>
           <button
             onClick={closeVaultModal}
-            style={{ color: '#6B7280', padding: 4 }}
+            style={{ color: 'var(--text-muted)', padding: 4 }}
             aria-label="Close modal"
           >
             <FiX size={16} />
@@ -91,7 +94,7 @@ export const VaultModal: React.FC = () => {
 
         {isUnlocked ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <p style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
               Private Vault is currently unlocked for this browser session. Restricted tools are
               accessible under the Private tab.
             </p>
@@ -113,7 +116,7 @@ export const VaultModal: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <p style={{ fontSize: 13, color: '#9CA3AF', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
               Enter administrator credentials to unlock private workspace items.
             </p>
             <input
@@ -128,16 +131,16 @@ export const VaultModal: React.FC = () => {
               className="mono"
               style={{
                 width: '100%',
-                backgroundColor: '#11131A',
-                border: `1px solid ${error ? '#EF4444' : '#252A37'}`,
+                backgroundColor: 'var(--bg-input)',
+                border: `1px solid ${error ? 'var(--danger)' : 'var(--border-subtle)'}`,
                 borderRadius: 7,
                 padding: '9px 12px',
                 fontSize: 13,
-                color: '#F3F4F6',
+                color: 'var(--text-primary)',
               }}
             />
             {error && (
-              <div style={{ fontSize: 12, color: '#EF4444', lineHeight: 1.4 }}>{error}</div>
+              <div style={{ fontSize: 12, color: 'var(--danger)', lineHeight: 1.4 }}>{error}</div>
             )}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
               <Button type="button" variant="secondary" size="sm" onClick={closeVaultModal}>

@@ -25,23 +25,24 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles: Record<'primary' | 'secondary' | 'ghost' | 'danger', React.CSSProperties> = {
     primary: {
-      backgroundColor: '#3B82F6',
-      color: '#F3F4F6',
-      border: '1px solid #3B82F6',
+      backgroundColor: 'var(--accent)',
+      color: '#FFFFFF',
+      border: '1px solid var(--accent)',
     },
     secondary: {
-      backgroundColor: '#161922',
-      color: '#F3F4F6',
-      border: '1px solid #252A37',
+      backgroundColor: 'var(--bg-surface)',
+      color: 'var(--text-primary)',
+      border: '1px solid var(--border-subtle)',
+      boxShadow: 'var(--card-top-highlight)',
     },
     ghost: {
       backgroundColor: 'transparent',
-      color: '#9CA3AF',
+      color: 'var(--text-secondary)',
       border: '1px solid transparent',
     },
     danger: {
-      backgroundColor: 'rgba(239, 68, 68, 0.12)',
-      color: '#EF4444',
+      backgroundColor: 'var(--danger-subtle)',
+      color: 'var(--danger)',
       border: '1px solid rgba(239, 68, 68, 0.35)',
     },
   };

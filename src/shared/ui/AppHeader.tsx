@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiSearch, FiArrowLeft, FiUnlock } from 'react-icons/fi';
+import { FiSearch, FiArrowLeft, FiUnlock, FiSun, FiMoon } from 'react-icons/fi';
 import { useVault } from '../context/VaultContext';
+import { useTheme } from '../context/ThemeContext';
 
 export interface AppHeaderProps {
   onOpenCommandPalette: () => void;
@@ -12,6 +13,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
   const navigate = useNavigate();
   const location = useLocation();
   const { isUnlocked, openVaultModal } = useVault();
+  const { theme, toggleTheme } = useTheme();
   const pressTimerRef = useRef<number | null>(null);
   const longPressTriggeredRef = useRef(false);
   const [pressing, setPressing] = useState(false);
@@ -56,7 +58,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '18px 0',
-        borderBottom: '1px solid #252A37',
+        borderBottom: '1px solid var(--border-subtle)',
         marginBottom: 24,
         gap: 12,
       }}
@@ -72,9 +74,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
               width: 30,
               height: 30,
               borderRadius: 6,
-              backgroundColor: '#161922',
-              border: '1px solid #252A37',
-              color: '#9CA3AF',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-secondary)',
               flexShrink: 0,
             }}
             aria-label="Back to hub"
@@ -99,22 +101,22 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
             fontSize: 14,
             fontWeight: 600,
             letterSpacing: '0.06em',
-            color: pressing ? '#3B82F6' : '#F3F4F6',
+            color: pressing ? 'var(--accent)' : 'var(--text-primary)',
             userSelect: 'none',
             WebkitUserSelect: 'none',
           }}
-          title="ANAS GAMAL"
+          title="ANAS GAMAL (Hold 2s for Vault)"
         >
           <span>ANAS GAMAL</span>
         </button>
 
         {subtitle && (
           <>
-            <span style={{ color: '#252A37', fontSize: 14 }}>/</span>
+            <span style={{ color: 'var(--border-subtle)', fontSize: 14 }}>/</span>
             <span
               style={{
                 fontSize: 13,
-                color: '#9CA3AF',
+                color: 'var(--text-secondary)',
                 fontWeight: 500,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -139,9 +141,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
               gap: 6,
               padding: '6px 10px',
               borderRadius: 7,
-              backgroundColor: 'rgba(59, 130, 246, 0.12)',
+              backgroundColor: 'var(--accent-subtle)',
               border: '1px solid rgba(59, 130, 246, 0.35)',
-              color: '#3B82F6',
+              color: 'var(--accent)',
               fontSize: 11,
             }}
             title="Private Vault unlocked"
@@ -153,6 +155,26 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
 
         <button
           type="button"
+          onClick={toggleTheme}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 32,
+            height: 32,
+            borderRadius: 7,
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            color: 'var(--text-secondary)',
+          }}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? <FiSun size={14} /> : <FiMoon size={14} />}
+        </button>
+
+        <button
+          type="button"
           onClick={onOpenCommandPalette}
           style={{
             display: 'inline-flex',
@@ -160,14 +182,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onOpenCommandPalette, subt
             gap: 10,
             padding: '6px 10px',
             borderRadius: 7,
-            backgroundColor: '#161922',
-            border: '1px solid #252A37',
-            color: '#9CA3AF',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            color: 'var(--text-secondary)',
             fontSize: 12,
           }}
           aria-label="Search workspace"
         >
-          <FiSearch size={13} color="#9CA3AF" />
+          <FiSearch size={13} />
           <span>Search</span>
           <span className="kbd-badge hide-on-mobile">Ctrl K</span>
         </button>

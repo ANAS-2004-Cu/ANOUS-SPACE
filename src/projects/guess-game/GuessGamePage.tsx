@@ -238,8 +238,8 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
         {/* Main Input & Progress Card */}
         <section
           style={{
-            backgroundColor: '#161922',
-            border: '1px solid #252A37',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: 10,
             padding: 20,
             display: 'flex',
@@ -250,11 +250,11 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <label
               htmlFor="guess-number-input"
-              style={{ fontSize: 13, fontWeight: 600, color: '#F3F4F6' }}
+              style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}
             >
               Enter your guess between 0 and 99
             </label>
-            <span className="mono" style={{ fontSize: 12, color: '#6B7280' }}>
+            <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               Range: 00–99
             </span>
           </div>
@@ -282,13 +282,13 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
               className="mono"
               style={{
                 flex: 1,
-                backgroundColor: '#0E1015',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 8,
                 padding: '10px 14px',
                 fontSize: 16,
                 fontWeight: 600,
-                color: '#F3F4F6',
+                color: 'var(--text-primary)',
                 textAlign: 'center',
               }}
             />
@@ -308,8 +308,8 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
           {/* Remaining Attempts Progress Bar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: '#9CA3AF' }}>Remaining Attempts</span>
-              <span className="mono" style={{ color: '#F3F4F6', fontWeight: 600 }}>
+              <span style={{ color: 'var(--text-secondary)' }}>Remaining Attempts</span>
+              <span className="mono" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
                 {remaining} / {MAX_TRIES}
               </span>
             </div>
@@ -317,8 +317,8 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
               style={{
                 width: '100%',
                 height: 8,
-                backgroundColor: '#0E1015',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 6,
                 overflow: 'hidden',
               }}
@@ -342,10 +342,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                 flexDirection: 'column',
                 gap: 8,
                 paddingTop: 10,
-                borderTop: '1px solid #252A37',
+                borderTop: '1px solid var(--border-subtle)',
               }}
             >
-              <span style={{ fontSize: 12, color: '#9CA3AF' }}>Previous Guesses</span>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Previous Guesses</span>
               <div
                 style={{
                   display: 'flex',
@@ -369,11 +369,11 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                         borderRadius: 6,
                         backgroundColor: isCorrect
                           ? 'rgba(16, 185, 129, 0.14)'
-                          : '#0E1015',
+                          : 'var(--bg-app)',
                         border: isCorrect
                           ? '1px solid rgba(16, 185, 129, 0.4)'
-                          : '1px solid #252A37',
-                        color: isCorrect ? '#10B981' : '#F3F4F6',
+                          : '1px solid var(--border-subtle)',
+                        color: isCorrect ? '#10B981' : 'var(--text-primary)',
                         fontSize: 12,
                         fontWeight: 600,
                         flexShrink: 0,
@@ -405,7 +405,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
         {/* Status / Telemetry Panel */}
         <section
           style={{
-            backgroundColor: '#161922',
+            backgroundColor: 'var(--bg-surface)',
             border:
               statusInfo.tone === 'success'
                 ? '1px solid rgba(16, 185, 129, 0.45)'
@@ -413,7 +413,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                 ? '1px solid rgba(239, 68, 68, 0.45)'
                 : statusInfo.tone === 'accent'
                 ? '1px solid rgba(59, 130, 246, 0.45)'
-                : '1px solid #252A37',
+                : '1px solid var(--border-subtle)',
             borderRadius: 10,
             padding: '24px 20px',
             display: 'flex',
@@ -437,12 +437,12 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                   ? '#EF4444'
                   : statusInfo.tone === 'accent'
                   ? '#3B82F6'
-                  : '#F3F4F6',
+                  : 'var(--text-primary)',
             }}
           >
             {statusInfo.title}
           </div>
-          <p style={{ fontSize: 13, color: '#9CA3AF', maxWidth: 420, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 420, lineHeight: 1.5 }}>
             {statusInfo.detail}
           </p>
         </section>

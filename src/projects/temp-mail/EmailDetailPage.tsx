@@ -13,6 +13,7 @@ import {
 import { AppHeader } from '../../shared/ui/AppHeader';
 import { Button } from '../../shared/ui/Button';
 import { useAlert } from '../../shared/context/AlertContext';
+import { useTheme } from '../../shared/context/ThemeContext';
 import * as Clipboard from '../../shared/utils/clipboard';
 import * as SecureStore from '../../shared/utils/storage';
 import {
@@ -39,6 +40,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
   const rawProvider = searchParams.get('provider') || TempMailProvider.MailTM;
   const provider = rawProvider === 'mailgw' ? TempMailProvider.MailTM : rawProvider;
   const { showAlert } = useAlert();
+  const { theme } = useTheme();
 
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState<any>(null);
@@ -214,6 +216,10 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       : email.mail_subject
     : 'Message Detail';
 
+  const iframeText = theme === 'light' ? '#0F172A' : '#F3F4F6';
+  const iframeBg = theme === 'light' ? '#FFFFFF' : '#0E1015';
+  const iframeBorder = theme === 'light' ? '#E2E8F0' : '#252A37';
+
   const htmlWrapper = `<!doctype html>
 <html>
   <head>
@@ -223,8 +229,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
     <style>
       body {
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        color: #F3F4F6;
-        background-color: #0E1015;
+        color: ${iframeText};
+        background-color: ${iframeBg};
         padding: 16px;
         margin: 0;
         font-size: 14px;
@@ -234,8 +240,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       a { color: #3B82F6; }
       img { max-width: 100%; height: auto; }
       table { width: 100%; border-collapse: collapse; }
-      th, td { border: 1px solid #252A37; padding: 8px; }
-      pre, code { font-family: 'JetBrains Mono', monospace; }
+      th, td { border: 1px solid ${iframeBorder}; padding: 8px; }
+      pre, code { font-family: 'JetBrains Mono', monospace; color: inherit; }
     </style>
   </head>
   <body>
@@ -306,8 +312,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
         {loading ? (
           <div
             style={{
-              backgroundColor: '#161922',
-              border: '1px solid #252A37',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 10,
               padding: '60px 20px',
               display: 'flex',
@@ -318,13 +324,13 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
             }}
           >
             <div className="spinner" style={{ width: 22, height: 22 }} />
-            <span style={{ fontSize: 13, color: '#9CA3AF' }}>Loading email content...</span>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Loading email content...</span>
           </div>
         ) : !email ? (
           <div
             style={{
-              backgroundColor: '#161922',
-              border: '1px solid #252A37',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 10,
               padding: '60px 24px',
               display: 'flex',
@@ -336,7 +342,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
             }}
           >
             <FiAlertCircle size={32} color="#EF4444" />
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#F3F4F6' }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
               Failed to load email
             </div>
             <Button variant="primary" size="sm" onClick={fetchEmailDetails}>
@@ -348,8 +354,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
             {/* Metadata Panel */}
             <section
               style={{
-                backgroundColor: '#161922',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 10,
                 padding: 18,
                 display: 'flex',
@@ -357,7 +363,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                 gap: 12,
               }}
             >
-              <h1 style={{ fontSize: 16, fontWeight: 600, color: '#F3F4F6' }}>
+              <h1 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
                 {emailSubject || '(No subject)'}
               </h1>
 
@@ -385,7 +391,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                       gap: 12,
                       flexWrap: 'wrap',
                       paddingTop: 10,
-                      borderTop: '1px solid #252A37',
+                      borderTop: '1px solid var(--border-subtle)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -409,19 +415,19 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                         {(fromName?.charAt(0) || '?').toUpperCase()}
                       </div>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#F3F4F6' }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                           {fromName || 'Unknown'}
                         </div>
                         <div
                           className="mono"
-                          style={{ fontSize: 12, color: '#9CA3AF', wordBreak: 'break-all' }}
+                          style={{ fontSize: 12, color: 'var(--text-secondary)', wordBreak: 'break-all' }}
                         >
                           {fromEmail || ''}
                         </div>
                       </div>
                     </div>
 
-                    <span className="mono" style={{ fontSize: 11, color: '#6B7280' }}>
+                    <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                       {dateDisplay}
                     </span>
                   </div>
@@ -429,8 +435,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
               })()}
 
               {isStandardEmailModel && email.to && (
-                <div style={{ fontSize: 12, color: '#9CA3AF' }}>
-                  <span style={{ color: '#6B7280' }}>To: </span>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>To: </span>
                   <span className="mono">
                     {Array.isArray(email.to)
                       ? email.to.map((recipient: any) => recipient.address).join(', ')
@@ -443,8 +449,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
             {/* Message Body Viewer */}
             <section
               style={{
-                backgroundColor: '#161922',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 10,
                 overflow: 'hidden',
                 minHeight: 320,
@@ -457,7 +463,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                     width: '100%',
                     height: 380,
                     border: 'none',
-                    backgroundColor: '#0E1015',
+                    backgroundColor: 'var(--bg-app)',
                     display: 'block',
                   }}
                   srcDoc={htmlWrapper}
@@ -472,7 +478,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                   }}
                   style={{
                     padding: 18,
-                    color: '#F3F4F6',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                     lineHeight: 1.6,
                     whiteSpace: 'pre-wrap',
@@ -492,8 +498,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
               email.attachments.length > 0 && (
                 <section
                   style={{
-                    backgroundColor: '#161922',
-                    border: '1px solid #252A37',
+                    backgroundColor: 'var(--bg-surface)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: 10,
                     padding: 18,
                     display: 'flex',
@@ -501,7 +507,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                     gap: 10,
                   }}
                 >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#F3F4F6' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                     Attachments ({email.attachments.length})
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -526,8 +532,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                           justifyContent: 'space-between',
                           gap: 12,
                           padding: '10px 14px',
-                          backgroundColor: '#0E1015',
-                          border: '1px solid #252A37',
+                          backgroundColor: 'var(--bg-app)',
+                          border: '1px solid var(--border-subtle)',
                           borderRadius: 8,
                           textAlign: 'left',
                         }}
@@ -545,7 +551,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                             <div
                               style={{
                                 fontSize: 13,
-                                color: '#F3F4F6',
+                                color: 'var(--text-primary)',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -553,7 +559,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                             >
                               {attachment.filename || 'Attachment'}
                             </div>
-                            <div className="mono" style={{ fontSize: 11, color: '#6B7280' }}>
+                            <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                               {attachment.size
                                 ? `${(attachment.size / 1024).toFixed(0)} KB`
                                 : ''}

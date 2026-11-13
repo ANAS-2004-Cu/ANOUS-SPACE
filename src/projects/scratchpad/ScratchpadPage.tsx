@@ -300,8 +300,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
         {/* Top Action & File Export Bar */}
         <section
           style={{
-            backgroundColor: '#161922',
-            border: '1px solid #252A37',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: 10,
             padding: 14,
             display: 'flex',
@@ -345,8 +345,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                backgroundColor: '#11131A',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-input)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 7,
                 overflow: 'hidden',
               }}
@@ -363,7 +363,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                   border: 'none',
                   padding: '6px 10px',
                   fontSize: 12,
-                  color: '#F3F4F6',
+                  color: 'var(--text-primary)',
                   width: 135,
                 }}
               />
@@ -373,12 +373,12 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                 className="mono"
                 aria-label="File extension"
                 style={{
-                  backgroundColor: '#161922',
+                  backgroundColor: 'var(--bg-surface)',
                   border: 'none',
-                  borderLeft: '1px solid #252A37',
+                  borderLeft: '1px solid var(--border-subtle)',
                   padding: '6px 8px',
                   fontSize: 12,
-                  color: '#9CA3AF',
+                  color: 'var(--text-secondary)',
                   cursor: 'pointer',
                 }}
               >
@@ -397,12 +397,12 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                   className="mono"
                   aria-label="Custom extension"
                   style={{
-                    backgroundColor: '#11131A',
+                    backgroundColor: 'var(--bg-input)',
                     border: 'none',
-                    borderLeft: '1px solid #252A37',
+                    borderLeft: '1px solid var(--border-subtle)',
                     padding: '6px 8px',
                     fontSize: 12,
-                    color: '#F3F4F6',
+                    color: 'var(--text-primary)',
                     width: 68,
                   }}
                 />
@@ -420,8 +420,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
         {looksLikeJson && (
           <section
             style={{
-              backgroundColor: '#161922',
-              border: '1px solid #252A37',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 10,
               padding: '10px 14px',
               display: 'flex',
@@ -433,10 +433,10 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <FiCode size={14} color="#3B82F6" />
-              <span style={{ fontSize: 12, fontWeight: 500, color: '#F3F4F6' }}>
+              <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)' }}>
                 Smart JSON Helper
               </span>
-              <span style={{ fontSize: 12, color: '#6B7280' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                 JSON structure detected
               </span>
             </div>
@@ -486,7 +486,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
             </div>
             <button
               onClick={() => setJsonStatus(null)}
-              style={{ fontSize: 11, color: '#9CA3AF' }}
+              style={{ fontSize: 11, color: 'var(--text-secondary)' }}
             >
               Dismiss
             </button>
@@ -502,8 +502,8 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            backgroundColor: '#161922',
-            border: `1px solid ${isDragging ? '#3B82F6' : '#252A37'}`,
+            backgroundColor: 'var(--bg-surface)',
+            border: `1px solid ${isDragging ? '#3B82F6' : 'var(--border-subtle)'}`,
             borderRadius: 10,
             overflow: 'hidden',
             minHeight: 420,
@@ -527,9 +527,9 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                 style={{
                   padding: '16px 24px',
                   borderRadius: 8,
-                  backgroundColor: '#161922',
+                  backgroundColor: 'var(--bg-surface)',
                   border: '1px solid #3B82F6',
-                  color: '#F3F4F6',
+                  color: 'var(--text-primary)',
                   fontSize: 13,
                   fontWeight: 500,
                 }}
@@ -558,7 +558,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               padding: 16,
               fontSize: 13,
               lineHeight: 1.6,
-              color: '#F3F4F6',
+              color: 'var(--text-primary)',
               resize: 'vertical',
             }}
           />
@@ -573,10 +573,10 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
               justifyContent: 'space-between',
               gap: 12,
               padding: '8px 14px',
-              borderTop: '1px solid #252A37',
-              backgroundColor: '#11131A',
+              borderTop: '1px solid var(--border-subtle)',
+              backgroundColor: 'var(--bg-input)',
               fontSize: 11,
-              color: '#6B7280',
+              color: 'var(--text-muted)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

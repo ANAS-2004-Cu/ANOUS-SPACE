@@ -194,8 +194,8 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 12,
-            backgroundColor: '#161922',
-            border: '1px solid #252A37',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: 10,
             padding: '12px 16px',
             flexWrap: 'wrap',
@@ -225,7 +225,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                   className="mono"
                   style={{
                     fontSize: 13,
-                    color: '#F3F4F6',
+                    color: 'var(--text-primary)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -256,8 +256,8 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
         {loading && !refreshing ? (
           <div
             style={{
-              backgroundColor: '#161922',
-              border: '1px solid #252A37',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 10,
               padding: '60px 20px',
               display: 'flex',
@@ -268,13 +268,13 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
             }}
           >
             <div className="spinner" style={{ width: 22, height: 22 }} />
-            <span style={{ fontSize: 13, color: '#9CA3AF' }}>Loading emails...</span>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Loading emails...</span>
           </div>
         ) : emails.length === 0 ? (
           <div
             style={{
-              backgroundColor: '#161922',
-              border: '1px solid #252A37',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 10,
               padding: '60px 24px',
               display: 'flex',
@@ -285,9 +285,9 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
               textAlign: 'center',
             }}
           >
-            <FiInbox size={32} color="#6B7280" />
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#F3F4F6' }}>No emails yet</div>
-            <div style={{ fontSize: 13, color: '#9CA3AF', maxWidth: 380 }}>
+            <FiInbox size={32} color="var(--text-muted)" />
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>No emails yet</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 380 }}>
               Incoming messages will appear here. Click Refresh to check for new mail.
             </div>
           </div>
@@ -305,8 +305,8 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                   }
                 }}
                 style={{
-                  backgroundColor: '#161922',
-                  border: '1px solid #252A37',
+                  backgroundColor: 'var(--bg-surface)',
+                  border: '1px solid var(--border-subtle)',
                   borderRadius: 9,
                   padding: '14px 16px',
                   display: 'flex',
@@ -342,7 +342,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
-                      color: '#F3F4F6',
+                      color: 'var(--text-primary)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -365,7 +365,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                   <div
                     style={{
                       fontSize: 12,
-                      color: '#9CA3AF',
+                      color: 'var(--text-secondary)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -384,7 +384,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                     flexShrink: 0,
                   }}
                 >
-                  <span className="mono" style={{ fontSize: 11, color: '#6B7280' }}>
+                  <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                     {formatDate(item.createdAt)}
                   </span>
                   <button

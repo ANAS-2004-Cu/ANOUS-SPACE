@@ -1,8 +1,11 @@
-:root {
+:root,
+[data-theme='dark'] {
   --bg-app: #0E1015;
   --bg-surface: #161922;
+  --bg-surface-hover: #191D28;
   --bg-elevated: #1C202B;
-  --bg-input: #11131A;
+  --bg-input: #0E1015;
+  --bg-backdrop: rgba(9, 10, 14, 0.78);
   --border-subtle: #252A37;
   --border-hover: #363D4F;
   --text-primary: #F3F4F6;
@@ -11,12 +14,55 @@
   --accent: #3B82F6;
   --accent-hover: #2563EB;
   --accent-subtle: rgba(59, 130, 246, 0.12);
+  --accent-tools: #3B82F6;
+  --accent-tools-subtle: rgba(59, 130, 246, 0.12);
+  --accent-games: #10B981;
+  --accent-games-subtle: rgba(16, 185, 129, 0.12);
+  --accent-projects: #8B5CF6;
+  --accent-projects-subtle: rgba(139, 92, 246, 0.12);
   --danger: #EF4444;
   --danger-subtle: rgba(239, 68, 68, 0.12);
   --success: #10B981;
   --success-subtle: rgba(16, 185, 129, 0.12);
+  --card-top-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  --card-shadow-hover: 0 10px 26px -10px rgba(0, 0, 0, 0.55);
+  --dot-color: rgba(255, 255, 255, 0.035);
+  --spotlight-color: rgba(59, 130, 246, 0.075);
+  --line-art-stroke: rgba(243, 244, 246, 0.055);
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+[data-theme='light'] {
+  --bg-app: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-surface-hover: #F8FAFC;
+  --bg-elevated: #F1F5F9;
+  --bg-input: #F1F5F9;
+  --bg-backdrop: rgba(15, 23, 42, 0.45);
+  --border-subtle: #E2E8F0;
+  --border-hover: #CBD5E1;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --accent: #3B82F6;
+  --accent-hover: #2563EB;
+  --accent-subtle: rgba(59, 130, 246, 0.1);
+  --accent-tools: #3B82F6;
+  --accent-tools-subtle: rgba(59, 130, 246, 0.1);
+  --accent-games: #10B981;
+  --accent-games-subtle: rgba(16, 185, 129, 0.1);
+  --accent-projects: #8B5CF6;
+  --accent-projects-subtle: rgba(139, 92, 246, 0.1);
+  --danger: #DC2626;
+  --danger-subtle: rgba(220, 38, 38, 0.08);
+  --success: #059669;
+  --success-subtle: rgba(5, 150, 105, 0.1);
+  --card-top-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  --card-shadow-hover: 0 10px 24px -8px rgba(15, 23, 42, 0.08);
+  --dot-color: rgba(15, 23, 42, 0.045);
+  --spotlight-color: rgba(59, 130, 246, 0.06);
+  --line-art-stroke: rgba(15, 23, 42, 0.06);
 }
 
 *,
@@ -33,12 +79,18 @@ body,
   width: 100%;
   min-height: 100vh;
   background-color: var(--bg-app);
+  background-image:
+    radial-gradient(ellipse 80% 420px at 50% -80px, var(--spotlight-color), transparent 75%),
+    radial-gradient(var(--dot-color) 1px, transparent 1px);
+  background-size: 100% 100%, 22px 22px;
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 button {
@@ -47,7 +99,16 @@ button {
   border: none;
   background: none;
   color: inherit;
-  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease,
+    transform 0.12s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.14s ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 button:disabled {
@@ -92,22 +153,68 @@ a {
 }
 
 .bento-card {
+  position: relative;
+  overflow: hidden;
   background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
+  box-shadow: var(--card-top-highlight);
   border-radius: 10px;
   padding: 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 152px;
-  transition: border-color 0.14s ease, background-color 0.14s ease;
+  min-height: 168px;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    transform 0.16s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.16s ease;
   text-align: left;
   cursor: pointer;
 }
 
 .bento-card:hover {
-  border-color: var(--border-hover);
-  background-color: #191D27;
+  transform: translateY(-2px);
+  background-color: var(--bg-surface-hover);
+  border-color: var(--card-accent, var(--border-hover));
+  box-shadow: var(--card-top-highlight), var(--card-shadow-hover);
+}
+
+.bento-card:active {
+  transform: scale(0.985);
+}
+
+.bento-card .card-arrow {
+  transition: transform 0.16s cubic-bezier(0.2, 0, 0, 1), color 0.16s ease;
+}
+
+.bento-card:hover .card-arrow {
+  transform: translate(2px, -2px);
+  color: var(--card-accent, var(--accent));
+}
+
+.bento-card .card-arrow-right {
+  transition: transform 0.16s cubic-bezier(0.2, 0, 0, 1), color 0.16s ease;
+}
+
+.bento-card:hover .card-arrow-right {
+  transform: translateX(3px);
+  color: var(--card-accent, var(--accent));
+}
+
+.bento-card .card-artwork {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 112px;
+  height: 112px;
+  pointer-events: none;
+  color: var(--line-art-stroke);
+  transition: color 0.18s ease, transform 0.22s ease;
+}
+
+.bento-card:hover .card-artwork {
+  transform: scale(1.04);
 }
 
 .bento-card-featured {
@@ -118,6 +225,23 @@ a {
   .bento-card-featured {
     grid-column: span 2;
   }
+}
+
+.recent-chip {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--card-top-highlight);
+  border-radius: 8px;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.recent-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-hover);
+  box-shadow: var(--card-top-highlight), var(--card-shadow-hover);
 }
 
 .kbd-badge {

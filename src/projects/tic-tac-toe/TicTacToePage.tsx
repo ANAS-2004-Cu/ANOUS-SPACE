@@ -383,8 +383,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
             gridTemplateColumns: '1fr 1fr',
             gap: 6,
             padding: 5,
-            backgroundColor: '#161922',
-            border: '1px solid #252A37',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: 9,
           }}
         >
@@ -397,7 +397,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               fontSize: 13,
               fontWeight: 500,
               backgroundColor: activeVariant === 'classic' ? '#3B82F6' : 'transparent',
-              color: activeVariant === 'classic' ? '#F3F4F6' : '#9CA3AF',
+              color: activeVariant === 'classic' ? 'var(--text-primary)' : 'var(--text-secondary)',
             }}
           >
             Classic 3x3
@@ -411,7 +411,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               fontSize: 13,
               fontWeight: 500,
               backgroundColor: activeVariant === '3-marker' ? '#3B82F6' : 'transparent',
-              color: activeVariant === '3-marker' ? '#F3F4F6' : '#9CA3AF',
+              color: activeVariant === '3-marker' ? 'var(--text-primary)' : 'var(--text-secondary)',
             }}
           >
             3-Marker
@@ -421,8 +421,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
         {activeVariant === 'classic' ? (
           <section
             style={{
-              backgroundColor: '#161922',
-              border: '1px solid #252A37',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 10,
               padding: 20,
               display: 'flex',
@@ -442,7 +442,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 flexWrap: 'wrap',
               }}
             >
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#F3F4F6' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                 Classic 3x3 Grid
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -471,13 +471,13 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               style={{
                 width: '100%',
                 padding: '10px 14px',
-                backgroundColor: '#0E1015',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 8,
                 textAlign: 'center',
                 fontSize: 13,
                 fontWeight: 500,
-                color: winner ? '#10B981' : isClassicDraw ? '#9CA3AF' : '#F3F4F6',
+                color: winner ? '#10B981' : isClassicDraw ? 'var(--text-secondary)' : 'var(--text-primary)',
               }}
             >
               {winner
@@ -499,8 +499,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 gridTemplateRows: 'repeat(3, 1fr)',
                 gap: 8,
                 padding: 10,
-                backgroundColor: '#0E1015',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 10,
               }}
             >
@@ -515,17 +515,17 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                     style={{
                       backgroundColor: isWinningSquare
                         ? 'rgba(59, 130, 246, 0.16)'
-                        : '#161922',
+                        : 'var(--bg-surface)',
                       border: isWinningSquare
                         ? '1px solid #3B82F6'
-                        : '1px solid #252A37',
+                        : '1px solid var(--border-subtle)',
                       borderRadius: 8,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 'clamp(30px, 9vw, 42px)',
                       fontWeight: 600,
-                      color: cell === 'X' ? '#3B82F6' : '#F3F4F6',
+                      color: cell === 'X' ? '#3B82F6' : 'var(--text-primary)',
                     }}
                   >
                     {cell}
@@ -541,10 +541,10 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 paddingTop: 6,
-                borderTop: '1px solid #252A37',
+                borderTop: '1px solid var(--border-subtle)',
               }}
             >
-              <span className="mono" style={{ fontSize: 12, color: '#6B7280' }}>
+              <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                 Mode state preserved across switches
               </span>
               <Button variant="secondary" size="sm" onClick={resetClassicGame}>
@@ -556,8 +556,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
         ) : (
           <section
             style={{
-              backgroundColor: '#161922',
-              border: '1px solid #252A37',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border-subtle)',
               borderRadius: 10,
               padding: 20,
               display: 'flex',
@@ -578,10 +578,10 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               }}
             >
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#F3F4F6' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                   Three-Marker Variant (FIFO Queue)
                 </div>
-                <div style={{ fontSize: 12, color: '#9CA3AF' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                   Max 3 markers per player; placing a 4th removes the oldest marker.
                 </div>
               </div>
@@ -611,13 +611,13 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               style={{
                 width: '100%',
                 padding: '10px 14px',
-                backgroundColor: '#0E1015',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 8,
                 textAlign: 'center',
                 fontSize: 13,
                 fontWeight: 500,
-                color: tmStatus.includes('wins') ? '#10B981' : '#F3F4F6',
+                color: tmStatus.includes('wins') ? '#10B981' : 'var(--text-primary)',
               }}
             >
               {tmStatus}
@@ -633,8 +633,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 gridTemplateRows: 'repeat(3, 1fr)',
                 gap: 8,
                 padding: 10,
-                backgroundColor: '#0E1015',
-                border: '1px solid #252A37',
+                backgroundColor: 'var(--bg-app)',
+                border: '1px solid var(--border-subtle)',
                 borderRadius: 10,
               }}
             >
@@ -653,19 +653,19 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                     style={{
                       backgroundColor: isWinningSquare
                         ? 'rgba(59, 130, 246, 0.16)'
-                        : '#161922',
+                        : 'var(--bg-surface)',
                       border: isWinningSquare
                         ? '1px solid #3B82F6'
                         : isOldestX || isOldestO
-                        ? '1px dashed #6B7280'
-                        : '1px solid #252A37',
+                        ? '1px dashed var(--text-muted)'
+                        : '1px solid var(--border-subtle)',
                       borderRadius: 8,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 'clamp(30px, 9vw, 42px)',
                       fontWeight: 600,
-                      color: cell === 'X' ? '#3B82F6' : '#F3F4F6',
+                      color: cell === 'X' ? '#3B82F6' : 'var(--text-primary)',
                       opacity: isOldestX || isOldestO ? 0.65 : 1,
                     }}
                     title={
@@ -689,7 +689,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 justifyContent: 'space-between',
                 gap: 10,
                 paddingTop: 8,
-                borderTop: '1px solid #252A37',
+                borderTop: '1px solid var(--border-subtle)',
                 flexWrap: 'wrap',
               }}
             >
@@ -699,8 +699,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                   style={{
                     fontSize: 12,
                     color: '#3B82F6',
-                    backgroundColor: '#0E1015',
-                    border: '1px solid #252A37',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: 6,
                     padding: '4px 10px',
                   }}
@@ -711,9 +711,9 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                   className="mono"
                   style={{
                     fontSize: 12,
-                    color: '#F3F4F6',
-                    backgroundColor: '#0E1015',
-                    border: '1px solid #252A37',
+                    color: 'var(--text-primary)',
+                    backgroundColor: 'var(--bg-app)',
+                    border: '1px solid var(--border-subtle)',
                     borderRadius: 6,
                     padding: '4px 10px',
                   }}
