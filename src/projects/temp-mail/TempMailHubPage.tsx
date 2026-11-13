@@ -224,9 +224,9 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       <ToolBanner
         toolId="temp-mail"
         accent="violet"
-        eyebrow="Communication · 7 Disposable Providers"
+        eyebrow="Disposable Email · 7 Providers"
         title="Temp-Mail Client"
-        description="Provision disposable inboxes across Mail.TM, Mail.gw, GuerrillaMail, and more with instant address preview."
+        description="Create temporary email addresses across Mail.TM, Mail.gw, GuerrillaMail, and more."
         actions={
           <Badge tone="violet" pill>
             {PROVIDER_ORDER.length} Providers
@@ -358,7 +358,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
               }}
             >
               <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
-                Target Address Preview
+                Address Preview
               </span>
               <span
                 className="mono"

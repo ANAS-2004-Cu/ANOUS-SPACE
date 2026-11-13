@@ -156,7 +156,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                     {isUnlocked ? 'Manage Private Vault' : 'Unlock Private Vault'}
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
-                    Authenticate with /api/vault to access restricted tools
+                    Enter passphrase to access private tools and links
                   </div>
                 </div>
               </div>

@@ -289,13 +289,12 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
       <ToolBanner
         toolId="scratchpad"
         accent="cyan"
-        eyebrow="Dev Utility · Local Buffer"
+        eyebrow="Text & Code Utility"
         title="Quick Scratchpad & File Maker"
-        description="Persistent code and payload editor with JSON formatting, drag-and-drop import, and instant multi-extension export."
+        description="Persistent text and code scratchpad with JSON formatting, file import, and multi-extension export."
         actions={
           <Badge tone="cyan" pill>
-            <span className="live-dot" />
-            <span>Auto-Saved Locally</span>
+            Auto-Saved Locally
           </Badge>
         }
       />
@@ -386,7 +385,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                 }}
               >
                 <FiCode size={13} strokeWidth={1.6} />
-                <span>JSON STUDIO</span>
+                <span>JSON Tools</span>
               </span>
 
               {jsonStatus && (
@@ -432,7 +431,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
             }}
             onScroll={handleScrollSync}
             onKeyDown={handleEditorKeyDown}
-            placeholder="Paste code, JSON payloads, .env variables, or markdown notes here... (or drag & drop a file)"
+            placeholder="Paste code, JSON, .env variables, or markdown notes here... (or drag & drop a file)"
             spellCheck={false}
             className="editor-textarea"
           />
@@ -473,10 +472,10 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
           >
             <div>
               <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-                Instant File Exporter
+                Export File
               </h2>
               <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 2 }}>
-                Choose a target extension and export the buffer directly as a local file.
+                Choose a filename and extension to download your notes as a file.
               </p>
             </div>
             <Badge tone="cyan">{resolvedFullFilename}</Badge>

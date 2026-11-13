@@ -39,17 +39,6 @@ export const ToolBanner: React.FC<ToolBannerProps> = ({
       </div>
 
       {actions && <div className="tool-banner__actions">{actions}</div>}
-
-      <svg
-        className="tool-banner__decor"
-        viewBox="0 0 160 80"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle cx="132" cy="18" r="36" stroke="currentColor" strokeWidth="1" strokeDasharray="3 4" />
-        <circle cx="132" cy="18" r="20" stroke="currentColor" strokeWidth="1" />
-        <path d="M112 8H144V40" stroke="currentColor" strokeWidth="1.2" opacity="0.6" />
-      </svg>
     </section>
   );
 };

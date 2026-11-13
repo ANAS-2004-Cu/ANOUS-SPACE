@@ -7,7 +7,6 @@ import { SegmentedControl, SegmentedOption } from '../shared/ui/SegmentedControl
 import { Badge, BadgeTone } from '../shared/ui/Badge';
 import { EmptyState } from '../shared/ui/EmptyState';
 import {
-  GeometricCardDecor,
   HeroGeometry,
   ToolAccent,
   ToolEmblem,
@@ -173,21 +172,12 @@ export const HubHome: React.FC<HubHomeProps> = ({
     >
       {/* Elevated Workspace Hero */}
       <section className="hub-hero animate-enter" style={{ ['--stagger-index' as string]: 0 }}>
-        <div className="hub-hero__glow" aria-hidden="true" />
         <div className="hub-hero__copy">
-          <div className="hub-hero__eyebrow-row">
-            <span className="hub-hero__eyebrow">
-              <span className="live-dot" />
-              <span>Personal Engineering Workspace</span>
-            </span>
-            <Badge tone="accent" pill>
-              {allProjects.length} Modules Ready
-            </Badge>
-          </div>
-          <h1 className="hub-hero__title">Tools, Utilities &amp; Projects</h1>
+          <span className="hub-hero__eyebrow">Anas Gamal · Workspace</span>
+          <h1 className="hub-hero__title">Tools &amp; Projects</h1>
           <p className="hub-hero__subtitle">
-            Keyboard-first micro-apps, disposable inbox tooling, and external builds organized in
-            one fast workspace.
+            Keyboard-friendly utilities, a disposable email client, and mini-games in one fast
+            workspace.
           </p>
           <div className="hub-hero__shortcuts hide-on-mobile">
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
@@ -197,7 +187,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
             <span>·</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               <span className="kbd-badge">Ctrl K</span>
-              <span>Command Palette</span>
+              <span>Search</span>
             </span>
           </div>
         </div>
@@ -277,7 +267,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
           />
 
           <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            {filteredTools.length} {filteredTools.length === 1 ? 'workspace' : 'workspaces'}
+            {filteredTools.length} {filteredTools.length === 1 ? 'item' : 'items'}
           </span>
         </div>
 
@@ -304,8 +294,6 @@ export const HubHome: React.FC<HubHomeProps> = ({
                   className="workspace-card animate-enter"
                   style={{ ['--stagger-index' as string]: idx }}
                 >
-                  <GeometricCardDecor />
-
                   <div className="workspace-card__body">
                     <div className="workspace-card__top">
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -335,7 +323,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
                   </div>
 
                   <div className="workspace-card__footer">
-                    <span>{isExternal ? 'Open Link' : 'Open Workspace'}</span>
+                    <span>{isExternal ? 'Open Link' : 'Open'}</span>
                     {isExternal ? (
                       <FiArrowUpRight size={15} className="workspace-card__arrow" />
                     ) : (
@@ -434,7 +422,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
                   </div>
 
                   <span className="external-project-card__cta">
-                    <span>Visit Repository</span>
+                    <span>Visit GitHub</span>
                     <FiArrowUpRight size={14} className="external-project-card__cta-arrow" />
                   </span>
                 </button>

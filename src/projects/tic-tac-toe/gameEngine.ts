@@ -20,13 +20,19 @@ export function calculateWinner(squares: CellValue[]): string | null {
   return null;
 }
 
-export function getWinningIndices(squares: CellValue[]): Set<number> {
-  for (const [a, b, c] of WINNING_LINES) {
+export function getWinningLine(squares: CellValue[]): readonly [number, number, number] | null {
+  for (const line of WINNING_LINES) {
+    const [a, b, c] = line;
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return new Set([a, b, c]);
+      return line;
     }
   }
-  return new Set();
+  return null;
+}
+
+export function getWinningIndices(squares: CellValue[]): Set<number> {
+  const line = getWinningLine(squares);
+  return line ? new Set(line) : new Set();
 }
 
 export function findBestClassicMove(currentBoard: CellValue[]): number {

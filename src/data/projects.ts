@@ -19,7 +19,7 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     id: 'scratchpad',
     title: 'Quick Scratchpad & File Maker',
     description:
-      'Persistent code and text scratchpad with JSON formatter/validator, file import, and instant multi-extension file export.',
+      'Persistent text and code pad with JSON formatting/validation, file import, and instant multi-extension export.',
     category: 'Tools',
     type: 'internal',
     to: '/scratchpad',
@@ -31,11 +31,11 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     id: 'temp-mail',
     title: 'Temp-Mail Client',
     description:
-      'Multi-provider disposable email workspace supporting Mail.TM, Mail.gw, GuerrillaMail, TempMail.lol, Maildrop.cc, Inboxes.com, and TempMail.Plus.',
+      'Disposable email client supporting Mail.TM, Mail.gw, GuerrillaMail, TempMail.lol, Maildrop.cc, Inboxes.com, and TempMail.Plus.',
     category: 'Tools',
     type: 'internal',
     to: '/temp-mail',
-    badge: 'Network',
+    badge: 'Email',
     featured: false,
     keywords: [
       'email',
@@ -53,7 +53,7 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     id: 'tic-tac-toe',
     title: 'Tic-Tac-Toe (Classic & 3-Marker)',
     description:
-      'Standard 3×3 grid and no-draw FIFO 3-marker tactical variant with single-player AI and two-player pass-and-play.',
+      'Classic 3×3 grid and no-draw 3-Marker mode (max 3 pieces per player) with single-player AI and pass-and-play.',
     category: 'Games',
     type: 'internal',
     to: '/tic-tac-toe',
@@ -65,11 +65,11 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     id: 'guess-game',
     title: 'Number Guess (0–99)',
     description:
-      'Range-finding numeric deduction game with 10 attempts, proximity telemetry within 10 units, and attempt history.',
+      'Guess a hidden number from 0 to 99 within 10 tries using higher/lower hints and live range tracking.',
     category: 'Games',
     type: 'internal',
     to: '/guess-game',
-    badge: 'Logic',
+    badge: 'Puzzle',
     featured: false,
     keywords: ['number', 'guess', 'game1', 'puzzle'],
   },
@@ -77,7 +77,7 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     id: 'ecommerce-showcase',
     title: 'Full-Stack E-Commerce Platform',
     description:
-      'Production storefront architecture featuring catalog filtering, cart state management, checkout pipeline, and order tracking.',
+      'Full-stack storefront featuring catalog filtering, cart state management, checkout flow, and order tracking.',
     category: 'Projects',
     type: 'external',
     externalUrl: 'https://github.com/ANAS-2004-Cu',

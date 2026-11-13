@@ -28,7 +28,7 @@ export interface ToolEmblemProps {
 export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
   switch (id) {
     case 'scratchpad':
-      // Geometric bracketed code prism
+      // Code editor window with syntax brackets
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect
@@ -51,7 +51,7 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'temp-mail':
-      // Layered signal envelope with node arc
+      // Clean envelope with unread dot
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect
@@ -75,7 +75,7 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'tic-tac-toe':
-      // 3x3 intersecting tactical grid with X and O nodes
+      // 3x3 board with X and O
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
@@ -96,23 +96,37 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'guess-game':
-      // Concentric radar target arcs
+      // Clean numeric range / dial glyph for 0-99 guessing
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" opacity="0.45" />
-          <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.75" />
-          <circle cx="12" cy="12" r="1.8" fill="currentColor" />
-          <path
-            d="M12 2.5V5M12 19V21.5M2.5 12H5M19 12H21.5"
+          <rect
+            x="3.5"
+            y="4.5"
+            width="17"
+            height="15"
+            rx="3.5"
             stroke="currentColor"
-            strokeWidth="1.6"
+            strokeWidth="1.7"
+          />
+          <path
+            d="M8.5 14.5L11.5 9.5L14.5 14.5M16 10.5L17.5 9L19 10.5"
+            stroke="currentColor"
+            strokeWidth="1.7"
             strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M7 16.5H17"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.55"
           />
         </svg>
       );
 
     case 'gameya-calculator':
-      // Ascending compound ledger bars + trajectory arc
+      // Ascending financial ledger bars
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="4" y="13.5" width="3.5" height="6.5" rx="1" stroke="currentColor" strokeWidth="1.65" />
@@ -129,7 +143,7 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     case 'ecommerce-showcase':
-      // Isometric orbital prism / storefront lattice
+      // Isometric storefront box
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
@@ -149,7 +163,7 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
       );
 
     default:
-      // Default geometric module cube
+      // Modular grid icon
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="4" y="4" width="7" height="7" rx="1.8" stroke="currentColor" strokeWidth="1.75" />
@@ -161,53 +175,72 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
   }
 };
 
-export const GeometricCardDecor: React.FC = () => (
-  <svg
-    className="workspace-card__decor"
-    viewBox="0 0 120 120"
-    fill="none"
-    aria-hidden="true"
-  >
-    <circle cx="96" cy="24" r="34" stroke="currentColor" strokeWidth="1" strokeDasharray="3 4" />
-    <circle cx="96" cy="24" r="18" stroke="currentColor" strokeWidth="1" />
-    <path d="M84 12H108V36" stroke="currentColor" strokeWidth="1.2" opacity="0.7" />
-    <circle cx="96" cy="24" r="2.5" fill="currentColor" />
-  </svg>
-);
-
 export const HeroGeometry: React.FC = () => (
   <svg
     className="hub-hero__geometry"
-    viewBox="0 0 220 140"
+    viewBox="0 0 200 120"
     fill="none"
     aria-hidden="true"
   >
-    <defs>
-      <linearGradient id="heroOrbGrad" x1="0" y1="0" x2="220" y2="140" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.85" />
-        <stop offset="100%" stopColor="var(--accent-secondary)" stopOpacity="0.25" />
-      </linearGradient>
-    </defs>
-    {/* Subtle coordinate crosshair frame */}
-    <path d="M18 22H30M24 16V28" stroke="var(--accent)" strokeWidth="1.2" strokeOpacity="0.55" />
-    <path d="M190 118H202M196 112V124" stroke="var(--accent-secondary)" strokeWidth="1.2" strokeOpacity="0.55" />
-    {/* Concentric orbital geometry */}
-    <circle cx="122" cy="70" r="56" stroke="url(#heroOrbGrad)" strokeWidth="1.2" strokeDasharray="4 5" />
-    <circle cx="122" cy="70" r="38" stroke="url(#heroOrbGrad)" strokeWidth="1.25" />
-    <circle cx="122" cy="70" r="18" stroke="var(--accent)" strokeWidth="1.2" strokeOpacity="0.5" />
-    {/* Geometric polygon lattice */}
-    <polygon
-      points="122,34 153,52 153,88 122,106 91,88 91,52"
-      stroke="var(--accent)"
-      strokeWidth="1.1"
-      strokeOpacity="0.45"
-      fill="var(--accent-subtle)"
-      fillOpacity="0.35"
+    {/* Clean architectural tile cluster inspired by Vercel / Linear */}
+    <rect
+      x="22"
+      y="20"
+      width="44"
+      height="44"
+      rx="10"
+      stroke="var(--border-strong)"
+      strokeWidth="1.2"
+      fill="var(--bg-recessed)"
     />
-    {/* Accent nodes */}
-    <circle cx="122" cy="34" r="3" fill="var(--accent)" />
-    <circle cx="153" cy="88" r="2.5" fill="var(--accent-secondary)" />
-    <circle cx="91" cy="88" r="2.5" fill="var(--cat-cyan-accent)" />
-    <circle cx="122" cy="70" r="4" fill="var(--accent)" />
+    <rect
+      x="76"
+      y="14"
+      width="50"
+      height="50"
+      rx="12"
+      stroke="var(--accent-border)"
+      strokeWidth="1.3"
+      fill="var(--accent-subtle)"
+    />
+    <rect
+      x="136"
+      y="24"
+      width="42"
+      height="42"
+      rx="10"
+      stroke="var(--border-strong)"
+      strokeWidth="1.2"
+      fill="var(--bg-recessed)"
+    />
+    <rect
+      x="46"
+      y="74"
+      width="52"
+      height="32"
+      rx="8"
+      stroke="var(--border-strong)"
+      strokeWidth="1.2"
+      fill="var(--bg-recessed)"
+    />
+    <rect
+      x="108"
+      y="74"
+      width="44"
+      height="32"
+      rx="8"
+      stroke="var(--cat-cyan-border)"
+      strokeWidth="1.2"
+      fill="var(--cat-cyan-subtle)"
+    />
+    {/* Crisp interior marks */}
+    <path
+      d="M93 39L101 31L109 39L101 47Z"
+      stroke="var(--accent)"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    <circle cx="44" cy="42" r="5" stroke="var(--text-muted)" strokeWidth="1.4" />
+    <path d="M151 45H163M157 39V51" stroke="var(--text-muted)" strokeWidth="1.4" strokeLinecap="round" />
   </svg>
 );

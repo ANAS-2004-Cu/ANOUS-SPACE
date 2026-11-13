@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiRotateCcw, FiCheck, FiArrowUp, FiArrowDown, FiHome, FiTarget } from 'react-icons/fi';
+import { FiRotateCcw, FiCheck, FiArrowUp, FiArrowDown, FiHome, FiHash } from 'react-icons/fi';
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { ToolBanner } from '../../shared/ui/ToolBanner';
 import { Surface } from '../../shared/ui/Surface';
@@ -8,7 +8,7 @@ import { Button } from '../../shared/ui/Button';
 import { Input } from '../../shared/ui/Input';
 import { Badge, BadgeTone } from '../../shared/ui/Badge';
 import { recordRecentProject } from '../../shared/utils/recentTools';
-import { GuessFeedback, MAX_TRIES, RadarZone, useGuessGame } from './useGuessGame';
+import { GuessFeedback, HintLevel, MAX_TRIES, useGuessGame } from './useGuessGame';
 
 export interface GuessGamePageProps {
   onOpenCommandPalette: () => void;
@@ -22,80 +22,86 @@ function getFeedbackCopy(
   switch (feedback) {
     case 'victory':
       return {
-        title: 'Target Matched',
-        detail: `Exact match confirmed in ${tries} ${tries === 1 ? 'attempt' : 'attempts'}. The target number was ${target}.`,
+        title: 'You Got It!',
+        detail: `Matched in ${tries} ${tries === 1 ? 'try' : 'tries'}. The secret number was ${target}.`,
       };
     case 'limit':
       return {
-        title: 'Attempt Limit Reached',
-        detail: `All ${MAX_TRIES} attempts used. The hidden target number was ${target}.`,
+        title: 'Out of Tries',
+        detail: `You used all ${MAX_TRIES} tries. The secret number was ${target}.`,
       };
     case 'so-lower':
       return {
-        title: 'Close — Too High (Within 10)',
-        detail: 'Your guess is within 10 units of the target, but still too high. Dial it down slightly.',
+        title: 'Very Close — Too High',
+        detail: 'You are within 10 of the secret number. Try a slightly lower number.',
       };
     case 'so-higher':
       return {
-        title: 'Close — Too Low (Within 10)',
-        detail: 'Your guess is within 10 units of the target, but still too low. Push it slightly higher.',
+        title: 'Very Close — Too Low',
+        detail: 'You are within 10 of the secret number. Try a slightly higher number.',
       };
     case 'lower':
       return {
         title: 'Too High',
-        detail: 'Your guess exceeds the target number. Aim lower.',
+        detail: 'The secret number is lower than your guess.',
       };
     case 'higher':
       return {
         title: 'Too Low',
-        detail: 'Your guess is below the target number. Aim higher.',
+        detail: 'The secret number is higher than your guess.',
       };
     case 'empty':
       return {
-        title: 'Input Required',
-        detail: 'Please enter a valid number between 0 and 99 before checking.',
+        title: 'Enter a Number',
+        detail: 'Type a whole number from 0 to 99 to make a guess.',
       };
     case 'out-of-range':
       return {
         title: 'Out of Range',
-        detail: 'Please enter a number strictly between 0 and 99.',
+        detail: 'Please choose a whole number between 0 and 99.',
       };
     default:
       return {
-        title: 'Awaiting Coordinates',
-        detail: 'Enter an integer from 0 to 99. Proximity telemetry narrows down your target.',
+        title: 'Pick a Number (0–99)',
+        detail:
+          'You have 10 tries to find the hidden number. Each guess tells you whether to go higher or lower.',
       };
   }
 }
 
-const ZONE_META: Record<
-  RadarZone,
-  { tone: BadgeTone; color: string; label: (hasGuess: boolean) => string }
+const HINT_META: Record<
+  HintLevel,
+  { tone: BadgeTone; color: string; label: string }
 > = {
-  cool: {
+  idle: {
     tone: 'accent',
     color: 'var(--accent)',
-    label: (hasGuess) => (hasGuess ? 'COLD SIGNAL (> 25)' : 'RADAR STANDBY'),
+    label: 'Range 00–99',
   },
-  warm: {
+  far: {
+    tone: 'accent',
+    color: 'var(--accent)',
+    label: 'More than 25 away',
+  },
+  close: {
     tone: 'warning',
     color: 'var(--status-warning)',
-    label: () => 'WARM PROXIMITY (≤ 25)',
+    label: 'Getting close (within 25)',
   },
-  hot: {
+  'very-close': {
     tone: 'danger',
     color: 'var(--status-danger)',
-    label: () => 'HOT — WITHIN 10 UNITS',
+    label: 'Very close (within 10)',
   },
-  victory: {
+  won: {
     tone: 'success',
     color: 'var(--status-success)',
-    label: () => 'TARGET LOCKED',
+    label: 'Solved',
   },
-  limit: {
+  lost: {
     tone: 'danger',
     color: 'var(--status-danger)',
-    label: () => 'ATTEMPTS EXHAUSTED',
+    label: 'Game Over',
   },
 };
 
@@ -112,7 +118,9 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
     feedback,
     guessHistory,
     lastGuess,
-    radarZone,
+    minBound,
+    maxBound,
+    hintLevel,
     submitGuess,
     reset,
   } = useGuessGame();
@@ -133,7 +141,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
     inputRef.current?.focus();
   };
 
-  const zone = ZONE_META[radarZone];
+  const hint = HINT_META[hintLevel];
   const statusInfo = getFeedbackCopy(feedback, tries, target);
   const progressRatio = remaining / MAX_TRIES;
   const progressBarColor =
@@ -144,20 +152,25 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
       : 'var(--status-danger)';
 
   const isGameEnded = feedback === 'victory' || feedback === 'limit';
-  const proximityStrength =
-    feedback === 'victory'
-      ? 10
-      : lastGuess
-      ? Math.max(1, Math.min(10, Math.ceil((100 - Math.min(99, lastGuess.distance)) / 10)))
-      : 0;
-  const ringBgColor =
-    radarZone === 'victory'
+  const tileBg =
+    hintLevel === 'won'
       ? 'var(--status-success-subtle)'
-      : radarZone === 'hot' || radarZone === 'limit'
+      : hintLevel === 'very-close' || hintLevel === 'lost'
       ? 'var(--status-danger-subtle)'
-      : radarZone === 'warm'
+      : hintLevel === 'close'
       ? 'var(--status-warning-subtle)'
-      : 'var(--cat-amber-subtle)';
+      : 'var(--bg-recessed)';
+
+  const directionIcon =
+    feedback === 'victory' ? (
+      <FiCheck size={12} strokeWidth={1.7} />
+    ) : feedback === 'higher' || feedback === 'so-higher' ? (
+      <FiArrowUp size={12} strokeWidth={1.7} />
+    ) : feedback === 'lower' || feedback === 'so-lower' ? (
+      <FiArrowDown size={12} strokeWidth={1.7} />
+    ) : (
+      <FiHash size={12} strokeWidth={1.7} />
+    );
 
   return (
     <WorkspaceLayout
@@ -169,12 +182,12 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
       <ToolBanner
         toolId="guess-game"
         accent="amber"
-        eyebrow="Logic Deduction · Proximity Radar"
+        eyebrow="Puzzle · 10 Tries"
         title="Number Guess (0–99)"
-        description="Locate the hidden two-digit coordinate within 10 attempts using live thermal proximity telemetry."
+        description="Guess the hidden number between 0 and 99 within 10 tries using higher/lower hints and narrowed range tracking."
       />
 
-      {/* Radar Readout Card */}
+      {/* Status & Narrowed Range Card */}
       <Surface
         variant="elevated"
         accent="amber"
@@ -193,9 +206,9 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 200 }}>
             <div>
-              <Badge tone={zone.tone}>
-                <FiTarget size={12} strokeWidth={1.6} />
-                <span>{zone.label(Boolean(lastGuess))}</span>
+              <Badge tone={hint.tone}>
+                {directionIcon}
+                <span>{hint.label}</span>
               </Badge>
             </div>
 
@@ -208,10 +221,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
           </div>
 
           <div
-            className="guess-readout-box"
+            className="guess-number-tile"
             style={{
-              borderColor: zone.color,
-              ['--radar-ring-color' as string]: ringBgColor,
+              borderColor: hint.color,
+              backgroundColor: tileBg,
             }}
           >
             <span
@@ -222,13 +235,13 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                 marginBottom: 2,
               }}
             >
-              {isGameEnded ? 'TARGET' : lastGuess ? 'LAST' : 'HIDDEN'}
+              {isGameEnded ? 'ANSWER' : lastGuess ? 'LAST' : 'SECRET'}
             </span>
             <span
               style={{
                 fontSize: 34,
                 fontWeight: 700,
-                color: zone.color,
+                color: hint.color,
                 lineHeight: 1.1,
               }}
             >
@@ -241,41 +254,49 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
           </div>
         </div>
 
-        {/* 10-Segment Signal Strength / Proximity Meter */}
-        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5 }}>
-            <span className="mono" style={{ color: 'var(--text-muted)' }}>
-              SIGNAL PROXIMITY
+        {/* Dynamic 0-99 Possible Range Indicator */}
+        <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+            <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
+              Possible Range
             </span>
-            <span className="mono" style={{ color: zone.color, fontWeight: 600 }}>
-              {lastGuess ? `${proximityStrength * 10}%` : 'STANDBY'}
+            <span className="mono" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+              {minBound === maxBound
+                ? String(minBound).padStart(2, '0')
+                : `${String(minBound).padStart(2, '0')} – ${String(maxBound).padStart(2, '0')}`}
             </span>
           </div>
-          <div className="guess-meter-segments" aria-hidden="true">
-            {Array.from({ length: 10 }, (_, idx) => {
-              const activePip = idx < proximityStrength;
-              return (
-                <span
-                  key={idx}
-                  className={['guess-meter-pip', activePip ? 'guess-meter-pip--active' : '']
-                    .filter(Boolean)
-                    .join(' ')}
-                  style={
-                    activePip
-                      ? {
-                          backgroundColor: zone.color,
-                          borderColor: zone.color,
-                        }
-                      : undefined
-                  }
-                />
-              );
-            })}
+          <div
+            className="guess-range-track"
+            role="img"
+            aria-label={`Possible numbers from ${minBound} to ${maxBound}`}
+          >
+            <div
+              className="guess-range-window"
+              style={{
+                left: `${minBound}%`,
+                width: `${Math.max(2, maxBound - minBound + 1)}%`,
+                backgroundColor: hint.color,
+              }}
+            />
+          </div>
+          <div
+            className="mono"
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: 10.5,
+              color: 'var(--text-muted)',
+            }}
+          >
+            <span>00</span>
+            <span>50</span>
+            <span>99</span>
           </div>
         </div>
       </Surface>
 
-      {/* Input & Telemetry Card */}
+      {/* Input & Guess History Card */}
       <Surface
         accent="amber"
         padded
@@ -288,10 +309,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
               htmlFor="guess-number-input"
               style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}
             >
-              Enter coordinates (0 – 99)
+              Your Guess (0 – 99)
             </label>
             <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              Range: 00–99
+              {remaining} {remaining === 1 ? 'try' : 'tries'} left
             </span>
           </div>
 
@@ -335,13 +356,13 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
               disabled={!active || tries >= MAX_TRIES}
             >
               <FiCheck size={15} strokeWidth={1.6} />
-              <span>CHECK</span>
+              <span>Guess</span>
             </Button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Remaining Attempts</span>
+              <span style={{ color: 'var(--text-secondary)' }}>Remaining Tries</span>
               <span className="mono" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
                 {remaining} / {MAX_TRIES}
               </span>
@@ -369,10 +390,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-                  Telemetry Log
+                  Previous Guesses
                 </span>
                 <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                  {guessHistory.length} {guessHistory.length === 1 ? 'entry' : 'entries'}
+                  {guessHistory.length} {guessHistory.length === 1 ? 'guess' : 'guesses'}
                 </span>
               </div>
 
@@ -380,14 +401,14 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                 {guessHistory.map((item, idx) => {
                   const isCorrect = item.result === 'correct';
                   const isLow = item.result === 'low';
-                  const isHot = !isCorrect && item.distance <= 10;
-                  const isWarm = !isCorrect && item.distance > 10 && item.distance <= 25;
+                  const isVeryClose = !isCorrect && item.distance <= 10;
+                  const isClose = !isCorrect && item.distance > 10 && item.distance <= 25;
 
                   const tone: BadgeTone = isCorrect
                     ? 'success'
-                    : isHot
+                    : isVeryClose
                     ? 'danger'
-                    : isWarm
+                    : isClose
                     ? 'warning'
                     : 'accent';
 
@@ -400,10 +421,10 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
                       style={{ padding: '4px 10px', fontSize: 12 }}
                       title={
                         isCorrect
-                          ? 'Target locked'
+                          ? 'Correct guess'
                           : isLow
-                          ? `Too low — go higher (${item.distance <= 10 ? 'Hot' : item.distance <= 25 ? 'Warm' : 'Cold'})`
-                          : `Too high — go lower (${item.distance <= 10 ? 'Hot' : item.distance <= 25 ? 'Warm' : 'Cold'})`
+                          ? 'Too low — go higher'
+                          : 'Too high — go lower'
                       }
                     >
                       <span>{String(item.value).padStart(2, '0')}</span>
@@ -436,11 +457,11 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
       >
         <Button variant="secondary" onClick={() => navigate('/')}>
           <FiHome size={14} strokeWidth={1.6} />
-          <span>HOME</span>
+          <span>Back to Hub</span>
         </Button>
         <Button variant="secondary" onClick={handleReset}>
           <FiRotateCcw size={14} strokeWidth={1.6} />
-          <span>NEW TARGET</span>
+          <span>New Number</span>
         </Button>
       </div>
     </WorkspaceLayout>

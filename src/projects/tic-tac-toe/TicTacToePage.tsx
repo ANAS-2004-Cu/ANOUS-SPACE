@@ -15,6 +15,7 @@ import {
   findBestClassicMove,
   findBestThreeMarkerMove,
   getWinningIndices,
+  getWinningLine,
 } from './gameEngine';
 import { GameBoard } from './GameBoard';
 
@@ -163,6 +164,11 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
     (typeBoard === 2 && count === 9 && winner === null) ||
     (typeBoard === 1 && count === 5 && winner === null);
 
+  const classicWinningLine = useMemo(
+    () => (winner ? getWinningLine(board) : null),
+    [winner, board]
+  );
+
   const classicWinningIndices = useMemo(
     () => (winner ? getWinningIndices(board) : new Set<number>()),
     [winner, board]
@@ -263,28 +269,41 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
     resetTmGame(nextMode);
   };
 
+  const tmWinningLine = useMemo(() => getWinningLine(tmBoard), [tmBoard]);
   const tmWinningIndices = useMemo(() => getWinningIndices(tmBoard), [tmBoard]);
   const tmHasWinner = tmStatus.includes('wins');
-  const tmFadingIndex =
+  const tmOldestIndex =
     !tmHasWinner && tmIsXNext && xPositions.length === 3
       ? xPositions[0]
       : !tmHasWinner && !tmIsXNext && oPositions.length === 3
       ? oPositions[0]
       : null;
 
+  const classicPreviewPlayer: 'X' | 'O' | null =
+    !winner && !isClassicDraw && !(typeBoard === 1 && currentPlayer === 'O')
+      ? (currentPlayer as 'X' | 'O')
+      : null;
+
+  const tmPreviewPlayer: 'X' | 'O' | null =
+    !tmHasWinner && !(tmMode === 'vs-computer' && !tmIsXNext)
+      ? tmIsXNext
+        ? 'X'
+        : 'O'
+      : null;
+
   return (
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
-      subtitle="Tic-Tac-Toe Arena"
+      subtitle="Tic-Tac-Toe"
       accent="amber"
       width="narrow"
     >
       <ToolBanner
         toolId="tic-tac-toe"
         accent="amber"
-        eyebrow="Board Strategy · AI & Pass-and-Play"
-        title="Tic-Tac-Toe Arena"
-        description="Classic 3×3 rules or the no-draw 3-marker FIFO queue where placing a 4th piece evicts your oldest marker."
+        eyebrow="Board Game · 1 or 2 Players"
+        title="Tic-Tac-Toe"
+        description="Play Classic 3×3 or 3-Marker mode, where each player keeps at most 3 pieces on the board."
       />
 
       <div className="animate-enter" style={{ ['--stagger-index' as string]: 1 }}>
@@ -295,8 +314,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
           value={activeVariant}
           onChange={handleVariantSwitch}
           options={[
-            { value: 'classic', label: 'Classic 3x3' },
-            { value: '3-marker', label: '3-Marker Queue' },
+            { value: 'classic', label: 'Classic 3×3' },
+            { value: '3-marker', label: '3-Marker Mode' },
           ]}
         />
       </div>
@@ -323,7 +342,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  Classic 3x3 Tabletop
+                  Classic 3×3
                 </h2>
                 <div className="mono" style={{ display: 'flex', gap: 6, fontSize: 11 }}>
                   <span style={{ color: 'var(--accent)', fontWeight: 700 }}>X</span>
@@ -389,6 +408,8 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
             <GameBoard
               board={board}
               winningIndices={classicWinningIndices}
+              winningLine={classicWinningLine}
+              previewPlayer={classicPreviewPlayer}
               onCellClick={handleClassicSquareClick}
             />
 
@@ -405,7 +426,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               }}
             >
               <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                Mode state preserved across switches
+                1P and 2P boards stay saved when switching
               </span>
               <Button variant="secondary" size="sm" onClick={resetClassicGame}>
                 <FiRotateCcw size={13} />
@@ -436,10 +457,10 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
             >
               <div>
                 <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
-                  Three-Marker Variant (FIFO Queue)
+                  3-Marker Mode
                 </h2>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
-                  Max 3 markers per player — placing a 4th evicts the oldest marker.
+                  Max 3 pieces per player — your 4th move removes your oldest piece.
                 </div>
               </div>
 
@@ -492,7 +513,9 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
             <GameBoard
               board={tmBoard}
               winningIndices={tmWinningIndices}
-              fadingIndex={tmFadingIndex}
+              winningLine={tmWinningLine}
+              oldestIndex={tmOldestIndex}
+              previewPlayer={tmPreviewPlayer}
               onCellClick={handleTmSquareClick}
             />
 
