@@ -13,6 +13,12 @@ export class ProviderHttpError extends Error {
 function extractReadableError(payload: unknown, fallback: string): string {
   if (payload && typeof payload === 'object') {
     const obj = payload as Record<string, unknown>;
+    if (Array.isArray(obj.violations) && obj.violations.length > 0) {
+      const first = obj.violations[0] as Record<string, unknown>;
+      if (typeof first?.message === 'string' && first.message.trim().length > 0) {
+        return first.message.trim();
+      }
+    }
     for (const key of ['message', 'error', 'detail', 'hydra:description']) {
       if (typeof obj[key] === 'string' && (obj[key] as string).trim().length > 0) {
         return (obj[key] as string).trim();
@@ -41,7 +47,8 @@ export async function fetchJson<T>(
     });
 
     const contentType = response.headers.get('content-type') || '';
-    const isJson = contentType.includes('application/json') || contentType.includes('application/ld+json');
+    const isJson =
+      contentType.includes('application/json') || contentType.includes('application/ld+json');
 
     let parsed: unknown = null;
     if (response.status !== 204) {
@@ -107,4 +114,47 @@ export function generateRandomToken(length: number = 10): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
+}
+
+export function escapeHtml(raw: string): string {
+  return String(raw || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export function stripHtml(html: string): string {
+  return String(html || '')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function parseSender(rawFrom?: string): { fromName: string; fromAddress: string } {
+  const fromStr = String(rawFrom || 'Unknown').trim();
+  const matches = fromStr.match(/(.*)<([^>]+)>/);
+  if (matches && matches.length > 2) {
+    const cleanedName = matches[1].replace(/^["']|["']$/g, '').trim();
+    const cleanedAddr = matches[2].trim();
+    return {
+      fromName: cleanedName || cleanedAddr,
+      fromAddress: cleanedAddr,
+    };
+  }
+  return { fromName: fromStr, fromAddress: fromStr };
+}
+
+export function triggerBlobDownload(blob: Blob, filename: string): void {
+  const blobUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.setAttribute('download', filename || 'attachment');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(blobUrl);
 }

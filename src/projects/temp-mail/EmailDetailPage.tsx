@@ -30,11 +30,12 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
   const provider = normalizeProviderId(searchParams.get('provider'));
   const adapter = PROVIDER_ADAPTERS[provider];
 
-  const { showAlert } = useAlert();
+  const { showToast } = useAlert();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
   const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [email, setEmail] = useState<EmailDetail | null>(null);
   const [showHtml, setShowHtml] = useState(true);
 
@@ -45,21 +46,35 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       const detail = await adapter.fetchMessageDetail(id);
       setEmail(detail);
     } catch {
-      showAlert('Error', 'Failed to load email details. Please try again.');
+      showToast({
+        title: 'Load Failed',
+        message: 'Failed to load email details. Please try again.',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }
-  }, [id, adapter, showAlert]);
+  }, [id, adapter, showToast]);
 
   useEffect(() => {
     if (!id) {
-      showAlert('Error', 'Invalid email identifier.');
+      showToast({
+        title: 'Invalid Email',
+        message: 'Missing email identifier.',
+        type: 'error',
+      });
       navigate('/temp-mail', { replace: true });
       return;
     }
 
     fetchEmailDetails();
-  }, [id, fetchEmailDetails, navigate, showAlert]);
+  }, [id, fetchEmailDetails, navigate, showToast]);
+
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const timer = window.setTimeout(() => setConfirmDelete(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [confirmDelete]);
 
   const handleBack = () => {
     if (provider === 'guerrillamail') {
@@ -69,31 +84,36 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
     }
   };
 
-  const handleDeleteEmail = () => {
+  const handleDeleteEmail = async () => {
     if (!email) return;
-
-    showAlert('Delete Email', 'Are you sure you want to delete this email?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await adapter.deleteMessage(email.id);
-            showAlert('Deleted', 'Email deleted.');
-            handleBack();
-          } catch {
-            showAlert('Error', 'Failed to delete email. Please try again.');
-          }
-        },
-      },
-    ]);
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    setConfirmDelete(false);
+    try {
+      await adapter.deleteMessage(email.id);
+      showToast({
+        title: 'Email Deleted',
+        message: 'Message removed from inbox.',
+        type: 'info',
+      });
+      handleBack();
+    } catch {
+      showToast({
+        title: 'Delete Failed',
+        message: 'Failed to delete email. Please try again.',
+        type: 'error',
+      });
+    }
   };
 
-  const formatDate = (isoString: string) => {
-    if (!isoString) return '';
-    const date = new Date(isoString);
-    if (Number.isNaN(date.getTime())) return '';
+  const formatDate = (rawString: string) => {
+    if (!rawString) return '';
+    const date = new Date(rawString);
+    if (Number.isNaN(date.getTime())) {
+      return rawString.length <= 24 ? rawString : '';
+    }
     return date.toLocaleString('en-US', {
       weekday: 'short',
       year: 'numeric',
@@ -107,9 +127,17 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
   const copyToClipboard = async (text: string) => {
     try {
       await Clipboard.setStringAsync(text);
-      showAlert('Copied', 'Content copied to clipboard.');
+      showToast({
+        title: 'Copied',
+        message: 'Content copied to clipboard.',
+        type: 'success',
+      });
     } catch {
-      showAlert('Error', 'Failed to copy text to clipboard.');
+      showToast({
+        title: 'Copy Failed',
+        message: 'Failed to copy text to clipboard.',
+        type: 'error',
+      });
     }
   };
 
@@ -220,7 +248,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                 </Button>
                 <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
                   <FiTrash2 size={13} />
-                  <span>Delete</span>
+                  <span>{confirmDelete ? 'Confirm Delete?' : 'Delete'}</span>
                 </Button>
               </div>
             )}
@@ -422,7 +450,11 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                               attachment.filename
                             );
                           } catch {
-                            showAlert('Error', 'Failed to download attachment.');
+                            showToast({
+                              title: 'Download Failed',
+                              message: 'Failed to download attachment.',
+                              type: 'error',
+                            });
                           }
                         }}
                         style={{

@@ -12,7 +12,11 @@ export default async function handler(req: any, res: any) {
 
   try {
     const urlObj = new URL(req.url || '', 'http://localhost');
-    const endpoint = urlObj.searchParams.get('endpoint') || '/v2/inbox';
+    const rawEndpoint = urlObj.searchParams.get('endpoint') || '/v2/inbox';
+    const endpoint =
+      rawEndpoint.startsWith('/') && !rawEndpoint.startsWith('//')
+        ? rawEndpoint
+        : `/${rawEndpoint.replace(/^\/+/, '')}`;
     const token = urlObj.searchParams.get('token');
     const targetUrl = token
       ? `${TEMPMAIL_LOL_UPSTREAM}${endpoint}?token=${encodeURIComponent(token)}`

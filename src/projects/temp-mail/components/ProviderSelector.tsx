@@ -30,8 +30,8 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
         border: `1px solid ${cardBorder}`,
         borderRadius: 12,
         padding: 6,
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+        display: 'flex',
+        flexWrap: 'wrap',
         gap: 6,
         boxShadow: isLight
           ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
@@ -51,21 +51,23 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
             aria-selected={isSelected}
             onClick={() => onSelect(providerId)}
             style={{
-              padding: '10px 12px',
+              flex: '1 1 112px',
+              padding: '9px 10px',
               borderRadius: 8,
               backgroundColor: isSelected ? meta.tint : wellBg,
               border: `1px solid ${isSelected ? meta.border : 'transparent'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 8,
+              gap: 7,
               transition: 'all 0.15s ease',
             }}
           >
             <span
               style={{
-                fontSize: 13,
+                fontSize: 12.5,
                 fontWeight: 600,
+                whiteSpace: 'nowrap',
                 color: isSelected ? meta.accent : isLight ? textPrimary : textSecondary,
               }}
             >

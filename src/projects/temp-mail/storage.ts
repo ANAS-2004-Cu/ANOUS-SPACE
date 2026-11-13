@@ -3,24 +3,33 @@ import { EmailDetail, MailProviderId } from './types';
 
 export const TEMPMAIL_STORAGE_KEYS = {
   mailTm: 'anous_tempmail_mailtm',
+  mailGw: 'anous_tempmail_mailgw',
   guerrilla: 'anous_tempmail_guerrilla',
   tempMailLol: 'anous_tempmail_tempmail_lol',
   maildrop: 'anous_tempmail_maildrop',
+  inboxes: 'anous_tempmail_inboxes',
+  tempmailPlus: 'anous_tempmail_tempmail_plus',
   guerrillaCache: 'anous_tempmail_guerrilla_cache',
 } as const;
 
 const LEGACY_KEYS: Record<MailProviderId, string[]> = {
-  'mail.tm': ['mailtm_data', 'mailgw_data'],
+  'mail.tm': ['mailtm_data'],
+  'mail.gw': ['mailgw_data'],
   guerrillamail: ['guerrilla_data'],
   'tempmail.lol': ['tempmail_lol_data'],
   'maildrop.cc': ['maildrop_data'],
+  'inboxes.com': [],
+  'tempmail.plus': [],
 };
 
 const CANONICAL_KEY_BY_PROVIDER: Record<MailProviderId, string> = {
   'mail.tm': TEMPMAIL_STORAGE_KEYS.mailTm,
+  'mail.gw': TEMPMAIL_STORAGE_KEYS.mailGw,
   guerrillamail: TEMPMAIL_STORAGE_KEYS.guerrilla,
   'tempmail.lol': TEMPMAIL_STORAGE_KEYS.tempMailLol,
   'maildrop.cc': TEMPMAIL_STORAGE_KEYS.maildrop,
+  'inboxes.com': TEMPMAIL_STORAGE_KEYS.inboxes,
+  'tempmail.plus': TEMPMAIL_STORAGE_KEYS.tempmailPlus,
 };
 
 export interface StoredMailTmData {
@@ -45,6 +54,11 @@ export interface StoredTempMailLolData {
 export interface StoredMaildropData {
   email: string;
   mailbox: string;
+}
+
+export interface StoredSimpleMailboxData {
+  email: string;
+  domain: string;
 }
 
 export async function readProviderStorage<T>(provider: MailProviderId): Promise<T | null> {

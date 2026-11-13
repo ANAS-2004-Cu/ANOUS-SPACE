@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
   try {
     const urlObj = new URL(req.url || '', 'http://localhost');
     const path = urlObj.searchParams.get('path') || '/domains';
-    const safePath = path.startsWith('/') ? path : `/${path}`;
+    const safePath = path.startsWith('/') && !path.startsWith('//') ? path : `/${path.replace(/^\/+/, '')}`;
     const targetUrl = `${MAILTM_UPSTREAM}${safePath}`;
 
     const headers: Record<string, string> = {

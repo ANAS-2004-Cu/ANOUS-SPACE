@@ -1,8 +1,11 @@
 export type MailProviderId =
   | 'mail.tm'
+  | 'mail.gw'
   | 'guerrillamail'
   | 'tempmail.lol'
-  | 'maildrop.cc';
+  | 'maildrop.cc'
+  | 'inboxes.com'
+  | 'tempmail.plus';
 
 export interface ProviderMeta {
   id: MailProviderId;
@@ -63,17 +66,24 @@ export interface MailProviderAdapter {
 }
 
 export const normalizeProviderId = (raw?: string | null): MailProviderId => {
-  if (!raw || raw === 'mailgw' || raw === 'mail.tm') {
-    return 'mail.tm';
+  const value = (raw || '').trim().toLowerCase();
+  if (value === 'mail.gw' || value === 'mailgw') {
+    return 'mail.gw';
   }
-  if (raw === 'guerrilla' || raw === 'guerrillamail') {
+  if (value === 'guerrilla' || value === 'guerrillamail') {
     return 'guerrillamail';
   }
-  if (raw === 'tempmail.lol') {
+  if (value === 'tempmail.lol') {
     return 'tempmail.lol';
   }
-  if (raw === 'maildrop.cc') {
+  if (value === 'maildrop.cc' || value === 'maildrop') {
     return 'maildrop.cc';
+  }
+  if (value === 'inboxes.com' || value === 'inboxes') {
+    return 'inboxes.com';
+  }
+  if (value === 'tempmail.plus') {
+    return 'tempmail.plus';
   }
   return 'mail.tm';
 };

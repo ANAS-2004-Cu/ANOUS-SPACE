@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FiArrowLeft,
@@ -27,18 +27,21 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
   onOpenCommandPalette,
 }) => {
   const navigate = useNavigate();
-  const { showAlert } = useAlert();
+  const { showToast } = useAlert();
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const meta = PROVIDERS_META.guerrillamail;
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState(false);
   const [emails, setEmails] = useState<EmailSummary[]>(() =>
     getCachedGuerrillaSummaries()
   );
+
+  const initLockRef = useRef<Promise<void> | null>(null);
 
   const provisionFreshAddress = useCallback(async () => {
     setLoading(true);
@@ -54,16 +57,17 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
       return account.address;
     } catch {
       setSessionError(true);
-      showAlert(
-        'Error',
-        'Failed to create a new GuerrillaMail address. Please try again.'
-      );
+      showToast({
+        title: 'Session Failed',
+        message: 'Failed to create a new GuerrillaMail address. Please try again.',
+        type: 'error',
+      });
       return null;
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [showAlert]);
+  }, [showToast]);
 
   const fetchEmails = useCallback(async (showLoader = true) => {
     if (showLoader) setLoading(true);
@@ -74,54 +78,71 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
     } catch {
       setSessionError(true);
       if (showLoader) {
-        showAlert(
-          'Session Error',
-          'Failed to fetch emails. Your session may have expired. Try resetting your session.'
-        );
+        showToast({
+          title: 'Session Error',
+          message: 'Failed to fetch emails. Your session may have expired.',
+          type: 'error',
+        });
       }
     } finally {
       if (showLoader) setLoading(false);
       setRefreshing(false);
     }
-  }, [showAlert]);
+  }, [showToast]);
 
   useEffect(() => {
+    if (!confirmReset) return;
+    const timer = window.setTimeout(() => setConfirmReset(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [confirmReset]);
+
+  useEffect(() => {
+    let mounted = true;
     const init = async () => {
-      setLoading(true);
+      if (!initLockRef.current) {
+        initLockRef.current = (async () => {
+          const stored = await guerrillaMailAdapter.getStoredAccount();
+          if (!mounted) return;
+          if (stored?.address) {
+            setAddress(stored.address);
+            await fetchEmails(true);
+          } else {
+            await provisionFreshAddress();
+          }
+        })().finally(() => {
+          initLockRef.current = null;
+        });
+      }
       try {
-        const stored = await guerrillaMailAdapter.getStoredAccount();
-        if (stored?.address) {
-          setAddress(stored.address);
-          await fetchEmails(true);
-        } else {
-          await provisionFreshAddress();
-        }
+        await initLockRef.current;
       } catch {
-        setSessionError(true);
-        setLoading(false);
+        if (mounted) {
+          setSessionError(true);
+          setLoading(false);
+        }
       }
     };
 
     init();
+    return () => {
+      mounted = false;
+    };
   }, [fetchEmails, provisionFreshAddress]);
 
-  const handleResetSession = () => {
-    showAlert(
-      'Reset Session',
-      'Are you sure you want to generate a new GuerrillaMail address?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          onPress: async () => {
-            const newEmail = await provisionFreshAddress();
-            if (newEmail) {
-              showAlert('Session Reset', `New email address: ${newEmail}`);
-            }
-          },
-        },
-      ]
-    );
+  const handleResetSession = async () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      return;
+    }
+    setConfirmReset(false);
+    const newEmail = await provisionFreshAddress();
+    if (newEmail) {
+      showToast({
+        title: 'Session Reset',
+        message: newEmail,
+        type: 'success',
+      });
+    }
   };
 
   const handleRefresh = useCallback(() => {
@@ -129,23 +150,19 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
     fetchEmails(false);
   }, [fetchEmails]);
 
-  const handleDeleteEmail = (id: string, e: React.MouseEvent) => {
+  const handleDeleteEmail = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    showAlert('Remove Email', 'Remove this email from your inbox view?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          await guerrillaMailAdapter.deleteMessage(id);
-          setEmails((prev) => {
-            const next = prev.filter((item) => item.id !== id);
-            setCachedGuerrillaSummaries(next);
-            return next;
-          });
-        },
-      },
-    ]);
+    await guerrillaMailAdapter.deleteMessage(id);
+    setEmails((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      setCachedGuerrillaSummaries(next);
+      return next;
+    });
+    showToast({
+      title: 'Message Deleted',
+      message: 'Removed from GuerrillaMail inbox.',
+      type: 'info',
+    });
   };
 
   const openDetail = (emailId: string) => {
@@ -268,12 +285,12 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Button
-                variant="secondary"
+                variant={confirmReset ? 'danger' : 'secondary'}
                 size="sm"
                 onClick={handleResetSession}
                 aria-label="Reset Session"
               >
-                <span>New Address</span>
+                <span>{confirmReset ? 'Confirm Reset?' : 'New Address'}</span>
               </Button>
               <Button
                 variant="secondary"
@@ -296,7 +313,16 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
           {sessionError && !loading && (
             <button
               type="button"
-              onClick={handleResetSession}
+              onClick={async () => {
+                const newEmail = await provisionFreshAddress();
+                if (newEmail) {
+                  showToast({
+                    title: 'Session Reset',
+                    message: newEmail,
+                    type: 'success',
+                  });
+                }
+              }}
               style={{
                 width: '100%',
                 backgroundColor: 'rgba(186, 94, 78, 0.12)',
@@ -359,7 +385,20 @@ export const GuerrillaInboxPage: React.FC<GuerrillaInboxPageProps> = ({
                   : 'New emails will appear here. Click Refresh to check for incoming mail.'}
               </div>
               {sessionError && (
-                <Button variant="primary" size="sm" onClick={handleResetSession}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={async () => {
+                    const newEmail = await provisionFreshAddress();
+                    if (newEmail) {
+                      showToast({
+                        title: 'Session Reset',
+                        message: newEmail,
+                        type: 'success',
+                      });
+                    }
+                  }}
+                >
                   Reset Session
                 </Button>
               )}

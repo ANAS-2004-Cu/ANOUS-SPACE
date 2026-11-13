@@ -52,7 +52,7 @@ ANOUS-SPACE/
     │   └── tic-tac-toe/          # Tic-Tac-Toe Arena — Classic 3x3 & 3-Marker Queue
     ├── shared/                   # Cross-workspace UI primitives, contexts, and utilities
     │   ├── context/              # ThemeContext, AlertContext, and VaultContext
-    │   ├── ui/                   # AppHeader, Button, AlertModal, CommandPalette, VaultModal
+    │   ├── ui/                   # AppHeader, Button, ToastContainer, CommandPalette, VaultModal
     │   └── utils/                # storage, clipboard, and recentTools helpers
     └── styles/                   # Global CSS custom properties, layouts, and keyframe animations
 ```

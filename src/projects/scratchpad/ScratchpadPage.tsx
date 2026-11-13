@@ -37,7 +37,7 @@ export interface ScratchpadPageProps {
 }
 
 export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPalette }) => {
-  const { showAlert } = useAlert();
+  const { showToast } = useAlert();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -71,6 +71,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
 
   const [customExt, setCustomExt] = useState<string>('.yaml');
   const [copied, setCopied] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [jsonStatus, setJsonStatus] = useState<{
     type: 'valid' | 'invalid';
@@ -169,19 +170,26 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
     setTimeout(() => setCopied(false), 1600);
   };
 
+  useEffect(() => {
+    if (!confirmClear) return;
+    const timer = window.setTimeout(() => setConfirmClear(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [confirmClear]);
+
   const handleClear = () => {
     if (!content) return;
-    showAlert('Clear Scratchpad', 'Are you sure you want to clear all editor content?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Clear',
-        style: 'destructive',
-        onPress: () => {
-          setContent('');
-          setJsonStatus(null);
-        },
-      },
-    ]);
+    if (!confirmClear) {
+      setConfirmClear(true);
+      return;
+    }
+    setContent('');
+    setJsonStatus(null);
+    setConfirmClear(false);
+    showToast({
+      title: 'Scratchpad Cleared',
+      message: 'Editor content has been cleared.',
+      type: 'info',
+    });
   };
 
   const readImportedFile = (file: File) => {
@@ -454,7 +462,7 @@ export const ScratchpadPage: React.FC<ScratchpadPageProps> = ({ onOpenCommandPal
                   disabled={!content}
                 >
                   <FiTrash2 size={13} strokeWidth={1.5} />
-                  <span>Clear</span>
+                  <span>{confirmClear ? 'Confirm Clear?' : 'Clear'}</span>
                 </Button>
               </div>
             </div>

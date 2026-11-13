@@ -20,7 +20,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
   const adapter = PROVIDER_ADAPTERS[activeProvider];
   const meta = PROVIDERS_META[activeProvider];
 
-  const { showAlert } = useAlert();
+  const { showToast } = useAlert();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -34,13 +34,21 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
       setLoading(true);
       const messages = await adapter.fetchMessages();
       setEmails(messages);
-    } catch {
-      showAlert('Error', 'Failed to load emails. Please try again.');
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : 'Failed to load emails. Please try again.';
+      showToast({
+        title: 'Inbox Sync Failed',
+        message: msg,
+        type: 'error',
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [adapter, showAlert]);
+  }, [adapter, showToast]);
 
   useEffect(() => {
     if (activeProvider === 'guerrillamail') {
@@ -52,43 +60,51 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
       try {
         const stored = await adapter.getStoredAccount();
         if (!stored?.address) {
-          showAlert('No Active Inbox', `No active ${meta.label} email found. Please create one first.`);
+          showToast({
+            title: 'No Active Inbox',
+            message: `No active ${meta.label} email found. Create one first.`,
+            type: 'warning',
+          });
           navigate('/temp-mail', { replace: true });
           return;
         }
         setAddress(stored.address);
         await fetchEmails();
       } catch {
-        showAlert('Error', 'Failed to load inbox session. Please try again.');
+        showToast({
+          title: 'Session Error',
+          message: 'Failed to load inbox session. Please try again.',
+          type: 'error',
+        });
         setLoading(false);
       }
     };
 
     init();
-  }, [activeProvider, adapter, meta.label, fetchEmails, navigate, showAlert]);
+  }, [activeProvider, adapter, meta.label, fetchEmails, navigate, showToast]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
     fetchEmails();
   }, [fetchEmails]);
 
-  const handleDeleteEmail = (id: string, e: React.MouseEvent) => {
+  const handleDeleteEmail = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    showAlert('Delete Email', 'Are you sure you want to delete this message?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await adapter.deleteMessage(id);
-            setEmails((prev) => prev.filter((item) => item.id !== id));
-          } catch {
-            showAlert('Error', 'Failed to delete email. Please try again.');
-          }
-        },
-      },
-    ]);
+    try {
+      await adapter.deleteMessage(id);
+      setEmails((prev) => prev.filter((item) => item.id !== id));
+      showToast({
+        title: 'Message Deleted',
+        message: 'Removed from inbox.',
+        type: 'info',
+      });
+    } catch {
+      showToast({
+        title: 'Delete Failed',
+        message: 'Failed to delete email. Please try again.',
+        type: 'error',
+      });
+    }
   };
 
   const openDetail = (emailId: string) => {

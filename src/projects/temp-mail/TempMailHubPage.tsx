@@ -13,6 +13,7 @@ import {
   PROVIDER_ADAPTERS,
   PROVIDER_ORDER,
   PROVIDERS_META,
+  TEMPMAIL_PLUS_DOMAINS,
   generateRandomUsername,
 } from './providers';
 import { ProviderSelector } from './components/ProviderSelector';
@@ -25,7 +26,7 @@ export interface TempMailHubPageProps {
 
 export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandPalette }) => {
   const navigate = useNavigate();
-  const { showAlert } = useAlert();
+  const { showToast } = useAlert();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -35,6 +36,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     Partial<Record<MailProviderId, string[]>>
   >({
     guerrillamail: GUERRILLA_DOMAINS,
+    'tempmail.plus': TEMPMAIL_PLUS_DOMAINS,
   });
   const [selectedDomain, setSelectedDomain] = useState<string>('');
   const [domainModalOpen, setDomainModalOpen] = useState(false);
@@ -67,6 +69,8 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
 
     const initProvider = async () => {
       setIsInitializing(true);
+      setDomainModalOpen(false);
+      setSelectedDomain('');
       try {
         await loadExistingAccounts();
 
@@ -78,8 +82,6 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
             setDomainsByProvider((prev) => ({ ...prev, [selectedProvider]: domainList }));
             setSelectedDomain(domainList[0]);
           }
-        } else {
-          if (active) setSelectedDomain('');
         }
 
         if (active) {
@@ -87,7 +89,11 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
         }
       } catch {
         if (active) {
-          showAlert('Error', 'Failed to load provider options. Please try again.');
+          showToast({
+            title: 'Provider Load Failed',
+            message: 'Failed to load provider options. Please try again.',
+            type: 'error',
+          });
         }
       } finally {
         if (active) setIsInitializing(false);
@@ -98,26 +104,42 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     return () => {
       active = false;
     };
-  }, [selectedProvider, loadExistingAccounts, showAlert]);
+  }, [selectedProvider, loadExistingAccounts, showToast]);
 
   const copyToClipboard = async (text: string) => {
     try {
       await Clipboard.setStringAsync(text);
-      showAlert('Copied', 'Email address copied to clipboard.');
+      showToast({
+        title: 'Copied',
+        message: 'Email address copied to clipboard.',
+        type: 'success',
+      });
     } catch {
-      showAlert('Error', 'Failed to copy to clipboard.');
+      showToast({
+        title: 'Copy Failed',
+        message: 'Failed to copy to clipboard.',
+        type: 'error',
+      });
     }
   };
 
   const handleCreateEmail = async () => {
     const meta = PROVIDERS_META[selectedProvider];
     if (selectedProvider !== 'tempmail.lol' && !username.trim()) {
-      showAlert('Validation Error', 'Please enter a username.');
+      showToast({
+        title: 'Username Required',
+        message: 'Please enter a username or generate one.',
+        type: 'warning',
+      });
       return;
     }
 
     if (meta.supportsDomainSelect && !selectedDomain) {
-      showAlert('Validation Error', 'Please select a domain.');
+      showToast({
+        title: 'Domain Required',
+        message: 'Please select a domain before creating an address.',
+        type: 'warning',
+      });
       return;
     }
 
@@ -130,25 +152,31 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
         [selectedProvider]: account.address,
       }));
 
-      showAlert('Account Created', `Email ${account.address} created.`, [
-        {
-          text: 'Copy Email',
-          onPress: () => copyToClipboard(account.address),
+      showToast({
+        title: 'Address Created',
+        message: account.address,
+        type: 'success',
+        durationMs: 4500,
+        action: {
+          label: 'Copy Email',
+          onClick: () => copyToClipboard(account.address),
         },
-        {
-          text: 'OK',
-          style: 'cancel',
-        },
-      ]);
+      });
     } catch (err) {
       const message =
         err instanceof Error && err.message
           ? err.message
           : `Failed to create ${meta.label} address. Please try again.`;
-      showAlert('Creation Failed', message, [
-        { text: 'New Username', onPress: () => setUsername(generateRandomUsername(10)) },
-        { text: 'OK', style: 'cancel' },
-      ]);
+      showToast({
+        title: 'Creation Failed',
+        message,
+        type: 'error',
+        durationMs: 4500,
+        action: {
+          label: 'New Username',
+          onClick: () => setUsername(generateRandomUsername(10)),
+        },
+      });
     } finally {
       setLoading(false);
     }
@@ -166,7 +194,10 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     const cleanUser = username.trim() || 'random';
     switch (selectedProvider) {
       case 'mail.tm':
+      case 'mail.gw':
       case 'guerrillamail':
+      case 'inboxes.com':
+      case 'tempmail.plus':
         return selectedDomain ? `${cleanUser}@${selectedDomain}` : cleanUser;
       case 'tempmail.lol':
         return `${username.trim() || 'random'} (domain assigned automatically)`;

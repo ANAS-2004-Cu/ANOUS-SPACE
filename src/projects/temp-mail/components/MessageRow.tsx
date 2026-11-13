@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiPaperclip, FiTrash2 } from 'react-icons/fi';
 import { EmailSummary } from '../types';
 
@@ -16,9 +16,12 @@ export const getAvatarStyle = (seed: string) => {
   return AVATAR_PALETTE[code % AVATAR_PALETTE.length];
 };
 
-function formatMessageDate(isoString: string): string {
-  const date = new Date(isoString);
-  if (Number.isNaN(date.getTime())) return '';
+function formatMessageDate(rawDate: string): string {
+  if (!rawDate) return '';
+  const date = new Date(rawDate);
+  if (Number.isNaN(date.getTime())) {
+    return rawDate.length <= 24 ? rawDate : '';
+  }
   return date.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -42,6 +45,14 @@ export const MessageRow: React.FC<MessageRowProps> = ({
   onOpen,
   onDelete,
 }) => {
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  useEffect(() => {
+    if (!confirmingDelete) return;
+    const timer = window.setTimeout(() => setConfirmingDelete(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [confirmingDelete]);
+
   const cardBg = isLight ? '#FFFFFF' : '#1C1A17';
   const cardBorder = isLight ? '#E5E1D8' : '#2E2A25';
   const textPrimary = isLight ? '#18191C' : '#F2F3F5';
@@ -148,14 +159,41 @@ export const MessageRow: React.FC<MessageRowProps> = ({
           {message.hasAttachments && (
             <FiPaperclip size={13} strokeWidth={1.5} color={textSecondary} />
           )}
-          <button
-            type="button"
-            onClick={(e) => onDelete(message.id, e)}
-            aria-label="Delete Email"
-            style={{ color: '#BA5E4E', padding: 4, display: 'inline-flex' }}
-          >
-            <FiTrash2 size={15} strokeWidth={1.5} />
-          </button>
+          {confirmingDelete ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirmingDelete(false);
+                onDelete(message.id, e);
+              }}
+              aria-label="Confirm Delete Email"
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: '#BA5E4E',
+                backgroundColor: 'rgba(186, 94, 78, 0.14)',
+                border: '1px solid rgba(186, 94, 78, 0.38)',
+                borderRadius: 6,
+                padding: '2px 8px',
+                lineHeight: 1.4,
+              }}
+            >
+              Confirm?
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirmingDelete(true);
+              }}
+              aria-label="Delete Email"
+              style={{ color: '#BA5E4E', padding: 4, display: 'inline-flex' }}
+            >
+              <FiTrash2 size={15} strokeWidth={1.5} />
+            </button>
+          )}
         </div>
       </div>
     </div>

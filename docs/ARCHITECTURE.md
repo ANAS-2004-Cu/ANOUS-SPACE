@@ -20,13 +20,13 @@ flowchart TD
 
   subgraph Shared["Shared Boundary Layer (src/shared/)"]
     Contexts["ThemeContext · AlertContext · VaultContext"]
-    UI["AppHeader · CommandPalette · VaultModal · AlertModal · Button"]
+    UI["AppHeader · CommandPalette · VaultModal · ToastContainer · Button"]
     Utils["storage.ts · clipboard.ts · recentTools.ts"]
   end
 
   subgraph PublicModules["Isolated Public Modules (src/projects/*)"]
     Scratchpad["scratchpad/ScratchpadPage.tsx"]
-    TempMail["temp-mail/* (Hub, Inboxes, Detail, Service, Modal)"]
+    TempMail["temp-mail/* (Hub, Inboxes, Detail, Providers, Modal)"]
     TicTacToe["tic-tac-toe/TicTacToePage.tsx"]
     GuessGame["guess-game/GuessGamePage.tsx"]
   end
@@ -38,7 +38,7 @@ flowchart TD
 
   subgraph Serverless["Serverless Edge / API Layer (api/)"]
     VaultAPI["POST /api/vault"]
-    Proxies["/api/guerrilla · /api/maildrop · /api/tempmail-lol"]
+    Proxies["/api/mailtm · /api/mailgw · /api/guerrilla · /api/maildrop · /api/tempmail-lol · /api/inboxes · /api/tempmail-plus"]
   end
 
   App --> Contexts
@@ -64,7 +64,7 @@ To ensure modules can be added, refactored, or removed without side effects acro
 
 1. **Self-Contained Directories**: Every internal micro-application lives in `src/projects/<module-name>/` with its own React views, helper services, and module `README.md`.
 2. **No Cross-Module Imports**: A file inside `src/projects/<module-a>/` must **never** import from `src/projects/<module-b>/`.
-3. **Shared Layer Boundary Only**: Modules inside `src/projects/*` may import only from `src/shared/` (`AppHeader`, `Button`, `AlertModal`, `ThemeContext`, `AlertContext`, `VaultContext`, `storage`, `clipboard`, and `recentTools`).
+3. **Shared Layer Boundary Only**: Modules inside `src/projects/*` may import only from `src/shared/` (`AppHeader`, `Button`, `ThemeContext`, `AlertContext`, `VaultContext`, `storage`, `clipboard`, and `recentTools`).
 
 > [!IMPORTANT]
 > Cross-cutting primitives belong exclusively in `src/shared/`. Never import state or components directly between sibling directories under `src/projects/`.
@@ -77,11 +77,11 @@ To ensure modules can be added, refactored, or removed without side effects acro
 | :--- | :--- | :--- |
 | `src/shared/context/ThemeContext.tsx` | `ThemeProvider`, `useTheme`, `ThemeMode` | Hydrates `'dark'` \| `'light'` synchronously from `localStorage['anous_theme']`, applies `data-theme` on `document.documentElement`, and exposes `toggleTheme()` and `setTheme()`. |
 | `src/shared/context/VaultContext.tsx` | `VaultProvider`, `useVault` | Hydrates `{ unlocked, projects }` synchronously from `sessionStorage['anous_vault_session']`. `unlockVault(password)` sends `POST /api/vault` and normalizes returned items into `ProjectItem[]` (`category: 'Private'`), treating paths starting with `/` as internal routes. |
-| `src/shared/context/AlertContext.tsx` | `AlertProvider`, `useAlert` | Manages modal state for `AlertModal` and exposes `showAlert(title, message?, actions?)`. |
+| `src/shared/context/AlertContext.tsx` | `AlertProvider`, `useAlert`, `ShowToastOptions`, `ToastType` | Manages stacked toast notifications in `ToastContainer`, exposes `showToast()` and compatibility `showAlert()`, with 3.5s auto-dismiss timers. |
 | `src/shared/ui/AppHeader.tsx` | `AppHeader` | Renders the top navigation bar, back-to-hub button on child routes, **2000ms pointer hold timer** (`startPress`) on `ANAS GAMAL` to open `VaultModal`, active terracotta `--accent-vault` `Vault` status pill when unlocked, theme toggle button, and `Search` (`Ctrl K`) button. |
 | `src/shared/ui/CommandPalette.tsx` | `CommandPalette` | Global search modal (`zIndex: 1100`). Searches `PUBLIC_PROJECTS` (plus `privateProjects` when unlocked), supports `ArrowUp`/`ArrowDown`/`Enter`/`Escape`, and surfaces the Vault action row when the query equals `"vault"`. |
 | `src/shared/ui/VaultModal.tsx` | `VaultModal` | Password authentication dialog (`zIndex: 1150`) when locked, or session status + `Lock Vault` confirmation when unlocked. |
-| `src/shared/ui/AlertModal.tsx` | `AlertModal`, `AlertAction` | Accessible dialog (`zIndex: 1200`) mapping action styles `'default'`, `'cancel'`, and `'destructive'` to `Button` variants. |
+| `src/shared/ui/ToastContainer.tsx` | `ToastContainer`, `ToastItem`, `ToastType` | Stacked non-blocking toast region (`zIndex: 1300`, bottom-right desktop / bottom-center mobile) supporting muted status tones, manual close, and optional action button. |
 | `src/shared/ui/Button.tsx` | `Button`, `ButtonProps` | Shared button primitive supporting variants `'primary'`, `'secondary'`, `'ghost'`, and `'danger'`, sizes `'sm'`, `'md'`, `'lg'`, `fullWidth`, and inline `loading` spinner. |
 | `src/shared/utils/storage.ts` | `getItem`, `setItem`, `getItemAsync`, `setItemAsync`, `deleteItemAsync` | Safe synchronous and asynchronous wrappers around `window.localStorage` with `try/catch` guards. |
 | `src/shared/utils/clipboard.ts` | `copyText`, `setStringAsync`, `copyToClipboard` | Writes to `navigator.clipboard.writeText` with a hidden `<textarea>` + `document.execCommand('copy')` fallback. |

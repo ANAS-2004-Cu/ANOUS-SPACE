@@ -9,7 +9,13 @@ import {
   StoredMaildropData,
   writeProviderStorage,
 } from '../storage';
-import { fetchJson, generateRandomToken } from './http';
+import {
+  escapeHtml,
+  fetchJson,
+  generateRandomToken,
+  parseSender,
+  stripHtml,
+} from './http';
 
 const MAILDROP_PROXY_URL = '/api/maildrop';
 const MAILDROP_DIRECT_URL = 'https://api.maildrop.cc/graphql';
@@ -30,18 +36,6 @@ interface MaildropRawDetail extends MaildropRawSummary {
   html?: string;
 }
 
-function parseSender(rawFrom?: string): { fromName: string; fromAddress: string } {
-  const fromStr = String(rawFrom || 'Unknown');
-  const matches = fromStr.match(/(.*)\s<(.*)>/);
-  if (matches && matches.length > 2) {
-    return {
-      fromName: matches[1].replace(/^"|"$/g, '').trim() || matches[2].trim(),
-      fromAddress: matches[2].trim(),
-    };
-  }
-  return { fromName: fromStr, fromAddress: fromStr };
-}
-
 async function executeGraphQL<T>(
   query: string,
   variables: Record<string, unknown>
@@ -57,7 +51,7 @@ async function executeGraphQL<T>(
     });
     if (proxyRes?.data) return proxyRes.data;
   } catch {
-    // Fallback to direct endpoint
+    // Fallback to direct CORS-enabled GraphQL endpoint
   }
 
   const directRes = await fetchJson<GraphQLResponse<T>>(MAILDROP_DIRECT_URL, {
@@ -165,11 +159,10 @@ export const maildropAdapter: MailProviderAdapter = {
     }
 
     const { fromName, fromAddress } = parseSender(msg.headerfrom);
-    const plainBody =
-      msg.data ||
-      (msg.html ? msg.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '');
+    const plainBody = msg.data || (msg.html ? stripHtml(msg.html) : '');
     const htmlBody =
-      msg.html || `<pre style="white-space:pre-wrap;color:inherit">${msg.data || ''}</pre>`;
+      msg.html ||
+      `<pre style="white-space:pre-wrap;color:inherit">${escapeHtml(msg.data || '')}</pre>`;
 
     return {
       id: msg.id,

@@ -13,7 +13,7 @@ import {
   writeGuerrillaSessionCache,
   writeProviderStorage,
 } from '../storage';
-import { fetchJson } from './http';
+import { escapeHtml, fetchJson, parseSender, stripHtml } from './http';
 
 const GUERRILLA_PROXY_URL = '/api/guerrilla';
 
@@ -37,6 +37,7 @@ interface GuerrillaRawMessage {
   mail_subject?: string;
   mail_excerpt?: string;
   mail_timestamp?: number | string;
+  mail_date?: string;
   att?: number | string;
   mail_body?: string;
 }
@@ -45,28 +46,15 @@ interface GuerrillaEmailResponse {
   email_addr?: string;
   email_user?: string;
   sid_token?: string;
-  simulated?: boolean;
   list?: GuerrillaRawMessage[];
 }
 
-function parseSender(rawFrom?: string): { fromName: string; fromAddress: string } {
-  const fromStr = String(rawFrom || 'Unknown');
-  const matches = fromStr.match(/(.*)\s<(.*)>/);
-  if (matches && matches.length > 2) {
-    return {
-      fromName: matches[1].replace(/^"|"$/g, '').trim() || matches[2].trim(),
-      fromAddress: matches[2].trim(),
-    };
-  }
-  return { fromName: fromStr, fromAddress: fromStr };
-}
-
-function normalizeTimestamp(ts?: number | string): string {
+function normalizeTimestamp(ts?: number | string, mailDate?: string): string {
   const numeric = Number(ts);
   if (!Number.isNaN(numeric) && numeric > 0) {
     return new Date(numeric * 1000).toISOString();
   }
-  return new Date().toISOString();
+  return mailDate ? mailDate.trim() : '';
 }
 
 function normalizeSummary(raw: GuerrillaRawMessage): EmailSummary {
@@ -77,18 +65,18 @@ function normalizeSummary(raw: GuerrillaRawMessage): EmailSummary {
     fromAddress,
     subject: raw.mail_subject || '(No subject)',
     preview: raw.mail_excerpt || '(No content)',
-    receivedAt: normalizeTimestamp(raw.mail_timestamp),
+    receivedAt: normalizeTimestamp(raw.mail_timestamp, raw.mail_date),
     hasAttachments: Number(raw.att || 0) > 0,
   };
 }
 
 function normalizeDetail(raw: GuerrillaRawMessage): EmailDetail {
   const summary = normalizeSummary(raw);
+  const rawBody = raw.mail_body || '';
+  const fallbackText = raw.mail_excerpt || 'No content available';
   const html =
-    raw.mail_body || `<div>${raw.mail_excerpt || 'No content available'}</div>`;
-  const text = raw.mail_body
-    ? raw.mail_body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-    : raw.mail_excerpt || 'No content available';
+    rawBody || `<pre style="white-space:pre-wrap;color:inherit">${escapeHtml(fallbackText)}</pre>`;
+  const text = rawBody ? stripHtml(rawBody) || fallbackText : fallbackText;
 
   return {
     ...summary,
@@ -146,7 +134,11 @@ export const guerrillaMailAdapter: MailProviderAdapter = {
     let finalUser = init.email_user || init.email_addr.split('@')[0];
     let finalDomain = domain || init.email_addr.split('@')[1] || GUERRILLA_DOMAINS[0];
 
-    const requestedUser = (username || '').trim();
+    const requestedUser = (username || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, '');
+
     if (requestedUser) {
       try {
         const userRes = await fetchJson<GuerrillaEmailResponse>(
@@ -156,6 +148,8 @@ export const guerrillaMailAdapter: MailProviderAdapter = {
         );
         if (userRes?.email_addr) {
           finalUser = userRes.email_addr.split('@')[0];
+        } else {
+          finalUser = requestedUser;
         }
       } catch {
         // Keep initialized user if custom alias fails
@@ -164,28 +158,15 @@ export const guerrillaMailAdapter: MailProviderAdapter = {
 
     if (domain) {
       try {
-        const domainRes = await fetchJson<GuerrillaEmailResponse>(
+        await fetchJson<GuerrillaEmailResponse | null>(
           `${GUERRILLA_PROXY_URL}?f=set_email_domain&domain_name=${encodeURIComponent(
             domain
           )}&sid_token=${encodeURIComponent(sidToken)}`
         );
-        if (domainRes?.email_addr) {
-          finalDomain = domainRes.email_addr.split('@')[1];
-        }
       } catch {
-        try {
-          const fallbackRes = await fetchJson<GuerrillaEmailResponse>(
-            `${GUERRILLA_PROXY_URL}?f=set_domain&domain=${encodeURIComponent(
-              domain
-            )}&sid_token=${encodeURIComponent(sidToken)}`
-          );
-          if (fallbackRes?.email_addr) {
-            finalDomain = fallbackRes.email_addr.split('@')[1];
-          }
-        } catch {
-          // Keep selected domain as alias
-        }
+        // All Guerrilla domains resolve to the same email_user inbox
       }
+      finalDomain = domain;
     }
 
     const finalAddress = `${finalUser}@${finalDomain}`;
@@ -209,16 +190,16 @@ export const guerrillaMailAdapter: MailProviderAdapter = {
   async fetchMessages(): Promise<EmailSummary[]> {
     const session = await getActiveSession();
     const res = await fetchJson<GuerrillaEmailResponse>(
-      `${GUERRILLA_PROXY_URL}?f=check_email&sid_token=${encodeURIComponent(
+      `${GUERRILLA_PROXY_URL}?f=get_email_list&offset=0&sid_token=${encodeURIComponent(
         session.sid_token
-      )}&seq=0`
+      )}`
     );
 
     const incoming = Array.isArray(res?.list) ? res.list.map(normalizeSummary) : [];
     const cached = getCachedGuerrillaSummaries();
-    const existingIds = new Set(cached.map((item) => item.id));
-    const fresh = incoming.filter((item) => !existingIds.has(item.id));
-    const merged = [...fresh, ...cached];
+    const incomingIds = new Set(incoming.map((item) => item.id));
+    const remainingCached = cached.filter((item) => !incomingIds.has(item.id));
+    const merged = [...incoming, ...remainingCached];
     setCachedGuerrillaSummaries(merged);
     return merged;
   },
@@ -237,6 +218,16 @@ export const guerrillaMailAdapter: MailProviderAdapter = {
   },
 
   async deleteMessage(id: string): Promise<void> {
+    const session = await getActiveSession();
+    try {
+      await fetchJson(
+        `${GUERRILLA_PROXY_URL}?f=del_email&email_ids%5B%5D=${encodeURIComponent(
+          id
+        )}&sid_token=${encodeURIComponent(session.sid_token)}`
+      );
+    } catch {
+      // Remove locally even if already expired on server
+    }
     const cached = getCachedGuerrillaSummaries();
     setCachedGuerrillaSummaries(cached.filter((item) => item.id !== id));
   },

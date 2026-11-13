@@ -9,7 +9,7 @@ import {
   StoredTempMailLolData,
   writeProviderStorage,
 } from '../storage';
-import { fetchJson } from './http';
+import { escapeHtml, fetchJson, parseSender, stripHtml } from './http';
 
 const TEMPMAIL_LOL_PROXY = '/api/tempmail-lol';
 
@@ -23,21 +23,25 @@ interface TempMailLolRawMessage {
   date?: number;
 }
 
-function parseSender(rawFrom?: string): { fromName: string; fromAddress: string } {
-  const fromStr = String(rawFrom || 'Unknown');
-  const matches = fromStr.match(/(.*)\s<(.*)>/);
-  if (matches && matches.length > 2) {
-    return {
-      fromName: matches[1].trim() || matches[2].trim(),
-      fromAddress: matches[2].trim(),
-    };
+interface TempMailLolPollResponse {
+  emails?: TempMailLolRawMessage[];
+  expired?: boolean;
+}
+
+const inFlightFetchByToken = new Map<string, Promise<EmailSummary[]>>();
+
+function computeDeterministicId(item: TempMailLolRawMessage, timestampMs: number): string {
+  const seed = `${item.from || ''}|${item.to || ''}|${item.subject || ''}|${timestampMs}|${(item.body || item.html || '').slice(0, 96)}`;
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
   }
-  return { fromName: fromStr, fromAddress: fromStr };
+  return `tmlol-${timestampMs}-${(hash >>> 0).toString(36)}`;
 }
 
 function normalizeMessage(
   item: TempMailLolRawMessage,
-  idx: number,
   inboxAddress: string
 ): EmailDetail {
   const timestampMs = item.date
@@ -47,12 +51,11 @@ function normalizeMessage(
     : Date.now();
   const receivedAt = new Date(timestampMs).toISOString();
   const { fromName, fromAddress } = parseSender(item.from);
-  const bodyText = item.body || '';
+  const rawHtml = item.html || '';
+  const bodyText = item.body || (rawHtml ? stripHtml(rawHtml) : '');
   const bodyHtml =
-    item.html || `<pre style="white-space:pre-wrap;color:inherit">${bodyText}</pre>`;
-  const id =
-    item.id ||
-    `tmlol-${timestampMs}-${idx}-${fromAddress.replace(/[^a-zA-Z0-9]/g, '')}`;
+    rawHtml || `<pre style="white-space:pre-wrap;color:inherit">${escapeHtml(bodyText)}</pre>`;
+  const id = item.id || computeDeterministicId(item, timestampMs);
 
   return {
     id,
@@ -95,17 +98,36 @@ export const tempMailLolAdapter: MailProviderAdapter = {
   },
 
   async createAccount(username?: string): Promise<TempAccount> {
-    const cleanPrefix = (username || '').trim();
+    const cleanPrefix = (username || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '')
+      .slice(0, 32);
     const payload = cleanPrefix.length > 0 ? { prefix: cleanPrefix } : {};
 
-    const data = await fetchJson<{ address?: string; token?: string }>(
-      `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent('/v2/inbox/create')}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+    let data: { address?: string; token?: string };
+    try {
+      data = await fetchJson<{ address?: string; token?: string }>(
+        `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent('/v2/inbox/create')}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+    } catch {
+      if (!cleanPrefix) {
+        throw new Error('Failed to create TempMail.lol address.');
       }
-    );
+      data = await fetchJson<{ address?: string; token?: string }>(
+        `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent('/v2/inbox/create')}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: '{}',
+        }
+      );
+    }
 
     if (!data?.address || !data?.token) {
       throw new Error('Failed to create TempMail.lol address.');
@@ -126,32 +148,61 @@ export const tempMailLolAdapter: MailProviderAdapter = {
   },
 
   async fetchMessages(): Promise<EmailSummary[]> {
-    const stored = await readProviderStorage<StoredTempMailLolData>('tempmail.lol');
-    if (!stored?.token) {
+    const initialStored = await readProviderStorage<StoredTempMailLolData>('tempmail.lol');
+    if (!initialStored?.token) {
       throw new Error('No active TempMail.lol session found.');
     }
 
-    const rawData = await fetchJson<{ emails?: TempMailLolRawMessage[] }>(
-      `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent(
-        '/v2/inbox'
-      )}&token=${encodeURIComponent(stored.token)}`
-    );
+    const activeToken = initialStored.token;
+    const existingPromise = inFlightFetchByToken.get(activeToken);
+    if (existingPromise) {
+      return existingPromise;
+    }
 
-    const incoming = Array.isArray(rawData?.emails)
-      ? rawData.emails.map((item, idx) => normalizeMessage(item, idx, stored.address))
-      : [];
+    const requestPromise = (async () => {
+      try {
+        const rawData = await fetchJson<TempMailLolPollResponse>(
+          `${TEMPMAIL_LOL_PROXY}?endpoint=${encodeURIComponent(
+            '/v2/inbox'
+          )}&token=${encodeURIComponent(activeToken)}`
+        );
 
-    const existing = Array.isArray(stored.emails) ? stored.emails : [];
-    const existingIds = new Set(existing.map((e) => e.id));
-    const fresh = incoming.filter((e) => !existingIds.has(e.id));
-    const merged = [...fresh, ...existing];
+        if (rawData?.expired === true) {
+          throw new Error(
+            'This TempMail.lol address has expired. Create a new address to receive mail.'
+          );
+        }
 
-    await writeProviderStorage('tempmail.lol', {
-      ...stored,
-      emails: merged,
-    });
+        const latestStored =
+          (await readProviderStorage<StoredTempMailLolData>('tempmail.lol')) ||
+          initialStored;
 
-    return merged.map(toSummary);
+        if (latestStored.token !== activeToken) {
+          return (latestStored.emails || []).map(toSummary);
+        }
+
+        const incoming = Array.isArray(rawData?.emails)
+          ? rawData.emails.map((item) => normalizeMessage(item, latestStored.address))
+          : [];
+
+        const existing = Array.isArray(latestStored.emails) ? latestStored.emails : [];
+        const existingIds = new Set(existing.map((e) => e.id));
+        const fresh = incoming.filter((e) => !existingIds.has(e.id));
+        const merged = [...fresh, ...existing];
+
+        await writeProviderStorage('tempmail.lol', {
+          ...latestStored,
+          emails: merged,
+        });
+
+        return merged.map(toSummary);
+      } finally {
+        inFlightFetchByToken.delete(activeToken);
+      }
+    })();
+
+    inFlightFetchByToken.set(activeToken, requestPromise);
+    return requestPromise;
   },
 
   async fetchMessageDetail(id: string): Promise<EmailDetail> {
