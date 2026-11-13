@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiRefreshCw, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import { AppHeader } from '../../shared/ui/AppHeader';
+import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
+import { ToolBanner } from '../../shared/ui/ToolBanner';
+import { Surface } from '../../shared/ui/Surface';
 import { Button } from '../../shared/ui/Button';
+import { Input } from '../../shared/ui/Input';
+import { Badge } from '../../shared/ui/Badge';
 import { useAlert } from '../../shared/context/AlertContext';
-import { useTheme } from '../../shared/context/ThemeContext';
 import * as Clipboard from '../../shared/utils/clipboard';
 import { recordRecentProject } from '../../shared/utils/recentTools';
 import { MailProviderId } from './types';
@@ -27,8 +30,6 @@ export interface TempMailHubPageProps {
 export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandPalette }) => {
   const navigate = useNavigate();
   const { showToast } = useAlert();
-  const { theme } = useTheme();
-  const isLight = theme === 'light';
 
   const [selectedProvider, setSelectedProvider] = useState<MailProviderId>('mail.tm');
   const [username, setUsername] = useState(() => generateRandomUsername(10));
@@ -38,6 +39,9 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     guerrillamail: GUERRILLA_DOMAINS,
     'tempmail.plus': TEMPMAIL_PLUS_DOMAINS,
   });
+  const domainsRef = useRef(domainsByProvider);
+  domainsRef.current = domainsByProvider;
+
   const [selectedDomain, setSelectedDomain] = useState<string>('');
   const [domainModalOpen, setDomainModalOpen] = useState(false);
   const [existingAddresses, setExistingAddresses] = useState<
@@ -76,7 +80,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
 
         const adapter = PROVIDER_ADAPTERS[selectedProvider];
         if (adapter.getDomains) {
-          const cached = domainsByProvider[selectedProvider];
+          const cached = domainsRef.current[selectedProvider];
           const domainList = cached && cached.length > 0 ? cached : await adapter.getDomains();
           if (active && domainList.length > 0) {
             setDomainsByProvider((prev) => ({ ...prev, [selectedProvider]: domainList }));
@@ -210,92 +214,65 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
   const activeExistingEmail = existingAddresses[selectedProvider] || null;
   const activeDomains = domainsByProvider[selectedProvider] || [];
 
-  const canvasBg = isLight ? '#F8F7F4' : '#141311';
-  const cardBg = isLight ? '#FFFFFF' : '#1C1A17';
-  const cardBorder = isLight ? '#E5E1D8' : '#2E2A25';
-  const wellBg = isLight ? '#EFECE6' : '#100F0D';
-  const textPrimary = isLight ? '#18191C' : '#F2F3F5';
-  const textSecondary = isLight ? '#52555E' : '#A1A6B3';
-  const textMuted = isLight ? '#7C808B' : '#6E7482';
-
   return (
-    <div
-      className="route-theme-canvas"
-      style={{
-        backgroundColor: canvasBg,
-        backgroundImage: isLight
-          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(166, 139, 96, 0.05), transparent 70%)'
-          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(166, 139, 96, 0.045), transparent 70%)',
-      }}
+    <WorkspaceLayout
+      onOpenCommandPalette={onOpenCommandPalette}
+      subtitle="Temp-Mail"
+      accent="violet"
+      width="medium"
     >
-      <div className="workspace-shell">
-        <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle="Temp-Mail" />
+      <ToolBanner
+        toolId="temp-mail"
+        accent="violet"
+        eyebrow="Communication · 7 Disposable Providers"
+        title="Temp-Mail Client"
+        description="Provision disposable inboxes across Mail.TM, Mail.gw, GuerrillaMail, and more with instant address preview."
+        actions={
+          <Badge tone="violet" pill>
+            {PROVIDER_ORDER.length} Providers
+          </Badge>
+        }
+      />
 
-        <main
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-            maxWidth: 740,
-            width: '100%',
-            margin: '0 auto',
-            paddingBottom: 40,
-          }}
-        >
-          <ProviderSelector
-            selectedProvider={selectedProvider}
-            existingAddresses={existingAddresses}
-            onSelect={setSelectedProvider}
-            isLight={isLight}
-          />
+      <div className="animate-enter" style={{ ['--stagger-index' as string]: 1 }}>
+        <ProviderSelector
+          selectedProvider={selectedProvider}
+          existingAddresses={existingAddresses}
+          onSelect={setSelectedProvider}
+        />
+      </div>
 
-          {activeExistingEmail && (
-            <ActiveAddressCard
-              address={activeExistingEmail}
-              providerMeta={activeMeta}
-              onCopy={copyToClipboard}
-              onOpenInbox={handleOpenInbox}
-              isLight={isLight}
-            />
-          )}
+      {activeExistingEmail && (
+        <ActiveAddressCard
+          address={activeExistingEmail}
+          providerMeta={activeMeta}
+          onCopy={copyToClipboard}
+          onOpenInbox={handleOpenInbox}
+        />
+      )}
 
-          {/* Create New Email Card */}
-          <section
-            style={{
-              backgroundColor: cardBg,
-              border: `1px solid ${cardBorder}`,
-              borderRadius: 12,
-              padding: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 16,
-              boxShadow: isLight
-                ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
-                : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
-            }}
-          >
-            <h2 style={{ fontSize: 14, fontWeight: 600, color: textPrimary }}>
-              Create New {activeMeta.label} Address
-            </h2>
+      <Surface
+        accent="violet"
+        padded
+        className="animate-enter"
+        style={{ ['--stagger-index' as string]: 3 }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
+            Create New {activeMeta.label} Address
+          </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: 12,
-                    color: textSecondary,
-                    marginBottom: 6,
-                    fontWeight: 500,
-                  }}
-                >
-                  Username / Alias
-                </label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="ui-field">
+              <label htmlFor="tempmail-username" className="ui-field__label">
+                Username / Alias
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <Input
+                    id="tempmail-username"
                     type="text"
-                    className="mono"
+                    mono
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder={
@@ -305,141 +282,110 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                     }
                     autoCapitalize="none"
                     autoCorrect="off"
-                    style={{
-                      flex: 1,
-                      backgroundColor: wellBg,
-                      border: `1px solid ${cardBorder}`,
-                      borderRadius: 8,
-                      padding: '10px 12px',
-                      fontSize: 13,
-                      color: textPrimary,
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setUsername(generateRandomUsername(10))}
-                    aria-label="Generate Random Username"
-                    title="Generate Random Username"
-                  >
-                    <FiRefreshCw size={14} />
-                  </Button>
-                </div>
-              </div>
-
-              {activeMeta.supportsDomainSelect && (
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: 12,
-                      color: textSecondary,
-                      marginBottom: 6,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Select Domain
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setDomainModalOpen(!domainModalOpen)}
-                    className="mono"
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '10px 12px',
-                      backgroundColor: wellBg,
-                      border: `1px solid ${cardBorder}`,
-                      borderRadius: 8,
-                      fontSize: 13,
-                      color: textPrimary,
-                    }}
-                  >
-                    <span>{selectedDomain ? `@${selectedDomain}` : 'Loading domains...'}</span>
-                    {domainModalOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
-                  </button>
-
-                  <DomainSelectModal
-                    visible={domainModalOpen}
-                    domains={activeDomains}
-                    selectedDomain={selectedDomain}
-                    onSelect={(domain) => {
-                      setSelectedDomain(domain);
-                      setDomainModalOpen(false);
-                    }}
-                    onClose={() => setDomainModalOpen(false)}
                   />
                 </div>
-              )}
-
-              {activeMeta.fixedDomain && (
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      fontSize: 12,
-                      color: textSecondary,
-                      marginBottom: 6,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Domain
-                  </label>
-                  <div
-                    className="mono"
-                    style={{
-                      padding: '10px 12px',
-                      backgroundColor: wellBg,
-                      border: `1px solid ${cardBorder}`,
-                      borderRadius: 8,
-                      fontSize: 13,
-                      color: textSecondary,
-                    }}
-                  >
-                    @{activeMeta.fixedDomain}
-                  </div>
-                </div>
-              )}
-
-              <div
-                style={{
-                  padding: '12px 14px',
-                  backgroundColor: wellBg,
-                  border: `1px solid ${cardBorder}`,
-                  borderRadius: 8,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                }}
-              >
-                <span style={{ fontSize: 11, color: textMuted, fontWeight: 500 }}>
-                  Target Address Preview
-                </span>
-                <span
-                  className="mono"
-                  style={{ fontSize: 13, color: activeMeta.accent, wordBreak: 'break-all' }}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setUsername(generateRandomUsername(10))}
+                  aria-label="Generate Random Username"
+                  title="Generate Random Username"
                 >
-                  {getPreviewEmail()}
-                </span>
+                  <FiRefreshCw size={14} />
+                </Button>
               </div>
             </div>
 
-            <Button
-              type="button"
-              variant="primary"
-              size="lg"
-              fullWidth
-              loading={loading}
-              disabled={loading || isInitializing}
-              onClick={handleCreateEmail}
+            {activeMeta.supportsDomainSelect && (
+              <div className="ui-field">
+                <span className="ui-field__label">Select Domain</span>
+                <button
+                  type="button"
+                  onClick={() => setDomainModalOpen(!domainModalOpen)}
+                  className="ui-input ui-input--mono"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    textAlign: 'left',
+                  }}
+                >
+                  <span>{selectedDomain ? `@${selectedDomain}` : 'Loading domains...'}</span>
+                  {domainModalOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
+                </button>
+
+                <DomainSelectModal
+                  visible={domainModalOpen}
+                  domains={activeDomains}
+                  selectedDomain={selectedDomain}
+                  onSelect={(domain) => {
+                    setSelectedDomain(domain);
+                    setDomainModalOpen(false);
+                  }}
+                  onClose={() => setDomainModalOpen(false)}
+                />
+              </div>
+            )}
+
+            {activeMeta.fixedDomain && (
+              <div className="ui-field">
+                <span className="ui-field__label">Domain</span>
+                <Surface
+                  as="div"
+                  variant="recessed"
+                  padded={false}
+                  className="mono"
+                  style={{
+                    padding: '9px 12px',
+                    fontSize: 13,
+                    color: 'var(--text-secondary)',
+                  }}
+                >
+                  @{activeMeta.fixedDomain}
+                </Surface>
+              </div>
+            )}
+
+            <Surface
+              as="div"
+              variant="recessed"
+              padded={false}
+              style={{
+                padding: '12px 14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+              }}
             >
-              Create {activeMeta.label} Address
-            </Button>
-          </section>
-        </main>
-      </div>
-    </div>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+                Target Address Preview
+              </span>
+              <span
+                className="mono"
+                style={{
+                  fontSize: 13,
+                  color: 'var(--cat-violet-accent)',
+                  wordBreak: 'break-all',
+                }}
+              >
+                {getPreviewEmail()}
+              </span>
+            </Surface>
+          </div>
+
+          <Button
+            type="button"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={loading}
+            disabled={loading || isInitializing}
+            onClick={handleCreateEmail}
+          >
+            Create {activeMeta.label} Address
+          </Button>
+        </div>
+      </Surface>
+    </WorkspaceLayout>
   );
 };

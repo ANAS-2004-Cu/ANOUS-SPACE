@@ -10,6 +10,7 @@ export interface ProjectItem {
   externalUrl?: string;
   badge?: string;
   featured?: boolean;
+  stack?: string[];
   keywords?: string[];
 }
 
@@ -82,6 +83,7 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     externalUrl: 'https://github.com/ANAS-2004-Cu',
     badge: 'Showcase',
     featured: true,
+    stack: ['React', 'TypeScript', 'REST API', 'Cart & Checkout'],
     keywords: ['store', 'shop', 'commerce', 'web', 'portfolio', 'live demo'],
   },
 ];

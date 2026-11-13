@@ -1,165 +1,42 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  FiArrowRight,
-  FiArrowUpRight,
-  FiClock,
-  FiCode,
-  FiMail,
-  FiGrid,
-  FiHash,
-  FiLayers,
-  FiLock,
-} from 'react-icons/fi';
+import { FiArrowRight, FiArrowUpRight, FiClock, FiLayers, FiExternalLink } from 'react-icons/fi';
 import { PUBLIC_PROJECTS, ProjectCategory, ProjectItem } from '../data/projects';
-import { AppHeader } from '../shared/ui/AppHeader';
+import { WorkspaceLayout } from '../shared/ui/WorkspaceLayout';
+import { SegmentedControl, SegmentedOption } from '../shared/ui/SegmentedControl';
+import { Badge, BadgeTone } from '../shared/ui/Badge';
+import { EmptyState } from '../shared/ui/EmptyState';
+import {
+  GeometricCardDecor,
+  HeroGeometry,
+  ToolAccent,
+  ToolEmblem,
+  getToolAccent,
+} from '../shared/ui/ToolEmblem';
 import { useVault } from '../shared/context/VaultContext';
 import { getRecentProjectIds, recordRecentProject } from '../shared/utils/recentTools';
 
-type FilterTab = 'All' | ProjectCategory;
+type WorkspaceFilter = 'All' | 'Tools' | 'Games' | 'Private';
 
 export interface HubHomeProps {
   onOpenCommandPalette: () => void;
   commandPaletteOpen?: boolean;
 }
 
-const CATEGORY_ACCENT: Record<
-  ProjectCategory,
-  { color: string; subtleBg: string; borderTint: string }
-> = {
-  Tools: {
-    color: 'var(--accent-tools)',
-    subtleBg: 'var(--accent-tools-subtle)',
-    borderTint: 'rgba(82, 120, 168, 0.34)',
-  },
-  Games: {
-    color: 'var(--accent-games)',
-    subtleBg: 'var(--accent-games-subtle)',
-    borderTint: 'rgba(77, 139, 110, 0.34)',
-  },
-  Projects: {
-    color: 'var(--accent-projects)',
-    subtleBg: 'var(--accent-projects-subtle)',
-    borderTint: 'rgba(189, 136, 62, 0.34)',
-  },
-  Private: {
-    color: 'var(--accent-vault)',
-    subtleBg: 'var(--accent-vault-subtle)',
-    borderTint: 'rgba(186, 94, 78, 0.34)',
-  },
-};
-
-function renderProjectIcon(item: ProjectItem, color: string) {
-  switch (item.id) {
-    case 'scratchpad':
-      return <FiCode size={15} strokeWidth={1.5} color={color} />;
-    case 'temp-mail':
-      return <FiMail size={15} strokeWidth={1.5} color={color} />;
-    case 'tic-tac-toe':
-      return <FiGrid size={15} strokeWidth={1.5} color={color} />;
-    case 'guess-game':
-      return <FiHash size={15} strokeWidth={1.5} color={color} />;
-    case 'ecommerce-showcase':
-      return <FiLayers size={15} strokeWidth={1.5} color={color} />;
+function accentToBadgeTone(accent: ToolAccent): BadgeTone {
+  switch (accent) {
+    case 'cyan':
+      return 'cyan';
+    case 'violet':
+      return 'violet';
+    case 'amber':
+      return 'amber';
+    case 'emerald':
+      return 'emerald';
+    case 'indigo':
+      return 'indigo';
     default:
-      return item.category === 'Private' ? (
-        <FiLock size={15} strokeWidth={1.5} color={color} />
-      ) : (
-        <FiLayers size={15} strokeWidth={1.5} color={color} />
-      );
-  }
-}
-
-function renderCardArtwork(id: string) {
-  switch (id) {
-    case 'scratchpad':
-      return (
-        <svg
-          className="card-artwork"
-          viewBox="0 0 120 120"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M46 28C38 28 34 32 34 40V50C34 56 28 60 22 60C28 60 34 64 34 70V80C34 88 38 92 46 92" />
-          <path d="M74 28C82 28 86 32 86 40V50C86 56 92 60 98 60C92 60 86 64 86 70V80C86 88 82 92 74 92" />
-          <line x1="54" y1="60" x2="66" y2="60" />
-        </svg>
-      );
-    case 'temp-mail':
-      return (
-        <svg
-          className="card-artwork"
-          viewBox="0 0 120 120"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="20" y="34" width="80" height="54" rx="6" />
-          <path d="M22 38L60 66L98 38" />
-          <line x1="22" y1="84" x2="46" y2="62" />
-          <line x1="98" y1="84" x2="74" y2="62" />
-        </svg>
-      );
-    case 'tic-tac-toe':
-      return (
-        <svg
-          className="card-artwork"
-          viewBox="0 0 120 120"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        >
-          <line x1="48" y1="24" x2="48" y2="96" />
-          <line x1="74" y1="24" x2="74" y2="96" />
-          <line x1="24" y1="48" x2="96" y2="48" />
-          <line x1="24" y1="74" x2="96" y2="74" />
-          <circle cx="61" cy="61" r="6" />
-          <path d="M31 31L41 41M41 31L31 41" />
-        </svg>
-      );
-    case 'guess-game':
-      return (
-        <svg
-          className="card-artwork"
-          viewBox="0 0 120 120"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        >
-          <line x1="24" y1="86" x2="96" y2="86" />
-          <line x1="30" y1="86" x2="30" y2="66" />
-          <line x1="45" y1="86" x2="45" y2="54" />
-          <line x1="60" y1="86" x2="60" y2="36" />
-          <line x1="75" y1="86" x2="75" y2="60" />
-          <line x1="90" y1="86" x2="90" y2="46" />
-          <circle cx="60" cy="30" r="3" />
-        </svg>
-      );
-    default:
-      return (
-        <svg
-          className="card-artwork"
-          viewBox="0 0 120 120"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="24" y="30" width="72" height="56" rx="5" />
-          <line x1="24" y1="44" x2="96" y2="44" />
-          <rect x="34" y="54" width="22" height="22" rx="3" />
-          <line x1="64" y1="58" x2="86" y2="58" />
-          <line x1="64" y1="68" x2="80" y2="68" />
-        </svg>
-      );
+      return 'accent';
   }
 }
 
@@ -169,7 +46,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isUnlocked, privateProjects, vaultModalOpen } = useVault();
-  const [activeTab, setActiveTab] = useState<FilterTab>('All');
+  const [activeTab, setActiveTab] = useState<WorkspaceFilter>('All');
   const [recentIds, setRecentIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -186,21 +63,45 @@ export const HubHome: React.FC<HubHomeProps> = ({
     return isUnlocked ? [...PUBLIC_PROJECTS, ...privateProjects] : PUBLIC_PROJECTS;
   }, [isUnlocked, privateProjects]);
 
+  const workspaceTools = useMemo<ProjectItem[]>(() => {
+    return allProjects.filter(
+      (item) => item.type === 'internal' || item.category === 'Private'
+    );
+  }, [allProjects]);
+
+  const externalProjects = useMemo<ProjectItem[]>(() => {
+    return allProjects.filter(
+      (item) => item.type === 'external' && item.category !== 'Private'
+    );
+  }, [allProjects]);
+
   const recentTools = useMemo<ProjectItem[]>(() => {
     return recentIds
       .map((id) => allProjects.find((p) => p.id === id && p.type === 'internal'))
       .filter((p): p is ProjectItem => Boolean(p));
   }, [recentIds, allProjects]);
 
-  const filteredProjects = useMemo<ProjectItem[]>(() => {
-    if (activeTab === 'All') return allProjects;
-    return allProjects.filter((item) => item.category === activeTab);
-  }, [allProjects, activeTab]);
+  const filteredTools = useMemo<ProjectItem[]>(() => {
+    if (activeTab === 'All') return workspaceTools;
+    return workspaceTools.filter((item) => item.category === (activeTab as ProjectCategory));
+  }, [workspaceTools, activeTab]);
 
-  const tabs: FilterTab[] = useMemo(() => {
-    const base: FilterTab[] = ['All', 'Tools', 'Games', 'Projects'];
+  const visibleExternalProjects = useMemo<ProjectItem[]>(() => {
+    return activeTab === 'All' ? externalProjects : [];
+  }, [activeTab, externalProjects]);
+
+  const keyboardLaunchables = useMemo<ProjectItem[]>(() => {
+    return [...filteredTools, ...visibleExternalProjects];
+  }, [filteredTools, visibleExternalProjects]);
+
+  const filterOptions: SegmentedOption<WorkspaceFilter>[] = useMemo(() => {
+    const base: SegmentedOption<WorkspaceFilter>[] = [
+      { value: 'All', label: 'All' },
+      { value: 'Tools', label: 'Tools' },
+      { value: 'Games', label: 'Games' },
+    ];
     if (isUnlocked) {
-      base.push('Private');
+      base.push({ value: 'Private', label: 'Private' });
     }
     return base;
   }, [isUnlocked]);
@@ -208,7 +109,8 @@ export const HubHome: React.FC<HubHomeProps> = ({
   const handleOpenProject = useCallback(
     (item: ProjectItem) => {
       const internalTarget =
-        item.to || (item.externalUrl && item.externalUrl.startsWith('/') ? item.externalUrl : undefined);
+        item.to ||
+        (item.externalUrl && item.externalUrl.startsWith('/') ? item.externalUrl : undefined);
       if (item.type === 'internal' || internalTarget) {
         if (item.category !== 'Private') {
           const updated = recordRecentProject(item.id);
@@ -222,7 +124,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
     [navigate]
   );
 
-  // Number shortcuts (1-9) to launch visible Hub cards directly on desktop
+  // Number shortcuts (1-9) to launch visible workspace & external cards
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (commandPaletteOpen || vaultModalOpen) return;
@@ -241,7 +143,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
       if (e.key >= '1' && e.key <= '9') {
         const index = Number(e.key) - 1;
-        const selected = filteredProjects[index];
+        const selected = keyboardLaunchables[index];
         if (selected) {
           e.preventDefault();
           handleOpenProject(selected);
@@ -251,310 +153,166 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [filteredProjects, commandPaletteOpen, vaultModalOpen, handleOpenProject]);
+  }, [keyboardLaunchables, commandPaletteOpen, vaultModalOpen, handleOpenProject]);
 
   return (
-    <div className="workspace-shell">
-      <AppHeader onOpenCommandPalette={onOpenCommandPalette} />
-
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* Clean Hero Section: Bold Title + Single Punchy Subtitle */}
-        <section style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <h1
-            style={{
-              fontSize: 'clamp(20px, 2.8vw, 26px)',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Personal Engineering Workspace &amp; Micro-Tools
-          </h1>
-          <p
-            style={{
-              fontSize: 14,
-              color: 'var(--text-secondary)',
-              lineHeight: 1.55,
-            }}
-          >
-            Self-contained developer utilities, tactical game prototypes, and production showcases
-            in one keyboard-first command deck.
+    <WorkspaceLayout
+      onOpenCommandPalette={onOpenCommandPalette}
+      accent="cobalt"
+      footer={
+        <footer className="workspace-footer">
+          <span>© 2026 Anas Gamal</span>
+          <div className="workspace-footer__meta">
+            <span className="mono hide-on-mobile">
+              Press 1–{Math.min(9, keyboardLaunchables.length)} to launch · Ctrl+K to search
+            </span>
+            <span className="mono">ANOUS-SPACE</span>
+          </div>
+        </footer>
+      }
+    >
+      {/* Elevated Workspace Hero */}
+      <section className="hub-hero animate-enter" style={{ ['--stagger-index' as string]: 0 }}>
+        <div className="hub-hero__glow" aria-hidden="true" />
+        <div className="hub-hero__copy">
+          <div className="hub-hero__eyebrow-row">
+            <span className="hub-hero__eyebrow">
+              <span className="live-dot" />
+              <span>Personal Engineering Workspace</span>
+            </span>
+            <Badge tone="accent" pill>
+              {allProjects.length} Modules Ready
+            </Badge>
+          </div>
+          <h1 className="hub-hero__title">Tools, Utilities &amp; Projects</h1>
+          <p className="hub-hero__subtitle">
+            Keyboard-first micro-apps, disposable inbox tooling, and external builds organized in
+            one fast workspace.
           </p>
-        </section>
+          <div className="hub-hero__shortcuts hide-on-mobile">
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <span className="kbd-badge">1–{Math.min(9, keyboardLaunchables.length)}</span>
+              <span>Quick Launch</span>
+            </span>
+            <span>·</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              <span className="kbd-badge">Ctrl K</span>
+              <span>Command Palette</span>
+            </span>
+          </div>
+        </div>
 
-        {/* Recent Bar (Up to 3 recently opened internal tools) */}
-        {recentTools.length > 0 && (
-          <section style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 11,
-                fontWeight: 500,
-                color: 'var(--text-muted)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-              }}
-            >
+        <HeroGeometry />
+      </section>
+
+      {/* Recent Tools Strip */}
+      {recentTools.length > 0 && (
+        <section
+          className="hub-section animate-enter"
+          aria-label="Recently used tools"
+          style={{ ['--stagger-index' as string]: 1 }}
+        >
+          <div className="hub-section-label">
+            <span className="hub-section-label__title">
               <FiClock size={12} />
               <span>Recent</span>
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                gap: 10,
-              }}
-            >
-              {recentTools.map((tool) => {
-                const accent = CATEGORY_ACCENT[tool.category];
-                return (
-                  <button
-                    key={tool.id}
-                    onClick={() => handleOpenProject(tool)}
-                    className="recent-chip"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 10,
-                      padding: '10px 12px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        minWidth: 0,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 26,
-                          height: 26,
-                          borderRadius: 6,
-                          backgroundColor: accent.subtleBg,
-                          border: `1px solid ${accent.borderTint}`,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {renderProjectIcon(tool, accent.color)}
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 500,
-                            color: 'var(--text-primary)',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {tool.title}
-                        </div>
-                        <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                          {tool.to}
-                        </div>
-                      </div>
-                    </div>
-                    <FiArrowRight
-                      size={13}
-                      color="var(--text-secondary)"
-                      style={{ flexShrink: 0 }}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        )}
+            </span>
+          </div>
 
-        {/* Category Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid var(--border-subtle)',
-            paddingBottom: 12,
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            {tabs.map((tab) => {
-              const active = activeTab === tab;
-              const tabColor =
-                tab === 'Private'
-                  ? 'var(--accent-vault)'
-                  : tab === 'Tools'
-                  ? 'var(--accent-tools)'
-                  : tab === 'Games'
-                  ? 'var(--accent-games)'
-                  : tab === 'Projects'
-                  ? 'var(--accent-projects)'
-                  : 'var(--accent)';
+          <div className="recent-grid">
+            {recentTools.map((tool, idx) => {
+              const accent = getToolAccent(tool.id);
               return (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: 7,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    backgroundColor: active ? tabColor : 'transparent',
-                    color: active ? '#FFFFFF' : 'var(--text-secondary)',
-                    border: active ? `1px solid ${tabColor}` : '1px solid transparent',
-                  }}
+                  key={tool.id}
+                  type="button"
+                  onClick={() => handleOpenProject(tool)}
+                  data-accent={accent}
+                  className="recent-chip animate-enter"
+                  style={{ ['--stagger-index' as string]: idx + 1 }}
                 >
-                  {tab}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    <span className="workspace-card__icon" style={{ width: 30, height: 30 }}>
+                      <ToolEmblem id={tool.id} size={15} />
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {tool.title}
+                      </div>
+                      <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {tool.to}
+                      </div>
+                    </div>
+                  </div>
+                  <FiArrowRight size={14} className="recent-chip__arrow" />
                 </button>
               );
             })}
           </div>
+        </section>
+      )}
+
+      {/* Workspace Mini-Apps & Utilities */}
+      <section
+        className="hub-section animate-enter"
+        aria-label="Workspace applications"
+        style={{ ['--stagger-index' as string]: 2 }}
+      >
+        <div className="hub-toolbar">
+          <SegmentedControl
+            options={filterOptions}
+            value={activeTab}
+            onChange={setActiveTab}
+            accentActive
+            ariaLabel="Filter workspace tools by category"
+          />
 
           <span className="mono" style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-            {filteredProjects.length} {filteredProjects.length === 1 ? 'item' : 'items'}
+            {filteredTools.length} {filteredTools.length === 1 ? 'workspace' : 'workspaces'}
           </span>
         </div>
 
-        {/* Bento Grid */}
-        {filteredProjects.length === 0 ? (
-          <div
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 12,
-              padding: '36px 20px',
-              textAlign: 'center',
-              color: 'var(--text-muted)',
-              fontSize: 13,
-            }}
-          >
-            No items configured in this category.
-          </div>
+        {filteredTools.length === 0 ? (
+          <EmptyState
+            icon={<FiLayers size={18} />}
+            title="No tools in this category"
+            description="Switch filters or press Ctrl+K to search all workspace items."
+          />
         ) : (
-          <section className="bento-grid">
-            {filteredProjects.map((item, idx) => {
+          <div key={activeTab} className="hub-grid">
+            {filteredTools.map((item, idx) => {
               const isExternal = item.type === 'external';
-              const isShowcaseSpan = item.category === 'Projects' || Boolean(item.featured);
-              const accent = CATEGORY_ACCENT[item.category];
               const shortcutKey = idx < 9 ? String(idx + 1) : null;
+              const accent = getToolAccent(item.id);
+              const badgeTone = accentToBadgeTone(accent);
 
               return (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => handleOpenProject(item)}
-                  className={`bento-card ${isShowcaseSpan ? 'bento-card-featured' : ''}`}
-                  style={
-                    {
-                      '--card-accent': accent.color,
-                    } as React.CSSProperties
-                  }
+                  data-accent={accent}
+                  className="workspace-card animate-enter"
+                  style={{ ['--stagger-index' as string]: idx }}
                 >
-                  {renderCardArtwork(item.id)}
+                  <GeometricCardDecor />
 
-                  <div
-                    style={{
-                      position: 'relative',
-                      zIndex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 10,
-                      width: '100%',
-                    }}
-                  >
-                    {isShowcaseSpan && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '8px 12px',
-                          backgroundColor: 'var(--bg-input)',
-                          border: '1px solid var(--border-subtle)',
-                          borderRadius: 8,
-                          marginBottom: 4,
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span
-                            style={{
-                              width: 7,
-                              height: 7,
-                              borderRadius: '50%',
-                              backgroundColor: 'var(--border-hover)',
-                            }}
-                          />
-                          <span
-                            style={{
-                              width: 7,
-                              height: 7,
-                              borderRadius: '50%',
-                              backgroundColor: 'var(--border-hover)',
-                            }}
-                          />
-                          <span
-                            className="mono"
-                            style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 4 }}
-                          >
-                            production-storefront
-                          </span>
-                        </div>
-                        <span
-                          className="mono"
-                          style={{ fontSize: 10, color: accent.color, fontWeight: 500 }}
-                        >
-                          EXTERNAL SHOWCASE
-                        </span>
-                      </div>
-                    )}
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 8,
-                      }}
-                    >
+                  <div className="workspace-card__body">
+                    <div className="workspace-card__top">
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 7,
-                            backgroundColor: accent.subtleBg,
-                            border: `1px solid ${accent.borderTint}`,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          {renderProjectIcon(item, accent.color)}
+                        <span className="workspace-card__icon">
+                          <ToolEmblem id={item.id} size={17} />
                         </span>
-                        <span
-                          className="mono"
-                          style={{
-                            fontSize: 11,
-                            color: accent.color,
-                            backgroundColor: accent.subtleBg,
-                            border: `1px solid ${accent.borderTint}`,
-                            borderRadius: 5,
-                            padding: '2px 7px',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {item.badge || item.category}
-                        </span>
+                        <Badge tone={badgeTone}>{item.badge || item.category}</Badge>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -572,83 +330,119 @@ export const HubHome: React.FC<HubHomeProps> = ({
                       </div>
                     </div>
 
-                    <h2
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 600,
-                        color: 'var(--text-primary)',
-                        marginTop: 2,
-                      }}
-                    >
-                      {item.title}
-                    </h2>
-
-                    <p
-                      style={{
-                        fontSize: 13,
-                        color: 'var(--text-secondary)',
-                        lineHeight: 1.55,
-                        maxWidth: isShowcaseSpan ? '90%' : undefined,
-                      }}
-                    >
-                      {item.description}
-                    </p>
+                    <h2 className="workspace-card__title">{item.title}</h2>
+                    <p className="workspace-card__desc">{item.description}</p>
                   </div>
 
-                  <div
-                    style={{
-                      position: 'relative',
-                      zIndex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      marginTop: 18,
-                      paddingTop: 12,
-                      borderTop: '1px solid var(--border-subtle)',
-                      fontSize: 12,
-                      fontWeight: 500,
-                      color: isExternal ? accent.color : 'var(--text-primary)',
-                    }}
-                  >
-                    <span>{isExternal ? 'Live Demo' : 'Open Workspace'}</span>
+                  <div className="workspace-card__footer">
+                    <span>{isExternal ? 'Open Link' : 'Open Workspace'}</span>
                     {isExternal ? (
-                      <FiArrowUpRight size={14} className="card-arrow" color={accent.color} />
+                      <FiArrowUpRight size={15} className="workspace-card__arrow" />
                     ) : (
-                      <FiArrowRight
-                        size={14}
-                        className="card-arrow-right"
-                        color="var(--text-secondary)"
-                      />
+                      <FiArrowRight size={15} className="workspace-card__arrow" />
                     )}
                   </div>
                 </button>
               );
             })}
-          </section>
+          </div>
         )}
-      </main>
+      </section>
 
-      <footer
-        style={{
-          marginTop: 48,
-          padding: '20px 0',
-          borderTop: '1px solid var(--border-subtle)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          color: 'var(--text-muted)',
-          fontSize: 12,
-          flexWrap: 'wrap',
-          gap: 8,
-        }}
-      >
-        <span>© 2026 Anas Gamal</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span className="mono hide-on-mobile">Press 1–5 to launch · Ctrl+K to search</span>
-          <span className="mono">ANOUS-SPACE</span>
-        </div>
-      </footer>
-    </div>
+      {/* Extensible External Projects Section */}
+      {visibleExternalProjects.length > 0 && (
+        <section
+          className="hub-section animate-enter"
+          aria-label="External projects"
+          style={{ ['--stagger-index' as string]: 4 }}
+        >
+          <div className="hub-section-label">
+            <span className="hub-section-label__title">
+              <FiExternalLink size={12} />
+              <span>External Projects</span>
+            </span>
+            <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              {visibleExternalProjects.length}{' '}
+              {visibleExternalProjects.length === 1 ? 'link' : 'links'}
+            </span>
+          </div>
+
+          <div className="external-projects-list">
+            {visibleExternalProjects.map((project, idx) => {
+              const shortcutIndex = filteredTools.length + idx;
+              const shortcutKey = shortcutIndex < 9 ? String(shortcutIndex + 1) : null;
+              const accent = getToolAccent(project.id);
+
+              return (
+                <button
+                  key={project.id}
+                  type="button"
+                  onClick={() => handleOpenProject(project)}
+                  data-accent={accent}
+                  className="external-project-card animate-enter"
+                  style={{ ['--stagger-index' as string]: idx + 2 }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 14,
+                      minWidth: 0,
+                      flex: 1,
+                    }}
+                  >
+                    <span
+                      className="workspace-card__icon"
+                      style={{ width: 40, height: 40, marginTop: 2 }}
+                    >
+                      <ToolEmblem id={project.id} size={20} />
+                    </span>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 6,
+                        minWidth: 0,
+                        flex: 1,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <Badge tone="indigo">{project.badge || 'External'}</Badge>
+                        {shortcutKey && (
+                          <span
+                            className="kbd-badge hide-on-mobile"
+                            title={`Press ${shortcutKey} to launch`}
+                          >
+                            {shortcutKey}
+                          </span>
+                        )}
+                      </div>
+                      <h2 className="workspace-card__title">{project.title}</h2>
+                      <p className="workspace-card__desc">{project.description}</p>
+
+                      {project.stack && project.stack.length > 0 && (
+                        <div className="external-project-card__stack">
+                          {project.stack.map((tech) => (
+                            <span key={tech} className="stack-pill">
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <span className="external-project-card__cta">
+                    <span>Visit Repository</span>
+                    <FiArrowUpRight size={14} className="external-project-card__cta-arrow" />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+    </WorkspaceLayout>
   );
 };

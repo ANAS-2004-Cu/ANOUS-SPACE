@@ -10,14 +10,15 @@ import {
   FiCode,
   FiFileText,
 } from 'react-icons/fi';
-import { AppHeader } from '../../shared/ui/AppHeader';
+import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
+import { Surface } from '../../shared/ui/Surface';
 import { Button } from '../../shared/ui/Button';
+import { EmptyState } from '../../shared/ui/EmptyState';
 import { useAlert } from '../../shared/context/AlertContext';
 import { useTheme } from '../../shared/context/ThemeContext';
 import * as Clipboard from '../../shared/utils/clipboard';
 import { EmailDetail, normalizeProviderId } from './types';
 import { PROVIDER_ADAPTERS } from './providers';
-import { getAvatarStyle } from './components/MessageRow';
 
 export interface EmailDetailPageProps {
   onOpenCommandPalette: () => void;
@@ -141,17 +142,10 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
     }
   };
 
-  const canvasBg = isLight ? '#F8F7F4' : '#141311';
-  const cardBg = isLight ? '#FFFFFF' : '#1C1A17';
-  const cardBorder = isLight ? '#E5E1D8' : '#2E2A25';
-  const wellBg = isLight ? '#EFECE6' : '#100F0D';
-  const textPrimary = isLight ? '#18191C' : '#F2F3F5';
-  const textSecondary = isLight ? '#52555E' : '#A1A6B3';
-  const textMuted = isLight ? '#7C808B' : '#6E7482';
-
-  const iframeText = isLight ? '#18191C' : '#F2F3F5';
-  const iframeBg = isLight ? '#FFFFFF' : '#100F0D';
-  const iframeBorder = isLight ? '#E5E1D8' : '#2E2A25';
+  const iframeText = isLight ? '#0F172A' : '#F1F5F9';
+  const iframeBg = isLight ? '#FFFFFF' : '#080B11';
+  const iframeBorder = isLight ? '#E2E8F0' : '#1E293B';
+  const iframeLink = isLight ? '#2563EB' : '#3B82F6';
 
   const htmlWrapper = `<!doctype html>
 <html>
@@ -170,7 +164,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
         line-height: 1.6;
         word-break: break-word;
       }
-      a { color: #5278A8; }
+      a { color: ${iframeLink}; }
       img { max-width: 100%; height: auto; }
       table { width: 100%; border-collapse: collapse; }
       th, td { border: 1px solid ${iframeBorder}; padding: 8px; }
@@ -183,341 +177,239 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
 </html>`;
 
   const senderInitial = ((email?.fromName || email?.fromAddress || '?').charAt(0) || '?').toUpperCase();
-  const avatar = getAvatarStyle(senderInitial);
 
   return (
-    <div
-      className="route-theme-canvas"
-      style={{
-        backgroundColor: canvasBg,
-        backgroundImage: isLight
-          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(166, 139, 96, 0.05), transparent 70%)'
-          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(166, 139, 96, 0.045), transparent 70%)',
-      }}
+    <WorkspaceLayout
+      onOpenCommandPalette={onOpenCommandPalette}
+      subtitle={email?.subject || 'Message Detail'}
+      accent="violet"
+      width="medium"
     >
-      <div className="workspace-shell">
-        <AppHeader
-          onOpenCommandPalette={onOpenCommandPalette}
-          subtitle={email?.subject || 'Message Detail'}
-        />
+      <div
+        className="animate-enter"
+        style={{
+          ['--stagger-index' as string]: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 10,
+          flexWrap: 'wrap',
+        }}
+      >
+        <Button variant="secondary" size="sm" onClick={handleBack}>
+          <FiArrowLeft size={13} />
+          <span>Back to Inbox</span>
+        </Button>
 
-        <main
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 14,
-            maxWidth: 780,
-            width: '100%',
-            margin: '0 auto',
-            paddingBottom: 40,
-          }}
-        >
-          {/* Top Action Bar */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10,
-              flexWrap: 'wrap',
-            }}
-          >
-            <Button variant="secondary" size="sm" onClick={handleBack}>
-              <FiArrowLeft size={13} />
-              <span>Back to Inbox</span>
+        {email && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Button variant="secondary" size="sm" onClick={() => setShowHtml(!showHtml)}>
+              {showHtml ? <FiFileText size={13} /> : <FiCode size={13} />}
+              <span>View {showHtml ? 'Plain Text' : 'HTML'}</span>
             </Button>
-
-            {email && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowHtml(!showHtml)}
-                >
-                  {showHtml ? <FiFileText size={13} /> : <FiCode size={13} />}
-                  <span>View {showHtml ? 'Plain Text' : 'HTML'}</span>
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => copyToClipboard(email.text)}
-                >
-                  <FiCopy size={13} />
-                  <span>Copy Content</span>
-                </Button>
-                <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
-                  <FiTrash2 size={13} />
-                  <span>{confirmDelete ? 'Confirm Delete?' : 'Delete'}</span>
-                </Button>
-              </div>
-            )}
+            <Button variant="secondary" size="sm" onClick={() => copyToClipboard(email.text)}>
+              <FiCopy size={13} />
+              <span>Copy Content</span>
+            </Button>
+            <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
+              <FiTrash2 size={13} />
+              <span>{confirmDelete ? 'Confirm Delete?' : 'Delete'}</span>
+            </Button>
           </div>
+        )}
+      </div>
 
-          {loading ? (
-            <div
-              style={{
-                backgroundColor: cardBg,
-                border: `1px solid ${cardBorder}`,
-                borderRadius: 12,
-                padding: '60px 20px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 12,
-              }}
-            >
-              <div className="spinner" style={{ width: 22, height: 22 }} />
-              <span style={{ fontSize: 13, color: textSecondary }}>Loading email content...</span>
-            </div>
-          ) : !email ? (
-            <div
-              style={{
-                backgroundColor: cardBg,
-                border: `1px solid ${cardBorder}`,
-                borderRadius: 12,
-                padding: '60px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 12,
-                textAlign: 'center',
-              }}
-            >
-              <FiAlertCircle size={32} strokeWidth={1.5} color="#BA5E4E" />
-              <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
-                Failed to load email
-              </div>
-              <Button variant="primary" size="sm" onClick={fetchEmailDetails}>
-                Try Again
-              </Button>
-            </div>
-          ) : (
-            <>
-              {/* Metadata Panel */}
-              <section
+      {loading ? (
+        <Surface accent="violet" padded={false}>
+          <div className="ui-empty-state">
+            <div className="spinner" style={{ width: 22, height: 22 }} />
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+              Loading email content...
+            </span>
+          </div>
+        </Surface>
+      ) : !email ? (
+        <EmptyState
+          icon={<FiAlertCircle size={20} color="var(--status-danger)" />}
+          title="Failed to load email"
+          description="The requested message could not be retrieved from the provider."
+          action={
+            <Button variant="primary" size="sm" onClick={fetchEmailDetails}>
+              Try Again
+            </Button>
+          }
+        />
+      ) : (
+        <>
+          <Surface
+            accent="violet"
+            padded
+            className="animate-enter"
+            style={{ ['--stagger-index' as string]: 1 }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <h1 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>
+                {email.subject || '(No subject)'}
+              </h1>
+
+              <div
                 style={{
-                  backgroundColor: cardBg,
-                  border: `1px solid ${cardBorder}`,
-                  borderRadius: 12,
-                  padding: 20,
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                   gap: 12,
-                  boxShadow: isLight
-                    ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
-                    : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
+                  flexWrap: 'wrap',
+                  paddingTop: 12,
+                  borderTop: '1px solid var(--border-subtle)',
                 }}
               >
-                <h1 style={{ fontSize: 16, fontWeight: 600, color: textPrimary }}>
-                  {email.subject || '(No subject)'}
-                </h1>
-
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    flexWrap: 'wrap',
-                    paddingTop: 12,
-                    borderTop: `1px solid ${cardBorder}`,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <div className="avatar-circle">{senderInitial}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {email.fromName || 'Unknown'}
+                    </div>
                     <div
                       className="mono"
                       style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: '50%',
-                        backgroundColor: avatar.bg,
-                        border: `1px solid ${avatar.border}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: avatar.color,
-                        flexShrink: 0,
+                        fontSize: 12,
+                        color: 'var(--text-secondary)',
+                        wordBreak: 'break-all',
                       }}
                     >
-                      {senderInitial}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
-                        {email.fromName || 'Unknown'}
-                      </div>
-                      <div
-                        className="mono"
-                        style={{ fontSize: 12, color: textSecondary, wordBreak: 'break-all' }}
-                      >
-                        {email.fromAddress}
-                      </div>
+                      {email.fromAddress}
                     </div>
                   </div>
-
-                  <span className="mono" style={{ fontSize: 11, color: textMuted }}>
-                    {formatDate(email.receivedAt)}
-                  </span>
                 </div>
 
-                {email.toAddresses.length > 0 && (
-                  <div style={{ fontSize: 12, color: textSecondary }}>
-                    <span style={{ color: textMuted }}>To: </span>
-                    <span className="mono">{email.toAddresses.join(', ')}</span>
-                  </div>
-                )}
-              </section>
+                <span className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  {formatDate(email.receivedAt)}
+                </span>
+              </div>
 
-              {/* Message Body Viewer */}
-              <section
+              {email.toAddresses.length > 0 && (
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>To: </span>
+                  <span className="mono">{email.toAddresses.join(', ')}</span>
+                </div>
+              )}
+            </div>
+          </Surface>
+
+          <Surface padded={false} style={{ overflow: 'hidden', minHeight: 320 }}>
+            {showHtml ? (
+              <iframe
+                title="Email Content"
                 style={{
-                  backgroundColor: cardBg,
-                  border: `1px solid ${cardBorder}`,
-                  borderRadius: 12,
-                  overflow: 'hidden',
+                  width: '100%',
+                  height: 400,
+                  border: 'none',
+                  backgroundColor: 'var(--bg-recessed)',
+                  display: 'block',
+                }}
+                srcDoc={htmlWrapper}
+                sandbox="allow-popups allow-popups-to-escape-sandbox"
+              />
+            ) : (
+              <div
+                className="mono"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  copyToClipboard(email.text);
+                }}
+                style={{
+                  padding: 20,
+                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  lineHeight: 1.65,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  userSelect: 'text',
+                  backgroundColor: 'var(--bg-recessed)',
                   minHeight: 320,
-                  boxShadow: isLight
-                    ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
-                    : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
                 }}
               >
-                {showHtml ? (
-                  <iframe
-                    title="Email Content"
-                    style={{
-                      width: '100%',
-                      height: 400,
-                      border: 'none',
-                      backgroundColor: wellBg,
-                      display: 'block',
-                    }}
-                    srcDoc={htmlWrapper}
-                    sandbox="allow-popups allow-popups-to-escape-sandbox"
-                  />
-                ) : (
-                  <div
-                    className="mono"
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      copyToClipboard(email.text);
-                    }}
-                    style={{
-                      padding: 20,
-                      color: textPrimary,
-                      fontSize: 13,
-                      lineHeight: 1.65,
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      userSelect: 'text',
-                      backgroundColor: wellBg,
-                      minHeight: 320,
-                    }}
-                  >
-                    {email.text || 'No content available'}
-                  </div>
-                )}
-              </section>
+                {email.text || 'No content available'}
+              </div>
+            )}
+          </Surface>
 
-              {/* Attachments */}
-              {email.attachments.length > 0 && adapter.downloadAttachment && (
-                <section
-                  style={{
-                    backgroundColor: cardBg,
-                    border: `1px solid ${cardBorder}`,
-                    borderRadius: 12,
-                    padding: 20,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
-                    Attachments ({email.attachments.length})
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {email.attachments.map((attachment) => (
-                      <button
-                        key={attachment.id}
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await adapter.downloadAttachment!(
-                              attachment.downloadUrl,
-                              attachment.filename
-                            );
-                          } catch {
-                            showToast({
-                              title: 'Download Failed',
-                              message: 'Failed to download attachment.',
-                              type: 'error',
-                            });
-                          }
-                        }}
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 12,
-                          padding: '10px 14px',
-                          backgroundColor: wellBg,
-                          border: `1px solid ${cardBorder}`,
-                          borderRadius: 8,
-                          textAlign: 'left',
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 10,
-                            minWidth: 0,
-                          }}
-                        >
-                          <FiPaperclip
-                            size={14}
-                            strokeWidth={1.5}
-                            color="#5278A8"
-                            style={{ flexShrink: 0 }}
-                          />
-                          <div style={{ minWidth: 0 }}>
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: textPrimary,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                            >
-                              {attachment.filename}
-                            </div>
-                            {attachment.size > 0 && (
-                              <div className="mono" style={{ fontSize: 11, color: textMuted }}>
-                                {(attachment.size / 1024).toFixed(0)} KB
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <FiDownload
+          {email.attachments.length > 0 && adapter.downloadAttachment && (
+            <Surface padded>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Attachments ({email.attachments.length})
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {email.attachments.map((attachment) => (
+                    <button
+                      key={attachment.id}
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await adapter.downloadAttachment!(
+                            attachment.downloadUrl,
+                            attachment.filename
+                          );
+                        } catch {
+                          showToast({
+                            title: 'Download Failed',
+                            message: 'Failed to download attachment.',
+                            type: 'error',
+                          });
+                        }
+                      }}
+                      className="ui-surface--recessed"
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        padding: '10px 14px',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                        <FiPaperclip
                           size={14}
-                          strokeWidth={1.5}
-                          color="#5278A8"
+                          strokeWidth={1.6}
+                          color="var(--accent)"
                           style={{ flexShrink: 0 }}
                         />
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
-            </>
+                        <div style={{ minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontSize: 13,
+                              color: 'var(--text-primary)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {attachment.filename}
+                          </div>
+                          {attachment.size > 0 && (
+                            <div className="mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                              {(attachment.size / 1024).toFixed(0)} KB
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <FiDownload
+                        size={14}
+                        strokeWidth={1.6}
+                        color="var(--accent)"
+                        style={{ flexShrink: 0 }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Surface>
           )}
-        </main>
-      </div>
-    </div>
+        </>
+      )}
+    </WorkspaceLayout>
   );
 };

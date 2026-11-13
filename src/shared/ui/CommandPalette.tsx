@@ -4,6 +4,26 @@ import { FiSearch, FiArrowUpRight, FiCornerDownLeft, FiLock } from 'react-icons/
 import { PUBLIC_PROJECTS, ProjectItem } from '../../data/projects';
 import { useVault } from '../context/VaultContext';
 import { recordRecentProject } from '../utils/recentTools';
+import { Modal } from './Modal';
+import { Badge, BadgeTone } from './Badge';
+import { ToolAccent, ToolEmblem, getToolAccent } from './ToolEmblem';
+
+function accentToTone(accent: ToolAccent): BadgeTone {
+  switch (accent) {
+    case 'cyan':
+      return 'cyan';
+    case 'violet':
+      return 'violet';
+    case 'amber':
+      return 'amber';
+    case 'emerald':
+      return 'emerald';
+    case 'indigo':
+      return 'indigo';
+    default:
+      return 'accent';
+  }
+}
 
 export interface CommandPaletteProps {
   open: boolean;
@@ -57,7 +77,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
   const handleSelectItem = (item: ProjectItem) => {
     onClose();
     const internalTarget =
-      item.to || (item.externalUrl && item.externalUrl.startsWith('/') ? item.externalUrl : undefined);
+      item.to ||
+      (item.externalUrl && item.externalUrl.startsWith('/') ? item.externalUrl : undefined);
     if (item.type === 'internal' || internalTarget) {
       if (item.category !== 'Private') {
         recordRecentProject(item.id);
@@ -105,92 +126,41 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'var(--bg-backdrop)',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        padding: '10vh 16px 16px',
-        zIndex: 1100,
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 560,
-          backgroundColor: 'var(--bg-surface)',
-          border: '1px solid var(--border-subtle)',
-          boxShadow: 'var(--card-top-highlight), var(--card-shadow-hover)',
-          borderRadius: 10,
-          overflow: 'hidden',
-        }}
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={handleKeyDown}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '12px 14px',
-            borderBottom: '1px solid var(--border-subtle)',
-            backgroundColor: 'var(--bg-input)',
-          }}
-        >
-          <FiSearch size={15} strokeWidth={1.5} color="var(--text-muted)" />
+    <Modal open={open} onClose={onClose} wide alignTop showHeader={false}>
+      <div onKeyDown={handleKeyDown}>
+        <div className="cmd-search-bar">
+          <FiSearch size={15} strokeWidth={1.6} color="var(--accent)" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search tools, games, or projects..."
-            style={{
-              flex: 1,
-              backgroundColor: 'transparent',
-              border: 'none',
-              fontSize: 13,
-              color: 'var(--text-primary)',
-            }}
+            placeholder="Search tools, games, or projects... (type 'vault' for private access)"
+            className="cmd-search-input"
           />
           <span className="kbd-badge">ESC</span>
         </div>
 
-        <div style={{ maxHeight: 340, overflowY: 'auto', padding: 6 }}>
+        <div className="cmd-results">
           {isVaultTrigger && (
             <button
+              type="button"
               onClick={handleTriggerVault}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '10px 12px',
-                borderRadius: 7,
-                backgroundColor: 'var(--accent-subtle)',
-                border: '1px solid var(--accent-border)',
-                marginBottom: 6,
-                textAlign: 'left',
-              }}
+              className="cmd-item cmd-item--vault"
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <FiLock size={14} strokeWidth={1.5} color="var(--accent)" />
+                <FiLock size={14} strokeWidth={1.6} color="var(--cat-emerald-accent)" />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                     {isUnlocked ? 'Manage Private Vault' : 'Unlock Private Vault'}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>
                     Authenticate with /api/vault to access restricted tools
                   </div>
                 </div>
               </div>
-              <FiCornerDownLeft size={13} strokeWidth={1.5} color="var(--accent)" />
+              <FiCornerDownLeft size={13} strokeWidth={1.6} color="var(--cat-emerald-accent)" />
             </button>
           )}
 
@@ -208,62 +178,53 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
           ) : (
             filteredItems.map((item, idx) => {
               const active = idx === selectedIndex;
+              const accent = getToolAccent(item.id);
               return (
                 <button
                   key={item.id}
+                  type="button"
+                  data-active={active}
+                  data-accent={accent}
                   onMouseEnter={() => setSelectedIndex(idx)}
                   onClick={() => handleSelectItem(item)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    padding: '10px 12px',
-                    borderRadius: 7,
-                    backgroundColor: active ? 'var(--bg-elevated)' : 'transparent',
-                    textAlign: 'left',
-                  }}
+                  className="cmd-item"
                 >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0, flex: 1 }}>
+                    <span
+                      className="workspace-card__icon"
+                      style={{ width: 28, height: 28 }}
+                    >
+                      <ToolEmblem id={item.id} size={14} />
+                    </span>
+
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 500,
+                            color: 'var(--text-primary)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {item.title}
+                        </span>
+                        <Badge tone={accentToTone(accent)}>{item.category}</Badge>
+                      </div>
+                      <div
                         style={{
-                          fontSize: 13,
-                          fontWeight: 500,
-                          color: 'var(--text-primary)',
+                          fontSize: 12,
+                          color: 'var(--text-muted)',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
+                          marginTop: 2,
                         }}
                       >
-                        {item.title}
-                      </span>
-                      <span
-                        className="mono"
-                        style={{
-                          fontSize: 10,
-                          color: 'var(--text-secondary)',
-                          backgroundColor: 'var(--bg-app)',
-                          border: '1px solid var(--border-subtle)',
-                          borderRadius: 4,
-                          padding: '1px 6px',
-                        }}
-                      >
-                        {item.category}
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: 'var(--text-muted)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        marginTop: 2,
-                      }}
-                    >
-                      {item.description}
+                        {item.description}
+                      </div>
                     </div>
                   </div>
                   {item.type === 'external' ? (
@@ -280,22 +241,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
           )}
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '8px 14px',
-            borderTop: '1px solid var(--border-subtle)',
-            backgroundColor: 'var(--bg-input)',
-            fontSize: 11,
-            color: 'var(--text-muted)',
-          }}
-        >
+        <div className="cmd-footer">
           <span>Navigate with Up/Down arrows</span>
           <span>Enter to open</span>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };

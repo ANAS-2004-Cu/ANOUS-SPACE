@@ -32,19 +32,19 @@ const TONE_STYLES: Record<
   { color: string; bg: string; border: string }
 > = {
   success: {
-    color: 'var(--success)',
-    bg: 'var(--success-subtle)',
-    border: 'rgba(77, 139, 110, 0.36)',
+    color: 'var(--status-success)',
+    bg: 'var(--status-success-subtle)',
+    border: 'var(--status-success-border)',
   },
   error: {
-    color: 'var(--danger)',
-    bg: 'var(--danger-subtle)',
-    border: 'rgba(186, 94, 78, 0.38)',
+    color: 'var(--status-danger)',
+    bg: 'var(--status-danger-subtle)',
+    border: 'var(--status-danger-border)',
   },
   warning: {
-    color: 'var(--warning)',
-    bg: 'var(--warning-subtle)',
-    border: 'rgba(189, 136, 62, 0.38)',
+    color: 'var(--status-warning)',
+    bg: 'var(--status-warning-subtle)',
+    border: 'var(--status-warning-border)',
   },
   info: {
     color: 'var(--accent)',
@@ -85,21 +85,13 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
           <div
             key={toast.id}
             role={toast.type === 'error' ? 'alert' : 'status'}
-            className="toast-card"
-            style={{ borderColor: tone.border }}
+            className={`toast-card toast-card--${toast.type}`}
           >
             <div
+              className="toast-icon-box"
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: 7,
                 backgroundColor: tone.bg,
-                border: `1px solid ${tone.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                marginTop: 1,
+                borderColor: tone.border,
               }}
             >
               {renderToneIcon(toast.type, tone.color)}
@@ -157,13 +149,8 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({
               type="button"
               onClick={() => onDismiss(toast.id)}
               aria-label="Dismiss notification"
-              style={{
-                color: 'var(--text-muted)',
-                padding: 3,
-                display: 'inline-flex',
-                borderRadius: 5,
-                flexShrink: 0,
-              }}
+              className="icon-btn"
+              style={{ width: 24, height: 24, border: 'none', backgroundColor: 'transparent' }}
             >
               <FiX size={14} strokeWidth={1.75} />
             </button>
