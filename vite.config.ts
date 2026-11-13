@@ -93,10 +93,11 @@ export default defineConfig({
                 headers: {
                   'Content-Type': 'application/json',
                   Accept: 'application/json',
+                  'User-Agent': 'Mozilla/5.0 (compatible; AnousSpace/1.0)',
                 },
               };
-              if (req.method === 'POST' && body) {
-                fetchOptions.body = body;
+              if (req.method === 'POST') {
+                fetchOptions.body = body || '{}';
               }
               const upstream = await fetch(targetUrl, fetchOptions);
               const text = await upstream.text();

@@ -27,9 +27,12 @@ export default async function handler(req: any, res: any) {
       },
     };
 
-    if (req.method === 'POST' && req.body) {
-      fetchOptions.body =
-        typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    if (req.method === 'POST') {
+      fetchOptions.body = req.body
+        ? typeof req.body === 'string'
+          ? req.body
+          : JSON.stringify(req.body)
+        : '{}';
     }
 
     const upstreamResponse = await fetch(targetUrl, fetchOptions);

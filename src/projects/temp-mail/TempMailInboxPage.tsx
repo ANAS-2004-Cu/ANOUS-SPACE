@@ -1,39 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiArrowLeft, FiRefreshCw, FiTrash2, FiInbox } from 'react-icons/fi';
+import { FiArrowLeft, FiRefreshCw, FiInbox } from 'react-icons/fi';
 import { AppHeader } from '../../shared/ui/AppHeader';
 import { Button } from '../../shared/ui/Button';
 import { useAlert } from '../../shared/context/AlertContext';
 import { useTheme } from '../../shared/context/ThemeContext';
-import * as SecureStore from '../../shared/utils/storage';
-import {
-  getMessages,
-  Email,
-  deleteMessage,
-  hydrateMailTmToken,
-  setAuthToken,
-  TempMailProvider,
-  getTempMailLolStoredData,
-  fetchTempMailLolMessages,
-  deleteTempMailLolMessage,
-  getMaildropStoredData,
-  fetchMaildropMessages,
-  deleteMaildropMessage,
-} from './tempMailService';
-
-const AVATAR_PALETTE = [
-  { color: '#5278A8', bg: 'rgba(82, 120, 168, 0.14)', border: 'rgba(82, 120, 168, 0.36)' },
-  { color: '#4D8B6E', bg: 'rgba(77, 139, 110, 0.14)', border: 'rgba(77, 139, 110, 0.36)' },
-  { color: '#BA5E4E', bg: 'rgba(186, 94, 78, 0.14)', border: 'rgba(186, 94, 78, 0.36)' },
-  { color: '#BD883E', bg: 'rgba(189, 136, 62, 0.14)', border: 'rgba(189, 136, 62, 0.36)' },
-  { color: '#9E5262', bg: 'rgba(158, 82, 98, 0.14)', border: 'rgba(158, 82, 98, 0.36)' },
-  { color: '#A68B60', bg: 'rgba(166, 139, 96, 0.14)', border: 'rgba(166, 139, 96, 0.36)' },
-];
-
-const getAvatarStyle = (seed: string) => {
-  const code = (seed || 'U').charCodeAt(0);
-  return AVATAR_PALETTE[code % AVATAR_PALETTE.length];
-};
+import { EmailSummary, normalizeProviderId } from './types';
+import { PROVIDER_ADAPTERS, PROVIDERS_META } from './providers';
+import { MessageRow } from './components/MessageRow';
 
 export interface TempMailInboxPageProps {
   onOpenCommandPalette: () => void;
@@ -42,115 +16,48 @@ export interface TempMailInboxPageProps {
 export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenCommandPalette }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const rawProvider = searchParams.get('provider') || TempMailProvider.MailTM;
-  const activeProvider =
-    rawProvider === 'mailgw' ? TempMailProvider.MailTM : rawProvider;
+  const activeProvider = normalizeProviderId(searchParams.get('provider'));
+  const adapter = PROVIDER_ADAPTERS[activeProvider];
+  const meta = PROVIDERS_META[activeProvider];
+
   const { showAlert } = useAlert();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [emails, setEmails] = useState<Email[]>([]);
-  const [email, setEmail] = useState<string | null>(null);
-
-  const getProviderBadge = () => {
-    switch (activeProvider) {
-      case TempMailProvider.TempMailLol:
-        return {
-          title: 'TempMail.lol Inbox',
-          label: 'TempMail.lol',
-          accent: '#BD883E',
-          bg: 'rgba(189, 136, 62, 0.14)',
-          border: 'rgba(189, 136, 62, 0.36)',
-        };
-      case TempMailProvider.Maildrop:
-        return {
-          title: 'Maildrop.cc Inbox',
-          label: 'Maildrop.cc',
-          accent: '#BA5E4E',
-          bg: 'rgba(186, 94, 78, 0.14)',
-          border: 'rgba(186, 94, 78, 0.36)',
-        };
-      default:
-        return {
-          title: 'Mail.TM Inbox',
-          label: 'Mail.TM',
-          accent: '#5278A8',
-          bg: 'rgba(82, 120, 168, 0.14)',
-          border: 'rgba(82, 120, 168, 0.36)',
-        };
-    }
-  };
-
-  const providerBadge = getProviderBadge();
+  const [emails, setEmails] = useState<EmailSummary[]>([]);
+  const [address, setAddress] = useState<string | null>(null);
 
   const fetchEmails = useCallback(async () => {
     try {
       setLoading(true);
-      if (activeProvider === TempMailProvider.TempMailLol) {
-        const messages = await fetchTempMailLolMessages();
-        setEmails(messages || []);
-      } else if (activeProvider === TempMailProvider.Maildrop) {
-        const messages = await fetchMaildropMessages();
-        setEmails(messages || []);
-      } else {
-        hydrateMailTmToken();
-        const messages = await getMessages();
-        setEmails(messages || []);
-      }
+      const messages = await adapter.fetchMessages();
+      setEmails(messages);
     } catch {
       showAlert('Error', 'Failed to load emails. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [activeProvider, showAlert]);
+  }, [adapter, showAlert]);
 
   useEffect(() => {
+    if (activeProvider === 'guerrillamail') {
+      navigate('/temp-mail/guerrilla-inbox', { replace: true });
+      return;
+    }
+
     const init = async () => {
       try {
-        if (activeProvider === TempMailProvider.TempMailLol) {
-          const stored = getTempMailLolStoredData();
-          if (stored?.address) {
-            setEmail(stored.address);
-            if (Array.isArray(stored.emails) && stored.emails.length > 0) {
-              setEmails(stored.emails);
-            }
-            await fetchEmails();
-          } else {
-            showAlert('No Active Inbox', 'No active TempMail.lol email found. Please create one first.');
-            navigate('/temp-mail', { replace: true });
-          }
-          return;
-        }
-
-        if (activeProvider === TempMailProvider.Maildrop) {
-          const stored = getMaildropStoredData();
-          if (stored?.email) {
-            setEmail(stored.email);
-            await fetchEmails();
-          } else {
-            showAlert('No Active Inbox', 'No active Maildrop.cc email found. Please create one first.');
-            navigate('/temp-mail', { replace: true });
-          }
-          return;
-        }
-
-        const storedMailTm =
-          (await SecureStore.getItemAsync('mailtm_data')) ||
-          (await SecureStore.getItemAsync('mailgw_data'));
-        if (storedMailTm) {
-          const data = JSON.parse(storedMailTm);
-          setEmail(data.email);
-          if (data.token) {
-            setAuthToken(data.token);
-          }
-          await fetchEmails();
-        } else {
-          showAlert('No Active Inbox', 'No active Mail.TM email found. Please create one first.');
+        const stored = await adapter.getStoredAccount();
+        if (!stored?.address) {
+          showAlert('No Active Inbox', `No active ${meta.label} email found. Please create one first.`);
           navigate('/temp-mail', { replace: true });
+          return;
         }
+        setAddress(stored.address);
+        await fetchEmails();
       } catch {
         showAlert('Error', 'Failed to load inbox session. Please try again.');
         setLoading(false);
@@ -158,9 +65,9 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
     };
 
     init();
-  }, [activeProvider, fetchEmails, navigate, showAlert]);
+  }, [activeProvider, adapter, meta.label, fetchEmails, navigate, showAlert]);
 
-  const onRefresh = useCallback(() => {
+  const handleRefresh = useCallback(() => {
     setRefreshing(true);
     fetchEmails();
   }, [fetchEmails]);
@@ -174,16 +81,8 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
         style: 'destructive',
         onPress: async () => {
           try {
-            if (activeProvider === TempMailProvider.TempMailLol) {
-              const remaining = deleteTempMailLolMessage(id);
-              setEmails(remaining);
-            } else if (activeProvider === TempMailProvider.Maildrop) {
-              await deleteMaildropMessage(id);
-              setEmails((prev) => prev.filter((item) => item.id !== id));
-            } else {
-              await deleteMessage(id);
-              setEmails((prev) => prev.filter((item) => item.id !== id));
-            }
+            await adapter.deleteMessage(id);
+            setEmails((prev) => prev.filter((item) => item.id !== id));
           } catch {
             showAlert('Error', 'Failed to delete email. Please try again.');
           }
@@ -192,28 +91,17 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
     ]);
   };
 
-  const viewEmailDetails = (emailId: string) => {
+  const openDetail = (emailId: string) => {
     navigate(
       `/temp-mail/detail?id=${encodeURIComponent(emailId)}&provider=${encodeURIComponent(activeProvider)}`
     );
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const canvasBg = isLight ? '#F2F4FB' : '#0F1322';
-  const cardBg = isLight ? '#FFFFFF' : '#171D33';
-  const cardBorder = isLight ? '#DCE2F2' : '#263052';
-  const textPrimary = isLight ? '#0F172A' : '#F3F4F6';
-  const textSecondary = isLight ? '#475569' : '#94A3B8';
-  const textMuted = isLight ? '#64748B' : '#64748B';
+  const canvasBg = isLight ? '#F8F7F4' : '#141311';
+  const cardBg = isLight ? '#FFFFFF' : '#1C1A17';
+  const cardBorder = isLight ? '#E5E1D8' : '#2E2A25';
+  const textPrimary = isLight ? '#18191C' : '#F2F3F5';
+  const textSecondary = isLight ? '#52555E' : '#A1A6B3';
 
   return (
     <div
@@ -221,12 +109,15 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
       style={{
         backgroundColor: canvasBg,
         backgroundImage: isLight
-          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(99, 102, 241, 0.1), transparent 70%)'
-          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(99, 102, 241, 0.16), transparent 70%)',
+          ? 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(166, 139, 96, 0.05), transparent 70%)'
+          : 'radial-gradient(ellipse 80% 45% at 50% -10%, rgba(166, 139, 96, 0.045), transparent 70%)',
       }}
     >
       <div className="workspace-shell">
-        <AppHeader onOpenCommandPalette={onOpenCommandPalette} subtitle={providerBadge.title} />
+        <AppHeader
+          onOpenCommandPalette={onOpenCommandPalette}
+          subtitle={`${meta.label} Inbox`}
+        />
 
         <main
           style={{
@@ -253,8 +144,8 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
               padding: '12px 16px',
               flexWrap: 'wrap',
               boxShadow: isLight
-                ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                : '0 14px 34px rgba(0, 0, 0, 0.32)',
+                ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
+                : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
@@ -271,18 +162,18 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                 className="mono"
                 style={{
                   fontSize: 11,
-                  color: providerBadge.accent,
-                  backgroundColor: providerBadge.bg,
-                  border: `1px solid ${providerBadge.border}`,
+                  color: meta.accent,
+                  backgroundColor: meta.tint,
+                  border: `1px solid ${meta.border}`,
                   borderRadius: 999,
                   padding: '2px 8px',
                   fontWeight: 600,
                   flexShrink: 0,
                 }}
               >
-                {providerBadge.label}
+                {meta.label}
               </span>
-              {email && (
+              {address && (
                 <div
                   style={{
                     display: 'flex',
@@ -302,7 +193,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                       textOverflow: 'ellipsis',
                     }}
                   >
-                    {email}
+                    {address}
                   </span>
                 </div>
               )}
@@ -311,7 +202,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
             <Button
               variant="secondary"
               size="sm"
-              onClick={onRefresh}
+              onClick={handleRefresh}
               disabled={refreshing}
               aria-label="Refresh Inbox"
             >
@@ -356,129 +247,26 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
                 textAlign: 'center',
               }}
             >
-              <FiInbox size={32} color={providerBadge.accent} />
+              <FiInbox size={32} color={meta.accent} />
               <div style={{ fontSize: 15, fontWeight: 600, color: textPrimary }}>
                 Inbox is ready and listening
               </div>
               <div style={{ fontSize: 13, color: textSecondary, maxWidth: 380 }}>
-                Incoming messages for this disposable address will appear here. Click Refresh to poll for new mail.
+                Incoming messages for this disposable address will appear here. Click Refresh to check for new mail.
               </div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {emails.map((item) => {
-                const initial = (
-                  item.from?.name
-                    ? item.from.name.charAt(0)
-                    : item.from?.address?.charAt(0) || 'U'
-                ).toUpperCase();
-                const avatar = getAvatarStyle(initial);
-
-                return (
-                  <div
-                    key={item.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => viewEmailDetails(item.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        viewEmailDetails(item.id);
-                      }
-                    }}
-                    style={{
-                      backgroundColor: cardBg,
-                      border: `1px solid ${cardBorder}`,
-                      borderRadius: 11,
-                      padding: '14px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 14,
-                      cursor: 'pointer',
-                      transition: 'border-color 0.15s ease, transform 0.15s ease',
-                    }}
-                  >
-                    <div
-                      className="mono"
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: '50%',
-                        backgroundColor: avatar.bg,
-                        border: `1px solid ${avatar.border}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: avatar.color,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {initial}
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: textPrimary,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {item.from?.name || item.from?.address}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          color: providerBadge.accent,
-                          fontWeight: 500,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {item.subject || '(No subject)'}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: textSecondary,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {item.intro || '(No content)'}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'flex-end',
-                        gap: 8,
-                        flexShrink: 0,
-                      }}
-                    >
-                      <span className="mono" style={{ fontSize: 11, color: textMuted }}>
-                        {formatDate(item.createdAt)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteEmail(item.id, e)}
-                        aria-label="Delete Email"
-                        style={{ color: '#BA5E4E', padding: 4, display: 'inline-flex' }}
-                      >
-                        <FiTrash2 size={15} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+              {emails.map((item) => (
+                <MessageRow
+                  key={item.id}
+                  message={item}
+                  accentColor={meta.accent}
+                  isLight={isLight}
+                  onOpen={openDetail}
+                  onDelete={handleDeleteEmail}
+                />
+              ))}
             </div>
           )}
         </main>

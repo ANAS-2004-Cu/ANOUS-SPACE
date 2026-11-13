@@ -15,33 +15,9 @@ import { Button } from '../../shared/ui/Button';
 import { useAlert } from '../../shared/context/AlertContext';
 import { useTheme } from '../../shared/context/ThemeContext';
 import * as Clipboard from '../../shared/utils/clipboard';
-import * as SecureStore from '../../shared/utils/storage';
-import {
-  getMessage,
-  deleteMessage,
-  downloadMailTmAttachment,
-  hydrateMailTmToken,
-  TempMailProvider,
-  getTempMailLolMessage,
-  deleteTempMailLolMessage,
-  fetchMaildropMessageDetail,
-  deleteMaildropMessage,
-} from './tempMailService';
-import * as GuerrillaAPI from './tempMailService';
-
-const AVATAR_PALETTE = [
-  { color: '#5278A8', bg: 'rgba(82, 120, 168, 0.14)', border: 'rgba(82, 120, 168, 0.36)' },
-  { color: '#4D8B6E', bg: 'rgba(77, 139, 110, 0.14)', border: 'rgba(77, 139, 110, 0.36)' },
-  { color: '#BA5E4E', bg: 'rgba(186, 94, 78, 0.14)', border: 'rgba(186, 94, 78, 0.36)' },
-  { color: '#BD883E', bg: 'rgba(189, 136, 62, 0.14)', border: 'rgba(189, 136, 62, 0.36)' },
-  { color: '#9E5262', bg: 'rgba(158, 82, 98, 0.14)', border: 'rgba(158, 82, 98, 0.36)' },
-  { color: '#A68B60', bg: 'rgba(166, 139, 96, 0.14)', border: 'rgba(166, 139, 96, 0.36)' },
-];
-
-const getAvatarStyle = (seed: string) => {
-  const code = (seed || 'U').charCodeAt(0);
-  return AVATAR_PALETTE[code % AVATAR_PALETTE.length];
-};
+import { EmailDetail, normalizeProviderId } from './types';
+import { PROVIDER_ADAPTERS } from './providers';
+import { getAvatarStyle } from './components/MessageRow';
 
 export interface EmailDetailPageProps {
   onOpenCommandPalette: () => void;
@@ -51,115 +27,42 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const id = searchParams.get('id');
-  const rawProvider = searchParams.get('provider') || TempMailProvider.MailTM;
-  const provider = rawProvider === 'mailgw' ? TempMailProvider.MailTM : rawProvider;
+  const provider = normalizeProviderId(searchParams.get('provider'));
+  const adapter = PROVIDER_ADAPTERS[provider];
+
   const { showAlert } = useAlert();
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState<any>(null);
-  const [htmlContent, setHtmlContent] = useState('');
-  const [plainTextContent, setPlainTextContent] = useState('');
+  const [email, setEmail] = useState<EmailDetail | null>(null);
   const [showHtml, setShowHtml] = useState(true);
-
-  const isGuerrilla = provider === 'guerrilla' || provider === TempMailProvider.GuerrillaMail;
-  const isTempMailLol = provider === TempMailProvider.TempMailLol;
-  const isMaildrop = provider === TempMailProvider.Maildrop;
-  const isMailTm = !isGuerrilla && !isTempMailLol && !isMaildrop;
-
-  const initializeGuerrillaAPI = async () => {
-    try {
-      const storedGuerrilla = await SecureStore.getItemAsync('guerrilla_data');
-      if (storedGuerrilla) {
-        const data = JSON.parse(storedGuerrilla);
-        GuerrillaAPI.initializeFromStoredData({
-          sid_token: data.sid_token,
-          email_user: data.email_user || data.email_addr?.split('@')[0] || 'user',
-        });
-      } else {
-        throw new Error('No stored GuerrillaMail session found');
-      }
-    } catch (error) {
-      showAlert('Error', 'Failed to initialize email session. Please try again.');
-      throw error;
-    }
-  };
 
   const fetchEmailDetails = useCallback(async () => {
     if (!id) return;
     try {
       setLoading(true);
-
-      if (isTempMailLol) {
-        const emailData = getTempMailLolMessage(id);
-        if (!emailData) {
-          throw new Error('TempMail.lol message not found');
-        }
-        setEmail(emailData);
-        setHtmlContent(
-          emailData.html || `<div>${emailData.text || 'No content available'}</div>`
-        );
-        setPlainTextContent(emailData.text || 'No content available');
-      } else if (isMaildrop) {
-        const emailData = await fetchMaildropMessageDetail(id);
-        setEmail(emailData);
-        setHtmlContent(
-          emailData.html || `<div>${emailData.text || 'No content available'}</div>`
-        );
-        setPlainTextContent(emailData.text || 'No content available');
-      } else if (isMailTm) {
-        hydrateMailTmToken();
-        const emailData = await getMessage(id);
-        setEmail(emailData);
-
-        const rawHtml = Array.isArray(emailData.html)
-          ? emailData.html.join('\n')
-          : emailData.html;
-        const html = rawHtml || `<div>${emailData.text || 'No content available'}</div>`;
-        const text = emailData.text || 'No content available';
-
-        setHtmlContent(html);
-        setPlainTextContent(text);
-      } else {
-        await initializeGuerrillaAPI();
-        const emailData = await GuerrillaAPI.fetchEmail(id);
-
-        if (!emailData) {
-          throw new Error('Failed to fetch email data');
-        }
-
-        setEmail(emailData);
-
-        const html =
-          emailData.mail_body ||
-          `<div>${emailData.mail_excerpt || 'No content available'}</div>`;
-        const text = emailData.mail_body
-          ? emailData.mail_body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-          : emailData.mail_excerpt || 'No content available';
-
-        setHtmlContent(html);
-        setPlainTextContent(text);
-      }
+      const detail = await adapter.fetchMessageDetail(id);
+      setEmail(detail);
     } catch {
       showAlert('Error', 'Failed to load email details. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [id, isMailTm, isTempMailLol, isMaildrop, showAlert]);
+  }, [id, adapter, showAlert]);
 
   useEffect(() => {
-    if (!id || typeof id !== 'string') {
+    if (!id) {
       showAlert('Error', 'Invalid email identifier.');
       navigate('/temp-mail', { replace: true });
       return;
     }
 
     fetchEmailDetails();
-  }, [id, provider, fetchEmailDetails, navigate, showAlert]);
+  }, [id, fetchEmailDetails, navigate, showAlert]);
 
   const handleBack = () => {
-    if (isGuerrilla) {
+    if (provider === 'guerrillamail') {
       navigate('/temp-mail/guerrilla-inbox');
     } else {
       navigate(`/temp-mail/inbox?provider=${encodeURIComponent(provider)}`);
@@ -176,18 +79,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
         style: 'destructive',
         onPress: async () => {
           try {
-            if (isTempMailLol) {
-              deleteTempMailLolMessage(email.id);
-              showAlert('Deleted', 'Email deleted.');
-            } else if (isMaildrop) {
-              await deleteMaildropMessage(email.id);
-              showAlert('Deleted', 'Email deleted.');
-            } else if (isMailTm) {
-              await deleteMessage(email.id);
-              showAlert('Deleted', 'Email deleted.');
-            } else {
-              showAlert('Removed', 'Email removed from inbox.');
-            }
+            await adapter.deleteMessage(email.id);
+            showAlert('Deleted', 'Email deleted.');
             handleBack();
           } catch {
             showAlert('Error', 'Failed to delete email. Please try again.');
@@ -197,14 +90,10 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
     ]);
   };
 
-  const formatDate = (dateValue: string | number) => {
-    if (!dateValue) return '';
-
-    const date =
-      typeof dateValue === 'string'
-        ? new Date(dateValue)
-        : new Date(Number(dateValue) * 1000);
-
+  const formatDate = (isoString: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleString('en-US', {
       weekday: 'short',
       year: 'numeric',
@@ -223,13 +112,6 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       showAlert('Error', 'Failed to copy text to clipboard.');
     }
   };
-
-  const isStandardEmailModel = !isGuerrilla;
-  const emailSubject = email
-    ? isStandardEmailModel
-      ? email.subject
-      : email.mail_subject
-    : 'Message Detail';
 
   const canvasBg = isLight ? '#F8F7F4' : '#141311';
   const cardBg = isLight ? '#FFFFFF' : '#1C1A17';
@@ -268,9 +150,12 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
     </style>
   </head>
   <body>
-    ${htmlContent}
+    ${email?.html || ''}
   </body>
 </html>`;
+
+  const senderInitial = ((email?.fromName || email?.fromAddress || '?').charAt(0) || '?').toUpperCase();
+  const avatar = getAvatarStyle(senderInitial);
 
   return (
     <div
@@ -285,7 +170,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       <div className="workspace-shell">
         <AppHeader
           onOpenCommandPalette={onOpenCommandPalette}
-          subtitle={emailSubject || '(No subject)'}
+          subtitle={email?.subject || 'Message Detail'}
         />
 
         <main
@@ -328,7 +213,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={() => copyToClipboard(plainTextContent)}
+                  onClick={() => copyToClipboard(email.text)}
                 >
                   <FiCopy size={13} />
                   <span>Copy Content</span>
@@ -394,91 +279,67 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                   flexDirection: 'column',
                   gap: 12,
                   boxShadow: isLight
-                    ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                    : '0 14px 34px rgba(0, 0, 0, 0.32)',
+                    ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
+                    : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
                 }}
               >
                 <h1 style={{ fontSize: 16, fontWeight: 600, color: textPrimary }}>
-                  {emailSubject || '(No subject)'}
+                  {email.subject || '(No subject)'}
                 </h1>
 
-                {(() => {
-                  const fromName = isStandardEmailModel
-                    ? email.from?.name || 'Unknown'
-                    : email.mail_from?.match(/(.*)\s<(.*)>/)
-                    ? email.mail_from.match(/(.*)\s<(.*)>/)[1]
-                    : email.mail_from;
-                  const fromEmail = isStandardEmailModel
-                    ? email.from?.address
-                    : email.mail_from?.match(/(.*)\s<(.*)>/)
-                    ? email.mail_from.match(/(.*)\s<(.*)>/)[2]
-                    : email.mail_from;
-                  const dateDisplay = formatDate(
-                    isStandardEmailModel ? email.createdAt : email.mail_timestamp
-                  );
-                  const initial = (fromName?.charAt(0) || '?').toUpperCase();
-                  const avatar = getAvatarStyle(initial);
-
-                  return (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                    paddingTop: 12,
+                    borderTop: `1px solid ${cardBorder}`,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                     <div
+                      className="mono"
                       style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: '50%',
+                        backgroundColor: avatar.bg,
+                        border: `1px solid ${avatar.border}`,
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 12,
-                        flexWrap: 'wrap',
-                        paddingTop: 12,
-                        borderTop: `1px solid ${cardBorder}`,
+                        justifyContent: 'center',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: avatar.color,
+                        flexShrink: 0,
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                        <div
-                          className="mono"
-                          style={{
-                            width: 38,
-                            height: 38,
-                            borderRadius: '50%',
-                            backgroundColor: avatar.bg,
-                            border: `1px solid ${avatar.border}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: avatar.color,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {initial}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
-                            {fromName || 'Unknown'}
-                          </div>
-                          <div
-                            className="mono"
-                            style={{ fontSize: 12, color: textSecondary, wordBreak: 'break-all' }}
-                          >
-                            {fromEmail || ''}
-                          </div>
-                        </div>
-                      </div>
-
-                      <span className="mono" style={{ fontSize: 11, color: textMuted }}>
-                        {dateDisplay}
-                      </span>
+                      {senderInitial}
                     </div>
-                  );
-                })()}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
+                        {email.fromName || 'Unknown'}
+                      </div>
+                      <div
+                        className="mono"
+                        style={{ fontSize: 12, color: textSecondary, wordBreak: 'break-all' }}
+                      >
+                        {email.fromAddress}
+                      </div>
+                    </div>
+                  </div>
 
-                {isStandardEmailModel && email.to && (
+                  <span className="mono" style={{ fontSize: 11, color: textMuted }}>
+                    {formatDate(email.receivedAt)}
+                  </span>
+                </div>
+
+                {email.toAddresses.length > 0 && (
                   <div style={{ fontSize: 12, color: textSecondary }}>
                     <span style={{ color: textMuted }}>To: </span>
-                    <span className="mono">
-                      {Array.isArray(email.to)
-                        ? email.to.map((recipient: any) => recipient.address).join(', ')
-                        : ''}
-                    </span>
+                    <span className="mono">{email.toAddresses.join(', ')}</span>
                   </div>
                 )}
               </section>
@@ -492,8 +353,8 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                   overflow: 'hidden',
                   minHeight: 320,
                   boxShadow: isLight
-                    ? '0 8px 24px rgba(15, 23, 42, 0.04)'
-                    : '0 14px 34px rgba(0, 0, 0, 0.32)',
+                    ? 'var(--card-top-highlight), 0 8px 22px rgba(24, 25, 28, 0.04)'
+                    : 'var(--card-top-highlight), 0 14px 30px rgba(0, 0, 0, 0.3)',
                 }}
               >
                 {showHtml ? (
@@ -514,7 +375,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                     className="mono"
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      copyToClipboard(plainTextContent);
+                      copyToClipboard(email.text);
                     }}
                     style={{
                       padding: 20,
@@ -528,92 +389,99 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
                       minHeight: 320,
                     }}
                   >
-                    {plainTextContent || 'No content available'}
+                    {email.text || 'No content available'}
                   </div>
                 )}
               </section>
 
               {/* Attachments */}
-              {isMailTm &&
-                email.hasAttachments &&
-                Array.isArray(email.attachments) &&
-                email.attachments.length > 0 && (
-                  <section
-                    style={{
-                      backgroundColor: cardBg,
-                      border: `1px solid ${cardBorder}`,
-                      borderRadius: 12,
-                      padding: 20,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 10,
-                    }}
-                  >
-                    <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
-                      Attachments ({email.attachments.length})
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {email.attachments.map((attachment: any, index: number) => (
-                        <button
-                          key={attachment.id || index}
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              await downloadMailTmAttachment(
-                                attachment.downloadUrl,
-                                attachment.filename || 'attachment'
-                              );
-                            } catch {
-                              showAlert('Error', 'Failed to download attachment.');
-                            }
-                          }}
+              {email.attachments.length > 0 && adapter.downloadAttachment && (
+                <section
+                  style={{
+                    backgroundColor: cardBg,
+                    border: `1px solid ${cardBorder}`,
+                    borderRadius: 12,
+                    padding: 20,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 600, color: textPrimary }}>
+                    Attachments ({email.attachments.length})
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {email.attachments.map((attachment) => (
+                      <button
+                        key={attachment.id}
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await adapter.downloadAttachment!(
+                              attachment.downloadUrl,
+                              attachment.filename
+                            );
+                          } catch {
+                            showAlert('Error', 'Failed to download attachment.');
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          padding: '10px 14px',
+                          backgroundColor: wellBg,
+                          border: `1px solid ${cardBorder}`,
+                          borderRadius: 8,
+                          textAlign: 'left',
+                        }}
+                      >
+                        <div
                           style={{
-                            width: '100%',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                            padding: '10px 14px',
-                            backgroundColor: wellBg,
-                            border: `1px solid ${cardBorder}`,
-                            borderRadius: 8,
-                            textAlign: 'left',
+                            gap: 10,
+                            minWidth: 0,
                           }}
                         >
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 10,
-                              minWidth: 0,
-                            }}
-                          >
-                            <FiPaperclip size={14} strokeWidth={1.5} color="#5278A8" style={{ flexShrink: 0 }} />
-                            <div style={{ minWidth: 0 }}>
-                              <div
-                                style={{
-                                  fontSize: 13,
-                                  color: textPrimary,
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }}
-                              >
-                                {attachment.filename || 'Attachment'}
-                              </div>
-                              <div className="mono" style={{ fontSize: 11, color: textMuted }}>
-                                {attachment.size
-                                  ? `${(attachment.size / 1024).toFixed(0)} KB`
-                                  : ''}
-                              </div>
+                          <FiPaperclip
+                            size={14}
+                            strokeWidth={1.5}
+                            color="#5278A8"
+                            style={{ flexShrink: 0 }}
+                          />
+                          <div style={{ minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontSize: 13,
+                                color: textPrimary,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {attachment.filename}
                             </div>
+                            {attachment.size > 0 && (
+                              <div className="mono" style={{ fontSize: 11, color: textMuted }}>
+                                {(attachment.size / 1024).toFixed(0)} KB
+                              </div>
+                            )}
                           </div>
-                          <FiDownload size={14} strokeWidth={1.5} color="#5278A8" style={{ flexShrink: 0 }} />
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                )}
+                        </div>
+                        <FiDownload
+                          size={14}
+                          strokeWidth={1.5}
+                          color="#5278A8"
+                          style={{ flexShrink: 0 }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
             </>
           )}
         </main>
