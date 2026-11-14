@@ -1,9 +1,19 @@
-const TEMPMAIL_LOL_UPSTREAM = 'https://api.tempmail.lol';
+declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
+
+const PROXY_USER_AGENT = 'Mozilla/5.0 (compatible; AnousSpace/1.0)';
+
+function sanitizePath(rawPath: string | null, fallback: string): string {
+  const path = rawPath || fallback;
+  if (path.startsWith('/') && !path.startsWith('//')) {
+    return path;
+  }
+  return `/${path.replace(/^\/+/, '')}`;
+}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -11,42 +21,35 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const urlObj = new URL(req.url || '', 'http://localhost');
-    const rawEndpoint = urlObj.searchParams.get('endpoint') || '/v2/inbox';
-    const endpoint =
-      rawEndpoint.startsWith('/') && !rawEndpoint.startsWith('//')
-        ? rawEndpoint
-        : `/${rawEndpoint.replace(/^\/+/, '')}`;
-    const token = urlObj.searchParams.get('token');
-    const targetUrl = token
-      ? `${TEMPMAIL_LOL_UPSTREAM}${endpoint}?token=${encodeURIComponent(token)}`
-      : `${TEMPMAIL_LOL_UPSTREAM}${endpoint}`;
+    const reqUrl = new URL(req.url || '', 'http://localhost');
+    const targetPath = sanitizePath(reqUrl.searchParams.get('path'), '/v3/inboxes');
+    const targetUrl = `https://api.tempmail.lol${targetPath}`;
 
-    const fetchOptions: RequestInit = {
-      method: req.method || 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; AnousSpace/1.0)',
-      },
+    const method = (req.method || 'GET').toUpperCase();
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      'User-Agent': PROXY_USER_AGENT,
     };
 
-    if (req.method === 'POST') {
-      fetchOptions.body = req.body
-        ? typeof req.body === 'string'
-          ? req.body
-          : JSON.stringify(req.body)
-        : '{}';
+    const fetchOptions: RequestInit = { method, headers };
+    if (method === 'POST') {
+      headers['Content-Type'] = 'application/json';
+      fetchOptions.body =
+        typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
     }
 
-    const upstreamResponse = await fetch(targetUrl, fetchOptions);
-    const text = await upstreamResponse.text();
-    res.status(upstreamResponse.status);
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.send(text);
+    const upstream = await fetch(targetUrl, fetchOptions);
+    const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+    res.setHeader('Content-Type', contentType);
+
+    if (upstream.status === 204) {
+      res.status(204).end();
+      return;
+    }
+
+    const bytes = new Uint8Array(await upstream.arrayBuffer());
+    res.status(upstream.status).send(typeof Buffer !== 'undefined' ? Buffer.from(bytes) : bytes);
   } catch {
-    res.status(502).json({
-      error: 'Failed to reach TempMail.lol upstream API',
-    });
+    res.status(502).json({ error: 'Failed to reach Tempmail.lol v3 upstream API' });
   }
 }

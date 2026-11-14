@@ -1,21 +1,35 @@
 export type MailProviderId =
   | 'mail.tm'
   | 'mail.gw'
-  | 'guerrillamail'
-  | 'tempmail.lol'
-  | 'maildrop.cc'
+  | 'catchmail.io'
+  | '1secmail'
   | 'inboxes.com'
-  | 'tempmail.plus';
+  | 'tempmail.lol'
+  | 'tempmail.plus'
+  | 'dropmail.me'
+  | 'maildrop.cc'
+  | 'guerrillamail';
+
+export type ProviderMode = 'stateless' | 'token' | 'session';
+export type DomainListMode = 'api' | 'fixed' | 'auto';
+export type ProviderProtocol = 'rest' | 'query' | 'graphql';
+
+export interface ProviderCapabilities {
+  mode: ProviderMode;
+  supportsDomainList: DomainListMode;
+  supportsCustomUsername: boolean;
+  supportsDelete: boolean;
+  inlineMessageBody: boolean;
+  supportsAttachments: boolean;
+  protocol: ProviderProtocol;
+  fixedDomains?: readonly string[];
+}
 
 export interface ProviderMeta {
   id: MailProviderId;
   label: string;
-  accent: string;
-  tint: string;
-  border: string;
-  supportsDomainSelect: boolean;
-  supportsAttachments: boolean;
-  fixedDomain?: string;
+  shortDescription: string;
+  capabilities: ProviderCapabilities;
 }
 
 export interface TempAccount {
@@ -26,6 +40,8 @@ export interface TempAccount {
   accountId?: string;
   emailUser?: string;
   mailbox?: string;
+  domain?: string;
+  expiresAt?: string;
 }
 
 export interface EmailAttachment {
@@ -55,6 +71,7 @@ export interface EmailDetail extends EmailSummary {
 
 export interface MailProviderAdapter {
   id: MailProviderId;
+  capabilities: ProviderCapabilities;
   getDomains?: () => Promise<string[]>;
   getStoredAccount: () => Promise<TempAccount | null>;
   createAccount: (username?: string, domain?: string) => Promise<TempAccount>;
@@ -67,23 +84,37 @@ export interface MailProviderAdapter {
 
 export const normalizeProviderId = (raw?: string | null): MailProviderId => {
   const value = (raw || '').trim().toLowerCase();
-  if (value === 'mail.gw' || value === 'mailgw') {
-    return 'mail.gw';
+  switch (value) {
+    case 'mail.gw':
+    case 'mailgw':
+      return 'mail.gw';
+    case 'catchmail.io':
+    case 'catchmail':
+      return 'catchmail.io';
+    case '1secmail':
+    case 'onesecmail':
+      return '1secmail';
+    case 'inboxes.com':
+    case 'inboxes':
+      return 'inboxes.com';
+    case 'tempmail.lol':
+    case 'tempmail-lol':
+      return 'tempmail.lol';
+    case 'tempmail.plus':
+    case 'tempmail-plus':
+      return 'tempmail.plus';
+    case 'dropmail.me':
+    case 'dropmail':
+      return 'dropmail.me';
+    case 'maildrop.cc':
+    case 'maildrop':
+      return 'maildrop.cc';
+    case 'guerrillamail':
+    case 'guerrilla':
+      return 'guerrillamail';
+    case 'mail.tm':
+    case 'mailtm':
+    default:
+      return 'mail.tm';
   }
-  if (value === 'guerrilla' || value === 'guerrillamail') {
-    return 'guerrillamail';
-  }
-  if (value === 'tempmail.lol') {
-    return 'tempmail.lol';
-  }
-  if (value === 'maildrop.cc' || value === 'maildrop') {
-    return 'maildrop.cc';
-  }
-  if (value === 'inboxes.com' || value === 'inboxes') {
-    return 'inboxes.com';
-  }
-  if (value === 'tempmail.plus') {
-    return 'tempmail.plus';
-  }
-  return 'mail.tm';
 };

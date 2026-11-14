@@ -1,251 +1,199 @@
 import {
+  clearAccountStorage,
+  readAccountStorage,
+  readMessageCache,
+  writeAccountStorage,
+  writeMessageCache,
+} from '../storage';
+import {
   EmailDetail,
   EmailSummary,
   MailProviderAdapter,
+  ProviderCapabilities,
   TempAccount,
 } from '../types';
 import {
-  clearGuerrillaSessionCache,
-  clearProviderStorage,
-  readGuerrillaSessionCache,
-  readProviderStorage,
-  StoredGuerrillaData,
-  writeGuerrillaSessionCache,
-  writeProviderStorage,
-} from '../storage';
-import { escapeHtml, fetchJson, parseSender, stripHtml } from './http';
+  ProviderHttpError,
+  fetchJson,
+  parseSender,
+  safeIsoDate,
+  stripHtml,
+  wrapPlainTextAsHtml,
+} from './http';
 
-const GUERRILLA_PROXY_URL = '/api/guerrilla';
+const GUERRILLA_CAPABILITIES: ProviderCapabilities = {
+  mode: 'session',
+  supportsDomainList: 'auto',
+  supportsCustomUsername: false,
+  supportsDelete: true,
+  inlineMessageBody: false,
+  supportsAttachments: false,
+  protocol: 'query',
+};
 
-export const GUERRILLA_DOMAINS = [
-  'guerrillamail.com',
-  'guerrillamail.net',
-  'guerrillamail.org',
-  'guerrillamailblock.com',
-  'guerrillamail.info',
-  'grr.la',
-  'sharklasers.com',
-  'guerrillamail.biz',
-  'guerrillamail.de',
-  'pokemail.net',
-  'spam4.me',
-];
+interface GuerrillaSessionResponse {
+  email_addr?: string;
+  sid_token?: string;
+  email_user?: string;
+}
 
-interface GuerrillaRawMessage {
-  mail_id: string | number;
+interface GuerrillaMailRaw {
+  mail_id?: string | number;
   mail_from?: string;
   mail_subject?: string;
   mail_excerpt?: string;
+  mail_body?: string;
   mail_timestamp?: number | string;
   mail_date?: string;
-  att?: number | string;
-  mail_body?: string;
 }
 
-interface GuerrillaEmailResponse {
-  email_addr?: string;
-  email_user?: string;
-  sid_token?: string;
-  list?: GuerrillaRawMessage[];
-}
-
-function normalizeTimestamp(ts?: number | string, mailDate?: string): string {
-  const numeric = Number(ts);
-  if (!Number.isNaN(numeric) && numeric > 0) {
-    return new Date(numeric * 1000).toISOString();
-  }
-  return mailDate ? mailDate.trim() : '';
-}
-
-function normalizeSummary(raw: GuerrillaRawMessage): EmailSummary {
-  const { fromName, fromAddress } = parseSender(raw.mail_from);
+function summaryFromRaw(msg: GuerrillaMailRaw): EmailSummary {
+  const sender = parseSender(msg.mail_from);
   return {
-    id: String(raw.mail_id),
-    fromName,
-    fromAddress,
-    subject: raw.mail_subject || '(No subject)',
-    preview: raw.mail_excerpt || '(No content)',
-    receivedAt: normalizeTimestamp(raw.mail_timestamp, raw.mail_date),
-    hasAttachments: Number(raw.att || 0) > 0,
+    id: String(msg.mail_id || ''),
+    fromName: sender.name,
+    fromAddress: sender.address,
+    subject: msg.mail_subject || '(No subject)',
+    preview: msg.mail_excerpt || '',
+    receivedAt: safeIsoDate(msg.mail_timestamp ?? msg.mail_date),
+    hasAttachments: false,
   };
-}
-
-function normalizeDetail(raw: GuerrillaRawMessage): EmailDetail {
-  const summary = normalizeSummary(raw);
-  const rawBody = raw.mail_body || '';
-  const fallbackText = raw.mail_excerpt || 'No content available';
-  const html =
-    rawBody || `<pre style="white-space:pre-wrap;color:inherit">${escapeHtml(fallbackText)}</pre>`;
-  const text = rawBody ? stripHtml(rawBody) || fallbackText : fallbackText;
-
-  return {
-    ...summary,
-    toAddresses: [],
-    text,
-    html,
-    attachments: [],
-  };
-}
-
-async function getActiveSession(): Promise<StoredGuerrillaData> {
-  const stored = await readProviderStorage<StoredGuerrillaData>('guerrillamail');
-  if (!stored?.sid_token) {
-    throw new Error('GuerrillaMail session not initialized.');
-  }
-  return stored;
-}
-
-export function getCachedGuerrillaSummaries(): EmailSummary[] {
-  return readGuerrillaSessionCache<EmailSummary>();
-}
-
-export function setCachedGuerrillaSummaries(items: EmailSummary[]): void {
-  writeGuerrillaSessionCache(items);
 }
 
 export const guerrillaMailAdapter: MailProviderAdapter = {
   id: 'guerrillamail',
-
-  async getDomains(): Promise<string[]> {
-    return GUERRILLA_DOMAINS;
-  },
+  capabilities: GUERRILLA_CAPABILITIES,
 
   async getStoredAccount(): Promise<TempAccount | null> {
-    const stored = await readProviderStorage<StoredGuerrillaData>('guerrillamail');
-    if (!stored?.email_addr || !stored?.sid_token) return null;
-    return {
-      provider: 'guerrillamail',
-      address: stored.email_addr,
-      token: stored.sid_token,
-      emailUser: stored.email_user || stored.email_addr.split('@')[0],
-    };
+    return readAccountStorage('guerrillamail');
   },
 
-  async createAccount(username?: string, domain?: string): Promise<TempAccount> {
-    const init = await fetchJson<GuerrillaEmailResponse>(
-      `${GUERRILLA_PROXY_URL}?f=get_email_address`
-    );
+  async createAccount(): Promise<TempAccount> {
+    const res = await fetchJson<GuerrillaSessionResponse>('/api/guerrilla?f=get_email_address');
+    const address = String(res?.email_addr || '').trim();
+    const sidToken = String(res?.sid_token || '').trim();
 
-    if (!init?.email_addr || !init?.sid_token) {
-      throw new Error('Failed to initialize GuerrillaMail session.');
+    if (!address || !sidToken) {
+      throw new ProviderHttpError(
+        'Guerrilla Mail did not return an address and session token.',
+        502,
+        'upstream'
+      );
     }
 
-    const sidToken = init.sid_token;
-    let finalUser = init.email_user || init.email_addr.split('@')[0];
-    let finalDomain = domain || init.email_addr.split('@')[1] || GUERRILLA_DOMAINS[0];
-
-    const requestedUser = (username || '')
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9._-]/g, '');
-
-    if (requestedUser) {
-      try {
-        const userRes = await fetchJson<GuerrillaEmailResponse>(
-          `${GUERRILLA_PROXY_URL}?f=set_email_user&email_user=${encodeURIComponent(
-            requestedUser
-          )}&sid_token=${encodeURIComponent(sidToken)}`
-        );
-        if (userRes?.email_addr) {
-          finalUser = userRes.email_addr.split('@')[0];
-        } else {
-          finalUser = requestedUser;
-        }
-      } catch {
-        // Keep initialized user if custom alias fails
-      }
-    }
-
-    if (domain) {
-      try {
-        await fetchJson<GuerrillaEmailResponse | null>(
-          `${GUERRILLA_PROXY_URL}?f=set_email_domain&domain_name=${encodeURIComponent(
-            domain
-          )}&sid_token=${encodeURIComponent(sidToken)}`
-        );
-      } catch {
-        // All Guerrilla domains resolve to the same email_user inbox
-      }
-      finalDomain = domain;
-    }
-
-    const finalAddress = `${finalUser}@${finalDomain}`;
-    const stored: StoredGuerrillaData = {
-      email_addr: finalAddress,
-      sid_token: sidToken,
-      email_user: finalUser,
-    };
-
-    await writeProviderStorage('guerrillamail', stored);
-    clearGuerrillaSessionCache();
-
-    return {
+    const [fallbackUser, domain] = address.split('@');
+    const account: TempAccount = {
       provider: 'guerrillamail',
-      address: finalAddress,
+      address,
       token: sidToken,
-      emailUser: finalUser,
+      emailUser: res.email_user || fallbackUser || '',
+      domain: domain || 'guerrillamailblock.com',
     };
+
+    await clearAccountStorage('guerrillamail');
+    await writeAccountStorage(account);
+    return account;
   },
 
   async fetchMessages(): Promise<EmailSummary[]> {
-    const session = await getActiveSession();
-    const res = await fetchJson<GuerrillaEmailResponse>(
-      `${GUERRILLA_PROXY_URL}?f=get_email_list&offset=0&sid_token=${encodeURIComponent(
-        session.sid_token
-      )}`
+    const account = await readAccountStorage('guerrillamail');
+    if (!account?.token) {
+      throw new ProviderHttpError('No active Guerrilla Mail session found.', 401, 'unauthorized');
+    }
+
+    const res = await fetchJson<{ list?: GuerrillaMailRaw[]; sid_token?: string }>(
+      `/api/guerrilla?f=check_email&sid_token=${encodeURIComponent(account.token)}&seq=0`
     );
 
-    const incoming = Array.isArray(res?.list) ? res.list.map(normalizeSummary) : [];
-    const cached = getCachedGuerrillaSummaries();
-    const incomingIds = new Set(incoming.map((item) => item.id));
-    const remainingCached = cached.filter((item) => !incomingIds.has(item.id));
-    const merged = [...incoming, ...remainingCached];
-    setCachedGuerrillaSummaries(merged);
-    return merged;
+    if (res?.sid_token && res.sid_token !== account.token) {
+      await writeAccountStorage({ ...account, token: res.sid_token });
+    }
+
+    const incoming = Array.isArray(res?.list) ? res.list : [];
+    const cachedDetails = readMessageCache('guerrillamail');
+    const detailById = new Map<string, EmailDetail>(cachedDetails.map((item) => [item.id, item]));
+
+    for (const raw of incoming) {
+      const summary = summaryFromRaw(raw);
+      if (!summary.id) continue;
+      const existing = detailById.get(summary.id);
+      if (existing) {
+        detailById.set(summary.id, { ...existing, ...summary });
+      } else {
+        detailById.set(summary.id, {
+          ...summary,
+          toAddresses: [account.address],
+          text: summary.preview || '',
+          html: summary.preview ? wrapPlainTextAsHtml(summary.preview) : '',
+          attachments: [],
+        });
+      }
+    }
+
+    const merged = Array.from(detailById.values()).sort((a, b) => {
+      const timeB = Date.parse(b.receivedAt) || 0;
+      const timeA = Date.parse(a.receivedAt) || 0;
+      return timeB - timeA;
+    });
+    writeMessageCache('guerrillamail', merged);
+
+    return merged.map(({ toAddresses: _to, text: _text, html: _html, attachments: _att, ...summary }) => summary);
   },
 
   async fetchMessageDetail(id: string): Promise<EmailDetail> {
-    const session = await getActiveSession();
-    const res = await fetchJson<GuerrillaRawMessage>(
-      `${GUERRILLA_PROXY_URL}?f=fetch_email&sid_token=${encodeURIComponent(
-        session.sid_token
-      )}&email_id=${encodeURIComponent(id)}`
-    );
-    if (!res || !res.mail_id) {
-      throw new Error('GuerrillaMail message not found.');
+    const account = await readAccountStorage('guerrillamail');
+    if (!account?.token) {
+      throw new ProviderHttpError('No active Guerrilla Mail session found.', 401, 'unauthorized');
     }
-    return normalizeDetail(res);
+
+    const msg = await fetchJson<GuerrillaMailRaw>(
+      `/api/guerrilla?f=fetch_email&email_id=${encodeURIComponent(id)}&sid_token=${encodeURIComponent(account.token)}`
+    );
+
+    const sender = parseSender(msg.mail_from);
+    const bodyRaw = msg.mail_body || msg.mail_excerpt || '';
+    const looksLikeHtml = /<[a-z][\s\S]*>/i.test(bodyRaw);
+    const htmlContent = looksLikeHtml ? bodyRaw : wrapPlainTextAsHtml(bodyRaw);
+    const textContent = looksLikeHtml ? stripHtml(bodyRaw) : bodyRaw;
+
+    const detail: EmailDetail = {
+      id: String(msg.mail_id || id),
+      fromName: sender.name,
+      fromAddress: sender.address,
+      subject: msg.mail_subject || '(No subject)',
+      preview: msg.mail_excerpt || textContent.slice(0, 120),
+      receivedAt: safeIsoDate(msg.mail_timestamp ?? msg.mail_date),
+      hasAttachments: false,
+      toAddresses: [account.address],
+      text: textContent || '(No content available)',
+      html: htmlContent,
+      attachments: [],
+    };
+
+    const cached = readMessageCache('guerrillamail');
+    const updated = cached.some((item) => item.id === detail.id)
+      ? cached.map((item) => (item.id === detail.id ? detail : item))
+      : [detail, ...cached];
+    writeMessageCache('guerrillamail', updated);
+
+    return detail;
   },
 
   async deleteMessage(id: string): Promise<void> {
-    const session = await getActiveSession();
-    try {
-      await fetchJson(
-        `${GUERRILLA_PROXY_URL}?f=del_email&email_ids%5B%5D=${encodeURIComponent(
-          id
-        )}&sid_token=${encodeURIComponent(session.sid_token)}`
-      );
-    } catch {
-      // Remove locally even if already expired on server
+    const account = await readAccountStorage('guerrillamail');
+    if (!account?.token) {
+      throw new ProviderHttpError('No active Guerrilla Mail session found.', 401, 'unauthorized');
     }
-    const cached = getCachedGuerrillaSummaries();
-    setCachedGuerrillaSummaries(cached.filter((item) => item.id !== id));
+
+    await fetchJson(
+      `/api/guerrilla?f=del_email&email_ids[]=${encodeURIComponent(id)}&sid_token=${encodeURIComponent(account.token)}`
+    );
+
+    const cached = readMessageCache('guerrillamail').filter((item) => item.id !== id);
+    writeMessageCache('guerrillamail', cached);
   },
 
   async resetSession(): Promise<void> {
-    const stored = await readProviderStorage<StoredGuerrillaData>('guerrillamail');
-    if (stored?.sid_token) {
-      try {
-        await fetchJson(
-          `${GUERRILLA_PROXY_URL}?f=forget_me&sid_token=${encodeURIComponent(
-            stored.sid_token
-          )}`
-        );
-      } catch {
-        // Ignore forget_me errors on expired sessions
-      }
-    }
-    await clearProviderStorage('guerrillamail');
-    clearGuerrillaSessionCache();
+    await clearAccountStorage('guerrillamail');
   },
 };

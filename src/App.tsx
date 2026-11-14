@@ -9,7 +9,6 @@ import { HubHome } from './pages/HubHome';
 import { ScratchpadPage } from './projects/scratchpad/ScratchpadPage';
 import { TempMailHubPage } from './projects/temp-mail/TempMailHubPage';
 import { TempMailInboxPage } from './projects/temp-mail/TempMailInboxPage';
-import { GuerrillaInboxPage } from './projects/temp-mail/GuerrillaInboxPage';
 import { EmailDetailPage } from './projects/temp-mail/EmailDetailPage';
 import { TicTacToePage } from './projects/tic-tac-toe/TicTacToePage';
 import { GuessGamePage } from './projects/guess-game/GuessGamePage';
@@ -71,7 +70,7 @@ const AppRoutes: React.FC = () => {
         />
         <Route
           path="/temp-mail/guerrilla-inbox"
-          element={<GuerrillaInboxPage onOpenCommandPalette={openCommandPalette} />}
+          element={<Navigate to="/temp-mail/inbox?provider=guerrillamail" replace />}
         />
         <Route
           path="/temp-mail/detail"

@@ -1,79 +1,48 @@
 import * as SecureStore from '../../shared/utils/storage';
-import { EmailDetail, MailProviderId } from './types';
+import { EmailDetail, MailProviderId, TempAccount } from './types';
 
-export const TEMPMAIL_STORAGE_KEYS = {
-  mailTm: 'anous_tempmail_mailtm',
-  mailGw: 'anous_tempmail_mailgw',
-  guerrilla: 'anous_tempmail_guerrilla',
-  tempMailLol: 'anous_tempmail_tempmail_lol',
-  maildrop: 'anous_tempmail_maildrop',
-  inboxes: 'anous_tempmail_inboxes',
-  tempmailPlus: 'anous_tempmail_tempmail_plus',
-  guerrillaCache: 'anous_tempmail_guerrilla_cache',
-} as const;
+export const TEMPMAIL_STORAGE_KEYS: Record<MailProviderId, string> = {
+  'mail.tm': 'anous_tempmail_mailtm',
+  'mail.gw': 'anous_tempmail_mailgw',
+  'catchmail.io': 'anous_tempmail_catchmail',
+  '1secmail': 'anous_tempmail_1secmail',
+  'inboxes.com': 'anous_tempmail_inboxes',
+  'tempmail.lol': 'anous_tempmail_tempmail_lol',
+  'tempmail.plus': 'anous_tempmail_tempmail_plus',
+  'dropmail.me': 'anous_tempmail_dropmail',
+  'maildrop.cc': 'anous_tempmail_maildrop',
+  guerrillamail: 'anous_tempmail_guerrilla',
+};
 
-const LEGACY_KEYS: Record<MailProviderId, string[]> = {
+const LEGACY_KEYS: Partial<Record<MailProviderId, string[]>> = {
   'mail.tm': ['mailtm_data'],
   'mail.gw': ['mailgw_data'],
   guerrillamail: ['guerrilla_data'],
   'tempmail.lol': ['tempmail_lol_data'],
   'maildrop.cc': ['maildrop_data'],
-  'inboxes.com': [],
-  'tempmail.plus': [],
 };
 
-const CANONICAL_KEY_BY_PROVIDER: Record<MailProviderId, string> = {
-  'mail.tm': TEMPMAIL_STORAGE_KEYS.mailTm,
-  'mail.gw': TEMPMAIL_STORAGE_KEYS.mailGw,
-  guerrillamail: TEMPMAIL_STORAGE_KEYS.guerrilla,
-  'tempmail.lol': TEMPMAIL_STORAGE_KEYS.tempMailLol,
-  'maildrop.cc': TEMPMAIL_STORAGE_KEYS.maildrop,
-  'inboxes.com': TEMPMAIL_STORAGE_KEYS.inboxes,
-  'tempmail.plus': TEMPMAIL_STORAGE_KEYS.tempmailPlus,
-};
+const MESSAGE_CACHE_PREFIX = 'anous_tempmail_msgcache_';
 
-export interface StoredMailTmData {
-  email: string;
-  password?: string;
-  token: string;
-  id?: string;
-}
-
-export interface StoredGuerrillaData {
-  email_addr: string;
-  sid_token: string;
-  email_user: string;
-}
-
-export interface StoredTempMailLolData {
-  address: string;
-  token: string;
-  emails: EmailDetail[];
-}
-
-export interface StoredMaildropData {
-  email: string;
-  mailbox: string;
-}
-
-export interface StoredSimpleMailboxData {
-  email: string;
-  domain: string;
-}
-
-export async function readProviderStorage<T>(provider: MailProviderId): Promise<T | null> {
-  const canonicalKey = CANONICAL_KEY_BY_PROVIDER[provider];
+export async function readAccountStorage(provider: MailProviderId): Promise<TempAccount | null> {
+  const canonicalKey = TEMPMAIL_STORAGE_KEYS[provider];
   try {
-    const canonicalRaw = await SecureStore.getItemAsync(canonicalKey);
-    if (canonicalRaw) {
-      return JSON.parse(canonicalRaw) as T;
+    const raw = await SecureStore.getItemAsync(canonicalKey);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const normalized = normalizeStoredAccount(provider, parsed);
+      if (normalized) return normalized;
     }
 
-    for (const legacyKey of LEGACY_KEYS[provider]) {
+    const legacyList = LEGACY_KEYS[provider] || [];
+    for (const legacyKey of legacyList) {
       const legacyRaw = await SecureStore.getItemAsync(legacyKey);
-      if (legacyRaw) {
-        await SecureStore.setItemAsync(canonicalKey, legacyRaw);
-        return JSON.parse(legacyRaw) as T;
+      if (!legacyRaw) continue;
+      const parsed = JSON.parse(legacyRaw) as Record<string, unknown>;
+      const normalized = normalizeStoredAccount(provider, parsed);
+      if (normalized) {
+        await SecureStore.setItemAsync(canonicalKey, JSON.stringify(normalized));
+        return normalized;
       }
     }
   } catch {
@@ -82,55 +51,84 @@ export async function readProviderStorage<T>(provider: MailProviderId): Promise<
   return null;
 }
 
-export async function writeProviderStorage<T>(
+function normalizeStoredAccount(
   provider: MailProviderId,
-  value: T
-): Promise<void> {
-  const canonicalKey = CANONICAL_KEY_BY_PROVIDER[provider];
-  await SecureStore.setItemAsync(canonicalKey, JSON.stringify(value));
+  raw: Record<string, unknown>
+): TempAccount | null {
+  const address = String(raw.address || raw.email || raw.email_addr || '').trim();
+  if (!address) return null;
+
+  const atIndex = address.indexOf('@');
+  const inferredUser = atIndex !== -1 ? address.slice(0, atIndex) : address;
+  const inferredDomain = atIndex !== -1 ? address.slice(atIndex + 1) : '';
+
+  return {
+    provider,
+    address,
+    token:
+      typeof raw.token === 'string'
+        ? raw.token
+        : typeof raw.sid_token === 'string'
+          ? raw.sid_token
+          : undefined,
+    password: typeof raw.password === 'string' ? raw.password : undefined,
+    accountId: typeof raw.accountId === 'string' ? raw.accountId : typeof raw.id === 'string' ? raw.id : undefined,
+    emailUser:
+      typeof raw.emailUser === 'string'
+        ? raw.emailUser
+        : typeof raw.email_user === 'string'
+          ? raw.email_user
+          : inferredUser,
+    mailbox: typeof raw.mailbox === 'string' ? raw.mailbox : inferredUser,
+    domain: typeof raw.domain === 'string' ? raw.domain : inferredDomain,
+    expiresAt: typeof raw.expiresAt === 'string' ? raw.expiresAt : undefined,
+  };
 }
 
-export async function clearProviderStorage(provider: MailProviderId): Promise<void> {
-  const canonicalKey = CANONICAL_KEY_BY_PROVIDER[provider];
+export async function writeAccountStorage(account: TempAccount): Promise<void> {
+  const canonicalKey = TEMPMAIL_STORAGE_KEYS[account.provider];
+  await SecureStore.setItemAsync(canonicalKey, JSON.stringify(account));
+}
+
+export async function clearAccountStorage(provider: MailProviderId): Promise<void> {
+  const canonicalKey = TEMPMAIL_STORAGE_KEYS[provider];
   await SecureStore.deleteItemAsync(canonicalKey);
-  for (const legacyKey of LEGACY_KEYS[provider]) {
+  for (const legacyKey of LEGACY_KEYS[provider] || []) {
     await SecureStore.deleteItemAsync(legacyKey);
   }
+  clearMessageCache(provider);
 }
 
-export function readGuerrillaSessionCache<T>(): T[] {
+export function readMessageCache(provider: MailProviderId): EmailDetail[] {
   try {
-    const raw =
-      window.sessionStorage.getItem(TEMPMAIL_STORAGE_KEYS.guerrillaCache) ||
-      window.sessionStorage.getItem('guerrilla_cached_emails');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        return parsed as T[];
-      }
-    }
+    const raw = window.localStorage.getItem(`${MESSAGE_CACHE_PREFIX}${provider}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as EmailDetail[]) : [];
   } catch {
-    // Ignore sessionStorage errors
+    return [];
   }
-  return [];
 }
 
-export function writeGuerrillaSessionCache<T>(items: T[]): void {
+export function writeMessageCache(provider: MailProviderId, messages: EmailDetail[]): void {
   try {
-    window.sessionStorage.setItem(
-      TEMPMAIL_STORAGE_KEYS.guerrillaCache,
-      JSON.stringify(items)
+    window.localStorage.setItem(
+      `${MESSAGE_CACHE_PREFIX}${provider}`,
+      JSON.stringify(messages.slice(0, 50))
     );
   } catch {
-    // Ignore sessionStorage errors
+    // Ignore storage quota errors
   }
 }
 
-export function clearGuerrillaSessionCache(): void {
+export function clearMessageCache(provider: MailProviderId): void {
   try {
-    window.sessionStorage.removeItem(TEMPMAIL_STORAGE_KEYS.guerrillaCache);
-    window.sessionStorage.removeItem('guerrilla_cached_emails');
+    window.localStorage.removeItem(`${MESSAGE_CACHE_PREFIX}${provider}`);
+    if (provider === 'guerrillamail') {
+      window.sessionStorage.removeItem('anous_tempmail_guerrilla_cache');
+      window.sessionStorage.removeItem('guerrilla_cached_emails');
+    }
   } catch {
-    // Ignore sessionStorage errors
+    // Ignore storage errors
   }
 }

@@ -19,13 +19,15 @@ function formatMessageDate(rawDate: string): string {
 export interface MessageRowProps {
   message: EmailSummary;
   index?: number;
+  supportsDelete?: boolean;
   onOpen: (id: string) => void;
-  onDelete: (id: string, e: React.MouseEvent) => void;
+  onDelete?: (id: string, e: React.MouseEvent) => void;
 }
 
 export const MessageRow: React.FC<MessageRowProps> = ({
   message,
   index = 0,
+  supportsDelete = true,
   onOpen,
   onDelete,
 }) => {
@@ -63,7 +65,7 @@ export const MessageRow: React.FC<MessageRowProps> = ({
           {message.subject || '(No subject)'}
         </div>
         <div className="message-row__preview ui-truncate">
-          {message.preview || '(No content)'}
+          {message.preview || 'Click to open message'}
         </div>
       </div>
 
@@ -73,31 +75,33 @@ export const MessageRow: React.FC<MessageRowProps> = ({
           {message.hasAttachments && (
             <FiPaperclip size={13} strokeWidth={1.6} color="var(--text-secondary)" />
           )}
-          {confirmingDelete ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirmingDelete(false);
-                onDelete(message.id, e);
-              }}
-              aria-label="Confirm Delete Email"
-              className="ui-btn ui-btn--danger ui-btn--sm message-row__confirm-btn"
-            >
-              Confirm?
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirmingDelete(true);
-              }}
-              aria-label="Delete Email"
-              className="icon-btn icon-btn--ghost-danger"
-            >
-              <FiTrash2 size={14} strokeWidth={1.6} />
-            </button>
+          {supportsDelete && onDelete && (
+            confirmingDelete ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmingDelete(false);
+                  onDelete(message.id, e);
+                }}
+                aria-label="Confirm Delete Email"
+                className="ui-btn ui-btn--danger ui-btn--sm message-row__confirm-btn"
+              >
+                Confirm?
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmingDelete(true);
+                }}
+                aria-label="Delete Email"
+                className="icon-btn icon-btn--ghost-danger"
+              >
+                <FiTrash2 size={14} strokeWidth={1.6} />
+              </button>
+            )
           )}
         </div>
       </div>

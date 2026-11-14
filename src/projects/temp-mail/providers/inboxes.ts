@@ -1,195 +1,169 @@
 import {
-  EmailAttachment,
+  clearAccountStorage,
+  readAccountStorage,
+  writeAccountStorage,
+} from '../storage';
+import {
   EmailDetail,
   EmailSummary,
   MailProviderAdapter,
+  ProviderCapabilities,
   TempAccount,
 } from '../types';
 import {
-  readProviderStorage,
-  StoredSimpleMailboxData,
-  writeProviderStorage,
-} from '../storage';
-import {
-  escapeHtml,
+  ProviderHttpError,
   fetchJson,
-  generateRandomToken,
+  generateRandomUsername,
   parseSender,
+  safeIsoDate,
+  sanitizeUsername,
   stripHtml,
+  wrapPlainTextAsHtml,
 } from './http';
 
-const INBOXES_PROXY_URL = '/api/inboxes';
+const INBOXES_CAPABILITIES: ProviderCapabilities = {
+  mode: 'stateless',
+  supportsDomainList: 'api',
+  supportsCustomUsername: true,
+  supportsDelete: false,
+  inlineMessageBody: false,
+  supportsAttachments: false,
+  protocol: 'rest',
+};
 
-const FALLBACK_DOMAINS = [
-  'getnada.com',
-  'blondmail.com',
-  'chapsmail.com',
-  'clowmail.com',
-  'dropjar.com',
-  'fivermail.com',
-  'getairmail.com',
-];
+const FALLBACK_INBOXES_DOMAINS = ['bltiwd.com', 'inboxes.com'];
 
-function inboxesUrl(path: string): string {
-  const safePath = path.startsWith('/') ? path : `/${path}`;
-  return `${INBOXES_PROXY_URL}?path=${encodeURIComponent(safePath)}`;
+const proxyUrl = (path: string) => `/api/inboxes?path=${encodeURIComponent(path)}`;
+
+interface InboxesDomainItem {
+  qdn?: string;
+  domain?: string;
 }
 
-interface InboxesDomainResponse {
-  domains?: Array<{ qdn?: string }>;
-}
-
-interface InboxesRawMessage {
-  uid: string;
+interface InboxesMessageRaw {
+  uid?: string;
+  id?: string;
   f?: string;
-  ff?: string;
+  from?: unknown;
+  ff?: string[];
   s?: string;
-  ph?: string;
+  subject?: string;
   cr?: string;
-  html?: string;
+  createdAt?: string;
+  rr?: string;
   text?: string;
-  at?: Array<{
-    id?: string;
-    name?: string;
-    filename?: string;
-    contentType?: string;
-    size?: number;
-    url?: string;
-  }>;
-}
-
-interface InboxesInboxResponse {
-  msgs?: InboxesRawMessage[];
-}
-
-async function getActiveAccount(): Promise<StoredSimpleMailboxData> {
-  const stored = await readProviderStorage<StoredSimpleMailboxData>('inboxes.com');
-  if (!stored?.email) {
-    throw new Error('No active Inboxes.com mailbox found.');
-  }
-  return stored;
+  html?: string;
+  cmd?: unknown;
+  to?: unknown;
 }
 
 export const inboxesAdapter: MailProviderAdapter = {
   id: 'inboxes.com',
+  capabilities: INBOXES_CAPABILITIES,
 
   async getDomains(): Promise<string[]> {
     try {
-      const data = await fetchJson<InboxesDomainResponse>(inboxesUrl('/domain'));
-      if (Array.isArray(data?.domains)) {
-        const list = data.domains
-          .map((item) => item.qdn)
-          .filter((d): d is string => Boolean(d));
-        if (list.length > 0) return list;
-      }
+      const res = await fetchJson<{ domains?: Array<InboxesDomainItem | string> } | Array<InboxesDomainItem | string>>(
+        proxyUrl('/domain')
+      );
+      const rawList = Array.isArray(res) ? res : res?.domains || [];
+      const parsed = rawList
+        .map((item) => (typeof item === 'string' ? item : item?.qdn || item?.domain || ''))
+        .filter((d) => Boolean(d && d.includes('.')));
+      if (parsed.length > 0) return parsed;
     } catch {
-      // Fallback below
+      // Fallback to default domain if API fails temporarily
     }
-    return FALLBACK_DOMAINS;
+    return FALLBACK_INBOXES_DOMAINS;
   },
 
   async getStoredAccount(): Promise<TempAccount | null> {
-    const stored = await readProviderStorage<StoredSimpleMailboxData>('inboxes.com');
-    if (!stored?.email) return null;
-    return {
-      provider: 'inboxes.com',
-      address: stored.email,
-      mailbox: stored.email.split('@')[0],
-    };
+    return readAccountStorage('inboxes.com');
   },
 
   async createAccount(username?: string, domain?: string): Promise<TempAccount> {
-    const cleanUser =
-      (username || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '') ||
-      generateRandomToken(10);
-    const chosenDomain =
-      domain || (await this.getDomains!())[0] || FALLBACK_DOMAINS[0];
-    const email = `${cleanUser}@${chosenDomain}`;
+    const cleanUser = username ? sanitizeUsername(username) : generateRandomUsername(10);
+    let targetDomain = (domain || '').trim();
+    if (!targetDomain) {
+      const domains = await this.getDomains!();
+      targetDomain = domains[0] || 'bltiwd.com';
+    }
 
-    await fetchJson<InboxesInboxResponse>(
-      inboxesUrl(`/inbox/${encodeURIComponent(email)}`)
-    );
-
-    const stored: StoredSimpleMailboxData = {
-      email,
-      domain: chosenDomain,
-    };
-    await writeProviderStorage('inboxes.com', stored);
-
-    return {
+    const account: TempAccount = {
       provider: 'inboxes.com',
-      address: email,
+      address: `${cleanUser}@${targetDomain}`,
+      emailUser: cleanUser,
       mailbox: cleanUser,
+      domain: targetDomain,
     };
+    await writeAccountStorage(account);
+    return account;
   },
 
   async fetchMessages(): Promise<EmailSummary[]> {
-    const stored = await getActiveAccount();
-    const res = await fetchJson<InboxesInboxResponse>(
-      inboxesUrl(`/inbox/${encodeURIComponent(stored.email)}`)
-    );
-    const list = Array.isArray(res?.msgs) ? res.msgs : [];
+    const account = await readAccountStorage('inboxes.com');
+    if (!account?.address) {
+      throw new ProviderHttpError('No active Inboxes.com address configured.', 401, 'unauthorized');
+    }
 
-    return list.map((msg) => {
-      const { fromName, fromAddress } = parseSender(msg.f);
-      const previewText = (msg.ph || '').replace(/\s+/g, ' ').trim();
+    const res = await fetchJson<{ msgs?: InboxesMessageRaw[] } | InboxesMessageRaw[]>(
+      proxyUrl(`/inbox/${encodeURIComponent(account.address)}`)
+    );
+    const msgs = Array.isArray(res) ? res : res?.msgs || [];
+
+    return msgs.map((msg) => {
+      const sender = parseSender(msg.f ?? msg.from ?? msg.ff);
       return {
-        id: msg.uid,
-        fromName,
-        fromAddress,
-        subject: msg.s || '(No subject)',
-        preview: previewText || '(No content)',
-        receivedAt: msg.cr || new Date().toISOString(),
-        hasAttachments: Array.isArray(msg.at) && msg.at.length > 0,
+        id: String(msg.uid || msg.id || ''),
+        fromName: sender.name,
+        fromAddress: sender.address,
+        subject: msg.s || msg.subject || '(No subject)',
+        preview: msg.text ? msg.text.slice(0, 120) : '',
+        receivedAt: safeIsoDate(msg.cr || msg.rr || msg.createdAt),
+        hasAttachments: false,
       };
     });
   },
 
   async fetchMessageDetail(id: string): Promise<EmailDetail> {
-    const stored = await getActiveAccount();
-    const msg = await fetchJson<InboxesRawMessage>(
-      inboxesUrl(`/message/${encodeURIComponent(id)}`)
+    const account = await readAccountStorage('inboxes.com');
+    const msg = await fetchJson<InboxesMessageRaw>(
+      proxyUrl(`/message/${encodeURIComponent(id)}`)
     );
-    if (!msg?.uid) {
-      throw new Error('Inboxes.com message not found.');
-    }
 
-    const { fromName, fromAddress } = parseSender(msg.ff || msg.f);
-    const plainBody = msg.text || (msg.html ? stripHtml(msg.html) : '');
-    const htmlBody =
-      msg.html ||
-      `<pre style="white-space:pre-wrap;color:inherit">${escapeHtml(plainBody)}</pre>`;
-
-    const attachments: EmailAttachment[] = Array.isArray(msg.at)
-      ? msg.at
-          .filter((att) => Boolean(att?.url))
-          .map((att, idx) => ({
-            id: att.id || `att-${idx}`,
-            filename: att.filename || att.name || 'attachment',
-            contentType: att.contentType || 'application/octet-stream',
-            size: att.size || 0,
-            downloadUrl: att.url || '',
-          }))
-      : [];
+    const sender = parseSender(msg.f ?? msg.from ?? msg.ff);
+    const htmlContent = msg.html || '';
+    const textContent = msg.text || (htmlContent ? stripHtml(htmlContent) : '');
+    const toList = Array.isArray(msg.to)
+      ? msg.to.map((item) => parseSender(item).address).filter(Boolean)
+      : account?.address
+        ? [account.address]
+        : [];
 
     return {
-      id: msg.uid,
-      fromName,
-      fromAddress,
-      toAddresses: [stored.email],
-      subject: msg.s || '(No subject)',
-      preview: (plainBody || '').slice(0, 120) || '(No content)',
-      receivedAt: msg.cr || new Date().toISOString(),
-      hasAttachments: attachments.length > 0,
-      text: plainBody || 'No content available',
-      html: htmlBody,
-      attachments,
+      id: String(msg.uid || msg.id || id),
+      fromName: sender.name,
+      fromAddress: sender.address,
+      subject: msg.s || msg.subject || '(No subject)',
+      preview: textContent.slice(0, 120),
+      receivedAt: safeIsoDate(msg.cr || msg.rr || msg.createdAt),
+      hasAttachments: false,
+      toAddresses: toList,
+      text: textContent || '(No content available)',
+      html: htmlContent || wrapPlainTextAsHtml(textContent),
+      attachments: [],
     };
   },
 
-  async deleteMessage(id: string): Promise<void> {
-    await fetchJson(inboxesUrl(`/message/${encodeURIComponent(id)}`), {
-      method: 'DELETE',
-    });
+  async deleteMessage(): Promise<void> {
+    throw new ProviderHttpError(
+      'Inboxes.com automatically deletes messages upon expiration.',
+      405,
+      'upstream'
+    );
+  },
+
+  async resetSession(): Promise<void> {
+    await clearAccountStorage('inboxes.com');
   },
 };

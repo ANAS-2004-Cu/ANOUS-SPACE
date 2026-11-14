@@ -20,29 +20,35 @@ export const DomainSelectModal: React.FC<DomainSelectModalProps> = ({
   return (
     <Modal open={visible} onClose={onClose} title="Select Domain">
       <div className="domain-modal-list">
-        {domains.map((item, index) => {
-          const isSelected = selectedDomain === item;
-          return (
-            <button
-              key={`${item}-${index}`}
-              type="button"
-              onClick={() => onSelect(item)}
-              className="cmd-item"
-              data-active={isSelected}
-            >
-              <span
-                className="mono"
-                style={{
-                  fontSize: 13,
-                  color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
-                }}
+        {domains.length === 0 ? (
+          <div className="ui-section-subtitle" style={{ padding: '14px 12px' }}>
+            No domains available right now.
+          </div>
+        ) : (
+          domains.map((item, index) => {
+            const isSelected = selectedDomain === item;
+            return (
+              <button
+                key={`${item}-${index}`}
+                type="button"
+                onClick={() => onSelect(item)}
+                className="cmd-item"
+                data-active={isSelected}
               >
-                @{item}
-              </span>
-              {isSelected && <FiCheck size={15} strokeWidth={1.6} color="var(--accent)" />}
-            </button>
-          );
-        })}
+                <span
+                  className="mono"
+                  style={{
+                    fontSize: 13,
+                    color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  }}
+                >
+                  @{item}
+                </span>
+                {isSelected && <FiCheck size={15} strokeWidth={1.6} color="var(--accent)" />}
+              </button>
+            );
+          })
+        )}
       </div>
     </Modal>
   );

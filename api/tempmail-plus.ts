@@ -1,9 +1,19 @@
-const TEMPMAIL_PLUS_UPSTREAM = 'https://tempmail.plus/api';
+declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
+
+const PROXY_USER_AGENT = 'Mozilla/5.0 (compatible; AnousSpace/1.0)';
+
+function sanitizePath(rawPath: string | null, fallback: string): string {
+  const path = rawPath || fallback;
+  if (path.startsWith('/') && !path.startsWith('//')) {
+    return path;
+  }
+  return `/${path.replace(/^\/+/, '')}`;
+}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -11,34 +21,39 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const urlObj = new URL(req.url || '', 'http://localhost');
-    const path = urlObj.searchParams.get('path') || '/mails';
-    const safePath = path.startsWith('/') && !path.startsWith('//') ? path : `/${path.replace(/^\/+/, '')}`;
-    const targetUrl = `${TEMPMAIL_PLUS_UPSTREAM}${safePath}`;
+    const reqUrl = new URL(req.url || '', 'http://localhost');
+    const targetPath = sanitizePath(reqUrl.searchParams.get('path'), '/mails/');
+    const targetUrl = `https://tempmail.plus/api${targetPath}`;
 
-    const upstreamResponse = await fetch(targetUrl, {
-      method: req.method || 'GET',
-      headers: {
-        Accept: req.headers?.accept || 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; AnousSpace/1.0)',
-      },
-    });
+    const method = (req.method || 'GET').toUpperCase();
+    const headers: Record<string, string> = {
+      Accept: req.headers?.accept || 'application/json, */*',
+      'User-Agent': PROXY_USER_AGENT,
+    };
 
-    const contentType =
-      upstreamResponse.headers.get('content-type') || 'application/json; charset=utf-8';
-    res.status(upstreamResponse.status);
+    const fetchOptions: RequestInit = { method, headers };
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+      headers['Content-Type'] = 'application/json';
+      fetchOptions.body =
+        typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
+    }
+
+    const upstream = await fetch(targetUrl, fetchOptions);
+    const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
     res.setHeader('Content-Type', contentType);
+    const disposition = upstream.headers.get('content-disposition');
+    if (disposition) {
+      res.setHeader('Content-Disposition', disposition);
+    }
 
-    if (upstreamResponse.status === 204) {
-      res.end();
+    if (upstream.status === 204) {
+      res.status(204).end();
       return;
     }
 
-    const bytes = new Uint8Array(await upstreamResponse.arrayBuffer());
-    res.send(bytes);
+    const bytes = new Uint8Array(await upstream.arrayBuffer());
+    res.status(upstream.status).send(typeof Buffer !== 'undefined' ? Buffer.from(bytes) : bytes);
   } catch {
-    res.status(502).json({
-      error: 'Failed to reach TempMail.Plus upstream API',
-    });
+    res.status(502).json({ error: 'Failed to reach TempMail.Plus upstream API' });
   }
 }

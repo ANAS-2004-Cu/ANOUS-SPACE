@@ -1,9 +1,11 @@
-const GUERRILLA_UPSTREAM = 'https://api.guerrillamail.com/ajax.php';
+declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
+
+const PROXY_USER_AGENT = 'Mozilla/5.0 (compatible; AnousSpace/1.0)';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -11,25 +13,25 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const queryIndex = req.url?.indexOf('?') ?? -1;
-    const queryString = queryIndex !== -1 ? req.url.slice(queryIndex) : '';
-    const targetUrl = `${GUERRILLA_UPSTREAM}${queryString}`;
+    const rawUrl = String(req.url || '');
+    const queryIndex = rawUrl.indexOf('?');
+    const queryString = queryIndex !== -1 ? rawUrl.slice(queryIndex) : '?f=get_email_address';
+    const targetUrl = `https://api.guerrillamail.com/ajax.php${queryString}`;
 
-    const upstreamResponse = await fetch(targetUrl, {
-      method: req.method || 'GET',
+    const upstream = await fetch(targetUrl, {
+      method: 'GET',
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; AnousSpace/1.0)',
+        'User-Agent': PROXY_USER_AGENT,
       },
     });
 
-    const text = await upstreamResponse.text();
-    res.status(upstreamResponse.status);
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.send(text);
+    const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+    res.setHeader('Content-Type', contentType);
+
+    const bytes = new Uint8Array(await upstream.arrayBuffer());
+    res.status(upstream.status).send(typeof Buffer !== 'undefined' ? Buffer.from(bytes) : bytes);
   } catch {
-    res.status(502).json({
-      error: 'Failed to reach GuerrillaMail upstream API',
-    });
+    res.status(502).json({ error: 'Failed to reach Guerrilla Mail upstream API' });
   }
 }

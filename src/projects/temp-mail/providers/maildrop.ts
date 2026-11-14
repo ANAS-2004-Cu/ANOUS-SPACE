@@ -1,191 +1,163 @@
 import {
+  clearAccountStorage,
+  readAccountStorage,
+  writeAccountStorage,
+} from '../storage';
+import {
   EmailDetail,
   EmailSummary,
   MailProviderAdapter,
+  ProviderCapabilities,
   TempAccount,
 } from '../types';
 import {
-  readProviderStorage,
-  StoredMaildropData,
-  writeProviderStorage,
-} from '../storage';
-import {
-  escapeHtml,
-  fetchJson,
-  generateRandomToken,
+  ProviderHttpError,
+  generateRandomUsername,
   parseSender,
+  postGraphQL,
+  safeIsoDate,
+  sanitizeUsername,
   stripHtml,
+  wrapPlainTextAsHtml,
 } from './http';
 
-const MAILDROP_PROXY_URL = '/api/maildrop';
-const MAILDROP_DIRECT_URL = 'https://api.maildrop.cc/graphql';
+const MAILDROP_CAPABILITIES: ProviderCapabilities = {
+  mode: 'stateless',
+  supportsDomainList: 'fixed',
+  fixedDomains: ['maildrop.cc'],
+  supportsCustomUsername: true,
+  supportsDelete: true,
+  inlineMessageBody: false,
+  supportsAttachments: false,
+  protocol: 'graphql',
+};
 
-interface GraphQLResponse<T> {
-  data?: T;
-}
-
-interface MaildropRawSummary {
+interface MaildropMessageSummaryRaw {
   id: string;
   headerfrom?: string;
   subject?: string;
   date?: string;
 }
 
-interface MaildropRawDetail extends MaildropRawSummary {
+interface MaildropMessageDetailRaw extends MaildropMessageSummaryRaw {
   data?: string;
   html?: string;
 }
 
-async function executeGraphQL<T>(
-  query: string,
-  variables: Record<string, unknown>
-): Promise<T | undefined> {
-  const body = JSON.stringify({ query, variables });
-  const headers = { 'Content-Type': 'application/json' };
-
-  try {
-    const proxyRes = await fetchJson<GraphQLResponse<T>>(MAILDROP_PROXY_URL, {
-      method: 'POST',
-      headers,
-      body,
-    });
-    if (proxyRes?.data) return proxyRes.data;
-  } catch {
-    // Fallback to direct CORS-enabled GraphQL endpoint
-  }
-
-  const directRes = await fetchJson<GraphQLResponse<T>>(MAILDROP_DIRECT_URL, {
-    method: 'POST',
-    headers,
-    body,
-  });
-  return directRes?.data;
-}
-
-async function getActiveMailbox(): Promise<StoredMaildropData> {
-  const stored = await readProviderStorage<StoredMaildropData>('maildrop.cc');
-  if (!stored?.mailbox) {
-    throw new Error('No active Maildrop.cc mailbox found.');
-  }
-  return stored;
+function resolveMailbox(account: TempAccount): string {
+  return account.mailbox || account.emailUser || account.address.split('@')[0] || '';
 }
 
 export const maildropAdapter: MailProviderAdapter = {
   id: 'maildrop.cc',
+  capabilities: MAILDROP_CAPABILITIES,
 
   async getStoredAccount(): Promise<TempAccount | null> {
-    const stored = await readProviderStorage<StoredMaildropData>('maildrop.cc');
-    if (!stored?.email) return null;
-    return {
-      provider: 'maildrop.cc',
-      address: stored.email,
-      mailbox: stored.mailbox,
-    };
+    return readAccountStorage('maildrop.cc');
   },
 
   async createAccount(username?: string): Promise<TempAccount> {
-    const cleanUser =
-      (username || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '') ||
-      generateRandomToken(10);
-    const email = `${cleanUser}@maildrop.cc`;
-
-    const stored: StoredMaildropData = {
-      email,
-      mailbox: cleanUser,
-    };
-    await writeProviderStorage('maildrop.cc', stored);
-
-    return {
+    const cleanUser = username ? sanitizeUsername(username) : generateRandomUsername(10);
+    const account: TempAccount = {
       provider: 'maildrop.cc',
-      address: email,
+      address: `${cleanUser}@maildrop.cc`,
       mailbox: cleanUser,
+      emailUser: cleanUser,
+      domain: 'maildrop.cc',
     };
+    await writeAccountStorage(account);
+    return account;
   },
 
   async fetchMessages(): Promise<EmailSummary[]> {
-    const stored = await getActiveMailbox();
-    const query = `
-      query GetInbox($mailbox: String!) {
-        inbox(mailbox: $mailbox) {
-          id
-          headerfrom
-          subject
-          date
-        }
-      }
-    `;
+    const account = await readAccountStorage('maildrop.cc');
+    if (!account?.address) {
+      throw new ProviderHttpError('No active Maildrop.cc mailbox configured.', 401, 'unauthorized');
+    }
 
-    const data = await executeGraphQL<{ inbox?: MaildropRawSummary[] }>(query, {
-      mailbox: stored.mailbox,
-    });
-    const list = Array.isArray(data?.inbox) ? data.inbox : [];
+    const mailbox = resolveMailbox(account);
+    let list: MaildropMessageSummaryRaw[] = [];
+    try {
+      const data = await postGraphQL<{ inbox?: MaildropMessageSummaryRaw[] }>(
+        '/api/maildrop',
+        'query ($mailbox: String!) { inbox(mailbox: $mailbox) { id headerfrom subject date } }',
+        { mailbox }
+      );
+      list = data?.inbox || [];
+    } catch {
+      const fallbackData = await postGraphQL<{ inbox?: MaildropMessageSummaryRaw[] }>(
+        '/api/maildrop',
+        `query { inbox(mailbox: ${JSON.stringify(mailbox)}) { id subject } }`
+      );
+      list = fallbackData?.inbox || [];
+    }
 
-    return list.map((item) => {
-      const { fromName, fromAddress } = parseSender(item.headerfrom);
+    return list.map((msg) => {
+      const sender = parseSender(msg.headerfrom);
       return {
-        id: item.id,
-        fromName,
-        fromAddress,
-        subject: item.subject || '(No subject)',
-        preview: `Received from ${fromName}`,
-        receivedAt: item.date || new Date().toISOString(),
+        id: String(msg.id),
+        fromName: sender.name,
+        fromAddress: sender.address,
+        subject: msg.subject || '(No subject)',
+        preview: '',
+        receivedAt: safeIsoDate(msg.date),
         hasAttachments: false,
       };
     });
   },
 
   async fetchMessageDetail(id: string): Promise<EmailDetail> {
-    const stored = await getActiveMailbox();
-    const query = `
-      query GetMessage($mailbox: String!, $id: String!) {
-        message(mailbox: $mailbox, id: $id) {
-          id
-          headerfrom
-          subject
-          date
-          data
-          html
-        }
-      }
-    `;
-
-    const data = await executeGraphQL<{ message?: MaildropRawDetail }>(query, {
-      mailbox: stored.mailbox,
-      id,
-    });
-    const msg = data?.message;
-    if (!msg) {
-      throw new Error('Maildrop.cc message not found.');
+    const account = await readAccountStorage('maildrop.cc');
+    if (!account?.address) {
+      throw new ProviderHttpError('No active Maildrop.cc mailbox configured.', 401, 'unauthorized');
     }
 
-    const { fromName, fromAddress } = parseSender(msg.headerfrom);
-    const plainBody = msg.data || (msg.html ? stripHtml(msg.html) : '');
-    const htmlBody =
-      msg.html ||
-      `<pre style="white-space:pre-wrap;color:inherit">${escapeHtml(msg.data || '')}</pre>`;
+    const mailbox = resolveMailbox(account);
+    const data = await postGraphQL<{ message?: MaildropMessageDetailRaw | null }>(
+      '/api/maildrop',
+      'query ($mailbox: String!, $id: String!) { message(mailbox: $mailbox, id: $id) { id headerfrom subject date data html } }',
+      { mailbox, id }
+    );
+
+    const msg = data?.message;
+    if (!msg) {
+      throw new ProviderHttpError('Message not found in Maildrop.cc inbox.', 404, 'upstream');
+    }
+
+    const sender = parseSender(msg.headerfrom);
+    const htmlContent = msg.html || '';
+    const textContent = msg.data || (htmlContent ? stripHtml(htmlContent) : '');
 
     return {
-      id: msg.id,
-      fromName,
-      fromAddress,
-      toAddresses: [stored.email],
+      id: String(msg.id || id),
+      fromName: sender.name,
+      fromAddress: sender.address,
       subject: msg.subject || '(No subject)',
-      preview: plainBody.slice(0, 120) || '(No content)',
-      receivedAt: msg.date || new Date().toISOString(),
+      preview: textContent.slice(0, 120),
+      receivedAt: safeIsoDate(msg.date),
       hasAttachments: false,
-      text: plainBody || 'No content available',
-      html: htmlBody,
+      toAddresses: [account.address],
+      text: textContent || '(No content available)',
+      html: htmlContent || wrapPlainTextAsHtml(textContent),
       attachments: [],
     };
   },
 
   async deleteMessage(id: string): Promise<void> {
-    const stored = await getActiveMailbox();
-    const query = `
-      mutation DeleteMessage($mailbox: String!, $id: String!) {
-        delete(mailbox: $mailbox, id: $id)
-      }
-    `;
-    await executeGraphQL(query, { mailbox: stored.mailbox, id });
+    const account = await readAccountStorage('maildrop.cc');
+    if (!account?.address) {
+      throw new ProviderHttpError('No active Maildrop.cc mailbox configured.', 401, 'unauthorized');
+    }
+
+    const mailbox = resolveMailbox(account);
+    await postGraphQL<{ delete?: boolean }>(
+      '/api/maildrop',
+      'mutation ($mailbox: String!, $id: String!) { delete(mailbox: $mailbox, id: $id) }',
+      { mailbox, id }
+    );
+  },
+
+  async resetSession(): Promise<void> {
+    await clearAccountStorage('maildrop.cc');
   },
 };

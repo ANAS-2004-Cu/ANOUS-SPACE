@@ -39,18 +39,19 @@ function createPathProxyMiddleware(
       const targetUrl = `${upstreamBase}${safePath}`;
 
       const headers: Record<string, string> = {
-        Accept: req.headers?.accept || 'application/json',
+        Accept: req.headers?.accept || 'application/json, */*',
         'User-Agent': PROXY_USER_AGENT,
       };
       if (forwardAuthorization && req.headers?.authorization) {
         headers['Authorization'] = String(req.headers.authorization);
       }
 
+      const method = (req.method || 'GET').toUpperCase();
       const fetchOptions: RequestInit = {
-        method: req.method || 'GET',
+        method,
         headers,
       };
-      if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+      if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
         headers['Content-Type'] = 'application/json';
         fetchOptions.body = body || '{}';
       }
@@ -60,6 +61,10 @@ function createPathProxyMiddleware(
         upstream.headers.get('content-type') || 'application/json; charset=utf-8';
       res.statusCode = upstream.status;
       res.setHeader('Content-Type', contentType);
+      const disposition = upstream.headers.get('content-disposition');
+      if (disposition) {
+        res.setHeader('Content-Disposition', disposition);
+      }
 
       if (upstream.status === 204) {
         res.end();
@@ -72,6 +77,86 @@ function createPathProxyMiddleware(
       res.statusCode = 502;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ error: `Failed to reach ${providerLabel} upstream API` }));
+    }
+  };
+}
+
+function createQueryProxyMiddleware(
+  upstreamUrl: string,
+  defaultQuery: string,
+  providerLabel: string
+) {
+  return async (req: any, res: any) => {
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 200;
+      res.end();
+      return;
+    }
+
+    try {
+      const rawUrl = String(req.url || '');
+      const queryIndex = rawUrl.indexOf('?');
+      const queryString = queryIndex !== -1 ? rawUrl.slice(queryIndex) : defaultQuery;
+      const targetUrl = `${upstreamUrl}${queryString}`;
+
+      const upstream = await fetch(targetUrl, {
+        method: req.method || 'GET',
+        headers: {
+          Accept: req.headers?.accept || 'application/json, */*',
+          'User-Agent': PROXY_USER_AGENT,
+        },
+      });
+
+      const contentType =
+        upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+      res.statusCode = upstream.status;
+      res.setHeader('Content-Type', contentType);
+      const disposition = upstream.headers.get('content-disposition');
+      if (disposition) {
+        res.setHeader('Content-Disposition', disposition);
+      }
+
+      const bytes = new Uint8Array(await upstream.arrayBuffer());
+      res.end(bytes);
+    } catch {
+      res.statusCode = 502;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: `Failed to reach ${providerLabel} upstream API` }));
+    }
+  };
+}
+
+function createGraphqlProxyMiddleware(endpoint: string, providerLabel: string) {
+  return async (req: any, res: any) => {
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 200;
+      res.end();
+      return;
+    }
+
+    const body = await readRequestBody(req);
+    try {
+      const upstream = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'User-Agent': PROXY_USER_AGENT,
+        },
+        body: body || '{}',
+      });
+
+      const contentType =
+        upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+      res.statusCode = upstream.status;
+      res.setHeader('Content-Type', contentType);
+
+      const bytes = new Uint8Array(await upstream.arrayBuffer());
+      res.end(bytes);
+    } catch {
+      res.statusCode = 502;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: `Failed to reach ${providerLabel} GraphQL API` }));
     }
   };
 }
@@ -139,7 +224,7 @@ export default defineConfig({
 
         server.middlewares.use(
           '/api/mailtm',
-          createPathProxyMiddleware('https://api.mail.tm', '/domains', 'Mail.TM', true)
+          createPathProxyMiddleware('https://api.mail.tm', '/domains', 'Mail.tm', true)
         );
 
         server.middlewares.use(
@@ -148,115 +233,52 @@ export default defineConfig({
         );
 
         server.middlewares.use(
+          '/api/catchmail',
+          createPathProxyMiddleware('https://api.catchmail.io/api/v1', '/mailbox', 'Catchmail.io')
+        );
+
+        server.middlewares.use(
+          '/api/onesecmail',
+          createQueryProxyMiddleware(
+            'https://www.1secmail.com/api/v1/',
+            '?action=getDomainList',
+            '1secmail'
+          )
+        );
+
+        server.middlewares.use(
           '/api/inboxes',
           createPathProxyMiddleware('https://inboxes.com/api/v2', '/domain', 'Inboxes.com')
         );
 
         server.middlewares.use(
-          '/api/tempmail-plus',
-          createPathProxyMiddleware('https://tempmail.plus/api', '/mails', 'TempMail.Plus')
+          '/api/tempmail-lol',
+          createPathProxyMiddleware('https://api.tempmail.lol', '/v3/inboxes', 'Tempmail.lol')
         );
 
-        server.middlewares.use('/api/tempmail-lol', async (req: any, res: any) => {
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 200;
-            res.end();
-            return;
-          }
+        server.middlewares.use(
+          '/api/tempmail-plus',
+          createPathProxyMiddleware('https://tempmail.plus/api', '/mails/', 'TempMail.Plus')
+        );
 
-          const body = await readRequestBody(req);
-          try {
-            const urlObj = new URL(req.url || '', 'http://localhost');
-            const rawEndpoint = urlObj.searchParams.get('endpoint') || '/v2/inbox';
-            const safeEndpoint =
-              rawEndpoint.startsWith('/') && !rawEndpoint.startsWith('//')
-                ? rawEndpoint
-                : `/${rawEndpoint.replace(/^\/+/, '')}`;
-            const token = urlObj.searchParams.get('token');
-            const targetUrl = token
-              ? `https://api.tempmail.lol${safeEndpoint}?token=${encodeURIComponent(token)}`
-              : `https://api.tempmail.lol${safeEndpoint}`;
+        server.middlewares.use(
+          '/api/dropmail',
+          createGraphqlProxyMiddleware('https://dropmail.me/api/graphql', 'DropMail.me')
+        );
 
-            const fetchOptions: RequestInit = {
-              method: req.method || 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                'User-Agent': PROXY_USER_AGENT,
-              },
-            };
-            if (req.method === 'POST') {
-              fetchOptions.body = body || '{}';
-            }
+        server.middlewares.use(
+          '/api/maildrop',
+          createGraphqlProxyMiddleware('https://api.maildrop.cc/graphql', 'Maildrop.cc')
+        );
 
-            const upstream = await fetch(targetUrl, fetchOptions);
-            const text = await upstream.text();
-            res.statusCode = upstream.status;
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            res.end(text);
-          } catch {
-            res.statusCode = 502;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({ error: 'Failed to reach TempMail.lol upstream API' }));
-          }
-        });
-
-        server.middlewares.use('/api/guerrilla', async (req: any, res: any) => {
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 200;
-            res.end();
-            return;
-          }
-          try {
-            const queryIndex = req.url?.indexOf('?') ?? -1;
-            const queryString = queryIndex !== -1 ? req.url.slice(queryIndex) : '';
-            const targetUrl = `https://api.guerrillamail.com/ajax.php${queryString}`;
-            const upstream = await fetch(targetUrl, {
-              method: req.method || 'GET',
-              headers: {
-                Accept: 'application/json',
-                'User-Agent': PROXY_USER_AGENT,
-              },
-            });
-            const text = await upstream.text();
-            res.statusCode = upstream.status;
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            res.end(text);
-          } catch {
-            res.statusCode = 502;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({ error: 'Failed to reach GuerrillaMail upstream API' }));
-          }
-        });
-
-        server.middlewares.use('/api/maildrop', async (req: any, res: any) => {
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 200;
-            res.end();
-            return;
-          }
-
-          const body = await readRequestBody(req);
-          try {
-            const upstream = await fetch('https://api.maildrop.cc/graphql', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                'User-Agent': PROXY_USER_AGENT,
-              },
-              body: body || '{}',
-            });
-            const text = await upstream.text();
-            res.statusCode = upstream.status;
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            res.end(text);
-          } catch {
-            res.statusCode = 502;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify({ error: 'Failed to reach Maildrop GraphQL API' }));
-          }
-        });
+        server.middlewares.use(
+          '/api/guerrilla',
+          createQueryProxyMiddleware(
+            'https://api.guerrillamail.com/ajax.php',
+            '?f=get_email_address',
+            'Guerrilla Mail'
+          )
+        );
       },
     },
   ],

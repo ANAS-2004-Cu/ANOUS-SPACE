@@ -13,12 +13,13 @@ import {
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { Surface } from '../../shared/ui/Surface';
 import { Button } from '../../shared/ui/Button';
+import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { useAlert } from '../../shared/context/AlertContext';
 import { useTheme } from '../../shared/context/ThemeContext';
 import * as Clipboard from '../../shared/utils/clipboard';
 import { EmailDetail, normalizeProviderId } from './types';
-import { PROVIDER_ADAPTERS } from './providers';
+import { PROVIDER_ADAPTERS, PROVIDERS_META } from './providers';
 
 export interface EmailDetailPageProps {
   onOpenCommandPalette: () => void;
@@ -30,6 +31,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
   const id = searchParams.get('id');
   const provider = normalizeProviderId(searchParams.get('provider'));
   const adapter = PROVIDER_ADAPTERS[provider];
+  const meta = PROVIDERS_META[provider];
 
   const { showToast } = useAlert();
   const { theme } = useTheme();
@@ -46,10 +48,14 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       setLoading(true);
       const detail = await adapter.fetchMessageDetail(id);
       setEmail(detail);
-    } catch {
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : 'Failed to load email details. Please try again.';
       showToast({
         title: 'Load Failed',
-        message: 'Failed to load email details. Please try again.',
+        message: msg,
         type: 'error',
       });
     } finally {
@@ -78,15 +84,11 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
   }, [confirmDelete]);
 
   const handleBack = () => {
-    if (provider === 'guerrillamail') {
-      navigate('/temp-mail/guerrilla-inbox');
-    } else {
-      navigate(`/temp-mail/inbox?provider=${encodeURIComponent(provider)}`);
-    }
+    navigate(`/temp-mail/inbox?provider=${encodeURIComponent(provider)}`);
   };
 
   const handleDeleteEmail = async () => {
-    if (!email) return;
+    if (!email || !adapter.capabilities.supportsDelete) return;
     if (!confirmDelete) {
       setConfirmDelete(true);
       return;
@@ -189,10 +191,15 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
         className="ui-row--between animate-enter"
         style={{ ['--stagger-index' as string]: 0 }}
       >
-        <Button variant="secondary" size="sm" onClick={handleBack}>
-          <FiArrowLeft size={13} />
-          <span>Back to Inbox</span>
-        </Button>
+        <div className="ui-row">
+          <Button variant="secondary" size="sm" onClick={handleBack}>
+            <FiArrowLeft size={13} />
+            <span>Back to Inbox</span>
+          </Button>
+          <Badge tone="slate" pill>
+            {meta.label}
+          </Badge>
+        </div>
 
         {email && (
           <div className="ui-row ui-row--wrap">
@@ -204,10 +211,12 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
               <FiCopy size={13} />
               <span>Copy Content</span>
             </Button>
-            <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
-              <FiTrash2 size={13} />
-              <span>{confirmDelete ? 'Confirm Delete?' : 'Delete'}</span>
-            </Button>
+            {adapter.capabilities.supportsDelete && (
+              <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
+                <FiTrash2 size={13} />
+                <span>{confirmDelete ? 'Confirm Delete?' : 'Delete'}</span>
+              </Button>
+            )}
           </div>
         )}
       </div>

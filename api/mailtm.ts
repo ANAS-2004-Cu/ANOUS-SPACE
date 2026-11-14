@@ -1,9 +1,19 @@
-const MAILTM_UPSTREAM = 'https://api.mail.tm';
+declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
+
+const PROXY_USER_AGENT = 'Mozilla/5.0 (compatible; AnousSpace/1.0)';
+
+function sanitizePath(rawPath: string | null, fallback: string): string {
+  const path = rawPath || fallback;
+  if (path.startsWith('/') && !path.startsWith('//')) {
+    return path;
+  }
+  return `/${path.replace(/^\/+/, '')}`;
+}
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -11,50 +21,45 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const urlObj = new URL(req.url || '', 'http://localhost');
-    const path = urlObj.searchParams.get('path') || '/domains';
-    const safePath = path.startsWith('/') && !path.startsWith('//') ? path : `/${path.replace(/^\/+/, '')}`;
-    const targetUrl = `${MAILTM_UPSTREAM}${safePath}`;
+    const reqUrl = new URL(req.url || '', 'http://localhost');
+    const targetPath = sanitizePath(reqUrl.searchParams.get('path'), '/domains');
+    const targetUrl = `https://api.mail.tm${targetPath}`;
 
     const headers: Record<string, string> = {
       Accept: req.headers?.accept || 'application/json',
-      'User-Agent': 'Mozilla/5.0 (compatible; AnousSpace/1.0)',
+      'User-Agent': PROXY_USER_AGENT,
     };
 
-    if (req.headers?.authorization) {
-      headers['Authorization'] = String(req.headers.authorization);
+    const authHeader = req.headers?.authorization || req.headers?.Authorization;
+    if (authHeader) {
+      headers['Authorization'] = String(authHeader);
     }
 
-    const fetchOptions: RequestInit = {
-      method: req.method || 'GET',
-      headers,
-    };
+    const method = (req.method || 'GET').toUpperCase();
+    const fetchOptions: RequestInit = { method, headers };
 
-    if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
       headers['Content-Type'] = 'application/json';
-      fetchOptions.body = req.body
-        ? typeof req.body === 'string'
-          ? req.body
-          : JSON.stringify(req.body)
-        : '{}';
+      fetchOptions.body =
+        typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
     }
 
-    const upstreamResponse = await fetch(targetUrl, fetchOptions);
-    const contentType =
-      upstreamResponse.headers.get('content-type') || 'application/json; charset=utf-8';
-    res.status(upstreamResponse.status);
+    const upstream = await fetch(targetUrl, fetchOptions);
+    const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
     res.setHeader('Content-Type', contentType);
+    const disposition = upstream.headers.get('content-disposition');
+    if (disposition) {
+      res.setHeader('Content-Disposition', disposition);
+    }
 
-    if (upstreamResponse.status === 204) {
-      res.end();
+    if (upstream.status === 204) {
+      res.status(204).end();
       return;
     }
 
-    const bytes = new Uint8Array(await upstreamResponse.arrayBuffer());
-    res.send(bytes);
+    const bytes = new Uint8Array(await upstream.arrayBuffer());
+    res.status(upstream.status).send(typeof Buffer !== 'undefined' ? Buffer.from(bytes) : bytes);
   } catch {
-    res.status(502).json({
-      error: 'Failed to reach Mail.TM upstream API',
-    });
+    res.status(502).json({ error: 'Failed to reach Mail.tm upstream API' });
   }
 }

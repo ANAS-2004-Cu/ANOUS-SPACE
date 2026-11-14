@@ -8,6 +8,14 @@ export interface ProviderSelectorProps {
   onSelect: (provider: MailProviderId) => void;
 }
 
+function getShortTag(providerId: MailProviderId): string {
+  const cap = PROVIDERS_META[providerId].capabilities;
+  if (cap.protocol === 'graphql') return 'GQL';
+  if (cap.mode === 'stateless') return 'DIRECT';
+  if (cap.mode === 'token') return 'TOKEN';
+  return 'SESS';
+}
+
 export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
   selectedProvider,
   existingAddresses,
@@ -35,13 +43,16 @@ export const ProviderSelector: React.FC<ProviderSelectorProps> = ({
               .filter(Boolean)
               .join(' ')}
           >
-            <span>{meta.label}</span>
-            {hasAccount && (
-              <span
-                className="live-dot live-dot--sm"
-                title="Active inbox ready"
-              />
-            )}
+            <span className="provider-tab__label">
+              {hasAccount && (
+                <span
+                  className="live-dot live-dot--sm"
+                  title="Active inbox ready"
+                />
+              )}
+              <span className="ui-truncate">{meta.label}</span>
+            </span>
+            <span className="provider-tab__tag">{getShortTag(providerId)}</span>
           </button>
         );
       })}

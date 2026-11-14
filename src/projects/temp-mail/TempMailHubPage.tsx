@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FiRefreshCw, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FiRefreshCw, FiChevronDown, FiChevronUp, FiZap } from 'react-icons/fi';
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { ToolBanner } from '../../shared/ui/ToolBanner';
 import { Surface } from '../../shared/ui/Surface';
@@ -10,14 +10,14 @@ import { Badge } from '../../shared/ui/Badge';
 import { useAlert } from '../../shared/context/AlertContext';
 import * as Clipboard from '../../shared/utils/clipboard';
 import { recordRecentProject } from '../../shared/utils/recentTools';
-import { MailProviderId } from './types';
+import { MailProviderId, normalizeProviderId } from './types';
 import {
-  GUERRILLA_DOMAINS,
   PROVIDER_ADAPTERS,
   PROVIDER_ORDER,
   PROVIDERS_META,
   TEMPMAIL_PLUS_DOMAINS,
   generateRandomUsername,
+  getCapabilityBadges,
 } from './providers';
 import { ProviderSelector } from './components/ProviderSelector';
 import { ActiveAddressCard } from './components/ActiveAddressCard';
@@ -29,15 +29,21 @@ export interface TempMailHubPageProps {
 
 export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandPalette }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useAlert();
 
-  const [selectedProvider, setSelectedProvider] = useState<MailProviderId>('mail.tm');
+  const initialProvider = searchParams.get('provider')
+    ? normalizeProviderId(searchParams.get('provider'))
+    : 'mail.tm';
+
+  const [selectedProvider, setSelectedProvider] = useState<MailProviderId>(initialProvider);
   const [username, setUsername] = useState(() => generateRandomUsername(10));
   const [domainsByProvider, setDomainsByProvider] = useState<
     Partial<Record<MailProviderId, string[]>>
   >({
-    guerrillamail: GUERRILLA_DOMAINS,
-    'tempmail.plus': TEMPMAIL_PLUS_DOMAINS,
+    'catchmail.io': ['catchmail.io'],
+    'maildrop.cc': ['maildrop.cc'],
+    'tempmail.plus': [...TEMPMAIL_PLUS_DOMAINS],
   });
   const domainsRef = useRef(domainsByProvider);
   domainsRef.current = domainsByProvider;
@@ -53,6 +59,11 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
   useEffect(() => {
     recordRecentProject('temp-mail');
   }, []);
+
+  const handleSelectProvider = (provider: MailProviderId) => {
+    setSelectedProvider(provider);
+    setSearchParams({ provider }, { replace: true });
+  };
 
   const loadExistingAccounts = useCallback(async () => {
     const entries = await Promise.all(
@@ -79,12 +90,18 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
         await loadExistingAccounts();
 
         const adapter = PROVIDER_ADAPTERS[selectedProvider];
-        if (adapter.getDomains) {
+        const caps = adapter.capabilities;
+
+        if (caps.supportsDomainList === 'api' && adapter.getDomains) {
           const cached = domainsRef.current[selectedProvider];
           const domainList = cached && cached.length > 0 ? cached : await adapter.getDomains();
           if (active && domainList.length > 0) {
             setDomainsByProvider((prev) => ({ ...prev, [selectedProvider]: domainList }));
             setSelectedDomain(domainList[0]);
+          }
+        } else if (caps.supportsDomainList === 'fixed' && caps.fixedDomains?.length) {
+          if (active) {
+            setSelectedDomain(caps.fixedDomains[0]);
           }
         }
 
@@ -95,7 +112,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
         if (active) {
           showToast({
             title: 'Provider Load Failed',
-            message: 'Failed to load provider options. Please try again.',
+            message: 'Failed to load provider domains. You can retry or pick another provider.',
             type: 'error',
           });
         }
@@ -127,21 +144,30 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     }
   };
 
-  const handleCreateEmail = async () => {
+  const openInboxFor = useCallback(
+    (provider: MailProviderId) => {
+      navigate(`/temp-mail/inbox?provider=${encodeURIComponent(provider)}`);
+    },
+    [navigate]
+  );
+
+  const handleCreateOrActivate = async () => {
     const meta = PROVIDERS_META[selectedProvider];
-    if (selectedProvider !== 'tempmail.lol' && !username.trim()) {
+    const caps = meta.capabilities;
+
+    if (caps.supportsCustomUsername && !username.trim()) {
       showToast({
         title: 'Username Required',
-        message: 'Please enter a username or generate one.',
+        message: 'Please enter a username or generate a random alias.',
         type: 'warning',
       });
       return;
     }
 
-    if (meta.supportsDomainSelect && !selectedDomain) {
+    if (caps.supportsDomainList === 'api' && !selectedDomain) {
       showToast({
         title: 'Domain Required',
-        message: 'Please select a domain before creating an address.',
+        message: 'Please select an available domain before creating an address.',
         type: 'warning',
       });
       return;
@@ -150,69 +176,87 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     setLoading(true);
     try {
       const adapter = PROVIDER_ADAPTERS[selectedProvider];
-      const account = await adapter.createAccount(username, selectedDomain || undefined);
+      const account = await adapter.createAccount(
+        caps.supportsCustomUsername ? username : undefined,
+        selectedDomain || undefined
+      );
       setExistingAddresses((prev) => ({
         ...prev,
         [selectedProvider]: account.address,
       }));
 
       showToast({
-        title: 'Address Created',
+        title: caps.mode === 'stateless' ? 'Inbox Activated' : 'Address Created',
         message: account.address,
         type: 'success',
         durationMs: 4500,
         action: {
-          label: 'Copy Email',
-          onClick: () => copyToClipboard(account.address),
+          label: 'Open Inbox',
+          onClick: () => openInboxFor(selectedProvider),
         },
       });
     } catch (err) {
       const message =
         err instanceof Error && err.message
           ? err.message
-          : `Failed to create ${meta.label} address. Please try again.`;
+          : `Failed to initialize ${meta.label} address. Please try again.`;
       showToast({
-        title: 'Creation Failed',
+        title: 'Setup Failed',
         message,
         type: 'error',
         durationMs: 4500,
-        action: {
-          label: 'New Username',
-          onClick: () => setUsername(generateRandomUsername(10)),
-        },
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenInbox = () => {
-    if (selectedProvider === 'guerrillamail') {
-      navigate('/temp-mail/guerrilla-inbox');
-    } else {
-      navigate(`/temp-mail/inbox?provider=${encodeURIComponent(selectedProvider)}`);
+  const handleClearActiveAccount = async () => {
+    const adapter = PROVIDER_ADAPTERS[selectedProvider];
+    if (adapter.resetSession) {
+      await adapter.resetSession();
     }
-  };
-
-  const getPreviewEmail = (): string => {
-    const cleanUser = username.trim() || 'random';
-    switch (selectedProvider) {
-      case 'mail.tm':
-      case 'mail.gw':
-      case 'guerrillamail':
-      case 'inboxes.com':
-      case 'tempmail.plus':
-        return selectedDomain ? `${cleanUser}@${selectedDomain}` : cleanUser;
-      case 'tempmail.lol':
-        return `${username.trim() || 'random'} (domain assigned automatically)`;
-      case 'maildrop.cc':
-        return `${cleanUser}@maildrop.cc`;
-    }
+    setExistingAddresses((prev) => ({ ...prev, [selectedProvider]: null }));
+    showToast({
+      title: 'Cleared',
+      message: `Cleared saved ${PROVIDERS_META[selectedProvider].label} address.`,
+      type: 'info',
+    });
   };
 
   const activeMeta = PROVIDERS_META[selectedProvider];
+  const caps = activeMeta.capabilities;
   const activeExistingEmail = existingAddresses[selectedProvider] || null;
   const activeDomains = domainsByProvider[selectedProvider] || [];
+  const capabilityBadges = getCapabilityBadges(selectedProvider);
+
+  const showDomainPickerModal =
+    caps.supportsDomainList === 'api' ||
+    (caps.supportsDomainList === 'fixed' && (caps.fixedDomains?.length || 0) > 1);
+
+  const singleFixedDomain =
+    caps.supportsDomainList === 'fixed' && caps.fixedDomains?.length === 1
+      ? caps.fixedDomains[0]
+      : null;
+
+  const getPreviewEmail = (): string => {
+    if (!caps.supportsCustomUsername) {
+      return 'Generated automatically on server';
+    }
+    const clean = username.trim() || 'random';
+    if (selectedProvider === 'catchmail.io' && clean.includes('@')) {
+      return clean;
+    }
+    const domain = selectedDomain || singleFixedDomain || '';
+    return domain ? `${clean}@${domain}` : clean;
+  };
+
+  const primaryActionLabel =
+    caps.mode === 'stateless'
+      ? `Activate ${activeMeta.label} Inbox`
+      : caps.supportsCustomUsername
+        ? `Create ${activeMeta.label} Address`
+        : `Generate ${activeMeta.label} Address`;
 
   return (
     <WorkspaceLayout
@@ -224,9 +268,9 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       <ToolBanner
         toolId="temp-mail"
         accent="slate"
-        eyebrow="Disposable Email · 7 Providers"
+        eyebrow={`Disposable Email · ${PROVIDER_ORDER.length} Providers`}
         title="Temp-Mail Client"
-        description="Create temporary email addresses across Mail.TM, Mail.gw, GuerrillaMail, and more."
+        description="Unified disposable email workspace across REST, Query, and GraphQL providers."
         actions={
           <Badge tone="slate" pill>
             {PROVIDER_ORDER.length} Providers
@@ -238,7 +282,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
         <ProviderSelector
           selectedProvider={selectedProvider}
           existingAddresses={existingAddresses}
-          onSelect={setSelectedProvider}
+          onSelect={handleSelectProvider}
         />
       </div>
 
@@ -247,7 +291,8 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
           address={activeExistingEmail}
           providerMeta={activeMeta}
           onCopy={copyToClipboard}
-          onOpenInbox={handleOpenInbox}
+          onOpenInbox={() => openInboxFor(selectedProvider)}
+          onResetSession={handleClearActiveAccount}
         />
       )}
 
@@ -258,103 +303,157 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
         style={{ ['--stagger-index' as string]: 3 }}
       >
         <div className="ui-stack ui-stack--lg">
-          <h2 className="ui-section-title">Create New {activeMeta.label} Address</h2>
-
-          <div className="ui-stack ui-stack--md">
-            <div className="ui-field">
-              <label htmlFor="tempmail-username" className="ui-field__label">
-                Username / Alias
-              </label>
-              <div className="ui-row">
-                <div className="ui-flex-1">
-                  <Input
-                    id="tempmail-username"
-                    type="text"
-                    mono
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder={
-                      selectedProvider === 'tempmail.lol'
-                        ? 'Optional prefix (or leave random)'
-                        : 'Username'
-                    }
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setUsername(generateRandomUsername(10))}
-                  aria-label="Generate Random Username"
-                  title="Generate Random Username"
-                >
-                  <FiRefreshCw size={14} />
-                </Button>
+          <div className="ui-stack ui-stack--xs">
+            <div className="ui-row--between">
+              <h2 className="ui-section-title">
+                {caps.mode === 'stateless' ? 'Activate' : 'Create'} {activeMeta.label} Address
+              </h2>
+              <div className="provider-cap-strip">
+                {capabilityBadges.map((badge) => (
+                  <Badge key={badge.label} tone={badge.tone} pill>
+                    {badge.label}
+                  </Badge>
+                ))}
               </div>
             </div>
+            <p className="ui-section-subtitle">{activeMeta.shortDescription}</p>
+          </div>
 
-            {activeMeta.supportsDomainSelect && (
-              <div className="ui-field">
-                <span className="ui-field__label">Select Domain</span>
-                <button
-                  type="button"
-                  onClick={() => setDomainModalOpen(!domainModalOpen)}
-                  className="ui-input ui-input--mono domain-select-trigger"
-                >
-                  <span>{selectedDomain ? `@${selectedDomain}` : 'Loading domains...'}</span>
-                  {domainModalOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
-                </button>
-
-                <DomainSelectModal
-                  visible={domainModalOpen}
-                  domains={activeDomains}
-                  selectedDomain={selectedDomain}
-                  onSelect={(domain) => {
-                    setSelectedDomain(domain);
-                    setDomainModalOpen(false);
-                  }}
-                  onClose={() => setDomainModalOpen(false)}
-                />
-              </div>
-            )}
-
-            {activeMeta.fixedDomain && (
-              <div className="ui-field">
-                <span className="ui-field__label">Domain</span>
-                <Surface
-                  as="div"
-                  variant="recessed"
-                  padded={false}
-                  className="mono fixed-domain-well"
-                >
-                  @{activeMeta.fixedDomain}
-                </Surface>
-              </div>
-            )}
-
+          {!caps.supportsCustomUsername ? (
             <Surface
               as="div"
               variant="recessed"
               padded={false}
-              className="address-preview-well"
+              className="provider-auto-notice"
             >
-              <span className="ui-meta-label">Address Preview</span>
-              <span className="mono address-preview-value">{getPreviewEmail()}</span>
+              <FiZap size={16} className="provider-auto-notice__icon" />
+              <div className="ui-stack ui-stack--xs">
+                <span>
+                  {activeMeta.label} allocates a randomized address and temporary domain
+                  automatically when creating a session.
+                </span>
+                {caps.inlineMessageBody && (
+                  <span className="ui-meta-label">
+                    Message bodies arrive inline during inbox sync and are cached locally for reading.
+                  </span>
+                )}
+              </div>
             </Surface>
-          </div>
+          ) : (
+            <div className="ui-stack ui-stack--md">
+              <div className="ui-field">
+                <label htmlFor="tempmail-username" className="ui-field__label">
+                  {selectedProvider === 'catchmail.io' ? 'Username or Custom Address' : 'Username / Alias'}
+                </label>
+                <div className="ui-row">
+                  <div className="ui-flex-1">
+                    <Input
+                      id="tempmail-username"
+                      type="text"
+                      mono
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder={
+                        selectedProvider === 'catchmail.io'
+                          ? 'alias or user@yourdomain.com'
+                          : 'Username'
+                      }
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setUsername(generateRandomUsername(10))}
+                    aria-label="Generate Random Username"
+                    title="Generate Random Username"
+                  >
+                    <FiRefreshCw size={14} />
+                  </Button>
+                </div>
+              </div>
 
-          <Button
-            type="button"
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-            disabled={loading || isInitializing}
-            onClick={handleCreateEmail}
-          >
-            Create {activeMeta.label} Address
-          </Button>
+              {showDomainPickerModal && (
+                <div className="ui-field">
+                  <span className="ui-field__label">Select Domain</span>
+                  <button
+                    type="button"
+                    onClick={() => setDomainModalOpen(!domainModalOpen)}
+                    className="ui-input ui-input--mono domain-select-trigger"
+                  >
+                    <span>{selectedDomain ? `@${selectedDomain}` : 'Loading domains...'}</span>
+                    {domainModalOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
+                  </button>
+
+                  <DomainSelectModal
+                    visible={domainModalOpen}
+                    domains={activeDomains}
+                    selectedDomain={selectedDomain}
+                    onSelect={(domain) => {
+                      setSelectedDomain(domain);
+                      setDomainModalOpen(false);
+                    }}
+                    onClose={() => setDomainModalOpen(false)}
+                  />
+                </div>
+              )}
+
+              {singleFixedDomain && (
+                <div className="ui-field">
+                  <div className="ui-field__header">
+                    <span className="ui-field__label">Domain</span>
+                    {selectedProvider === 'catchmail.io' && (
+                      <span className="ui-field__hint">Or type user@yourdomain.com above</span>
+                    )}
+                  </div>
+                  <Surface
+                    as="div"
+                    variant="recessed"
+                    padded={false}
+                    className="mono fixed-domain-well"
+                  >
+                    @{singleFixedDomain}
+                  </Surface>
+                </div>
+              )}
+
+              <Surface
+                as="div"
+                variant="recessed"
+                padded={false}
+                className="address-preview-well"
+              >
+                <span className="ui-meta-label">Address Preview</span>
+                <span className="mono address-preview-value">{getPreviewEmail()}</span>
+              </Surface>
+            </div>
+          )}
+
+          <div className="ui-row ui-row--wrap">
+            <Button
+              type="button"
+              variant="primary"
+              size="lg"
+              className="ui-flex-1"
+              loading={loading}
+              disabled={loading || isInitializing}
+              onClick={handleCreateOrActivate}
+            >
+              {primaryActionLabel}
+            </Button>
+
+            {activeExistingEmail && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                onClick={() => openInboxFor(selectedProvider)}
+              >
+                Open Active Inbox
+              </Button>
+            )}
+          </div>
         </div>
       </Surface>
     </WorkspaceLayout>
