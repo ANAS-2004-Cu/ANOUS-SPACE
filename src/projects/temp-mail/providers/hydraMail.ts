@@ -68,7 +68,10 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
     try {
       const tokenRes = await fetchJson<{ token?: string; id?: string }>(proxyUrl('/token'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
         body: JSON.stringify({ address: account.address, password: account.password }),
       });
       if (!tokenRes.token) return null;
@@ -107,7 +110,9 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
     capabilities: config.capabilities,
 
     async getDomains(): Promise<string[]> {
-      const data = await fetchJson<HydraDomainsResponse | HydraDomainItem[]>(proxyUrl('/domains'));
+      const data = await fetchJson<HydraDomainsResponse | HydraDomainItem[]>(proxyUrl('/domains'), {
+        headers: { Accept: 'application/json' },
+      });
       const list = Array.isArray(data) ? data : data?.['hydra:member'] || [];
       return list
         .filter((d) => d && typeof d.domain === 'string' && d.isActive !== false)
@@ -134,13 +139,19 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
 
       const created = await fetchJson<{ id?: string; address?: string }>(proxyUrl('/accounts'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
         body: JSON.stringify({ address, password }),
       });
 
       const tokenRes = await fetchJson<{ token?: string; id?: string }>(proxyUrl('/token'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
         body: JSON.stringify({ address, password }),
       });
 
@@ -166,7 +177,10 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
         const res = await fetchJson<{ 'hydra:member'?: HydraMessageRaw[] } | HydraMessageRaw[]>(
           proxyUrl('/messages'),
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -191,7 +205,10 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
         const msg = await fetchJson<HydraMessageRaw>(
           proxyUrl(`/messages/${encodeURIComponent(id)}`),
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 

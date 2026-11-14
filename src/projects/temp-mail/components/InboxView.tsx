@@ -20,6 +20,9 @@ export interface InboxViewProps {
   capabilityBadges?: Array<{ label: string; tone: BadgeTone }>;
   supportsDelete: boolean;
   address: string | null;
+  hasScrambledAlias?: boolean;
+  scrambledEnabled?: boolean;
+  onToggleScrambled?: (next: boolean) => void;
   emails: EmailSummary[];
   loading: boolean;
   refreshing: boolean;
@@ -42,6 +45,9 @@ export const InboxView: React.FC<InboxViewProps> = ({
   capabilityBadges = [],
   supportsDelete,
   address,
+  hasScrambledAlias = false,
+  scrambledEnabled = false,
+  onToggleScrambled,
   emails,
   loading,
   refreshing,
@@ -143,15 +149,32 @@ export const InboxView: React.FC<InboxViewProps> = ({
               <span className="mono inbox-address-text ui-truncate">{address}</span>
             </div>
 
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => onCopyAddress(address)}
-              title="Copy Email Address"
-            >
-              <FiCopy size={13} />
-              <span>Copy</span>
-            </Button>
+            <div className="ui-row ui-row--wrap">
+              {hasScrambledAlias && onToggleScrambled && (
+                <label
+                  className="scrambled-toggle"
+                  data-enabled={scrambledEnabled}
+                  title="Display and copy the scrambled alias while keeping the same inbox session"
+                >
+                  <input
+                    type="checkbox"
+                    checked={scrambledEnabled}
+                    onChange={(e) => onToggleScrambled(e.target.checked)}
+                  />
+                  <span>Scrambled Address</span>
+                </label>
+              )}
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onCopyAddress(address)}
+                title="Copy Email Address"
+              >
+                <FiCopy size={13} />
+                <span>Copy</span>
+              </Button>
+            </div>
           </Surface>
         )}
       </Surface>

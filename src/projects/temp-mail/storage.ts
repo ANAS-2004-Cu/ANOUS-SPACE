@@ -10,7 +10,6 @@ export const TEMPMAIL_STORAGE_KEYS: Record<MailProviderId, string> = {
   'tempmail.lol': 'anous_tempmail_tempmail_lol',
   'tempmail.plus': 'anous_tempmail_tempmail_plus',
   'dropmail.me': 'anous_tempmail_dropmail',
-  'maildrop.cc': 'anous_tempmail_maildrop',
   guerrillamail: 'anous_tempmail_guerrilla',
 };
 
@@ -18,12 +17,31 @@ const LEGACY_KEYS: Partial<Record<MailProviderId, string[]>> = {
   'mail.tm': ['mailtm_data'],
   guerrillamail: ['guerrilla_data'],
   'tempmail.lol': ['tempmail_lol_data'],
-  'maildrop.cc': ['maildrop_data'],
 };
+
+const REMOVED_PROVIDER_KEYS = [
+  'anous_tempmail_maildrop',
+  'maildrop_data',
+  'anous_tempmail_msgcache_maildrop.cc',
+];
+
+let cleanedRemovedKeys = false;
+function cleanupRemovedProviders(): void {
+  if (cleanedRemovedKeys || typeof window === 'undefined') return;
+  cleanedRemovedKeys = true;
+  for (const key of REMOVED_PROVIDER_KEYS) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // Ignore storage errors
+    }
+  }
+}
 
 const MESSAGE_CACHE_PREFIX = 'anous_tempmail_msgcache_';
 
 export async function readAccountStorage(provider: MailProviderId): Promise<TempAccount | null> {
+  cleanupRemovedProviders();
   const canonicalKey = TEMPMAIL_STORAGE_KEYS[provider];
   try {
     const raw = await SecureStore.getItemAsync(canonicalKey);
@@ -64,6 +82,8 @@ function normalizeStoredAccount(
   return {
     provider,
     address,
+    alias: typeof raw.alias === 'string' && raw.alias.trim() ? raw.alias.trim() : undefined,
+    useScrambled: typeof raw.useScrambled === 'boolean' ? raw.useScrambled : undefined,
     token:
       typeof raw.token === 'string'
         ? raw.token

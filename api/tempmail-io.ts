@@ -4,7 +4,7 @@ const PROXY_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
 function sanitizePath(rawPath: string | null, fallback: string): string {
-  const path = rawPath || fallback;
+  const path = (rawPath || fallback).replace(/%40/gi, '@');
   if (path.startsWith('/') && !path.startsWith('//')) {
     return path;
   }
@@ -28,10 +28,12 @@ export default async function handler(req: any, res: any) {
 
     const method = (req.method || 'GET').toUpperCase();
     const headers: Record<string, string> = {
-      Accept: req.headers?.accept || 'application/json, */*',
+      Accept: 'application/json',
       'User-Agent': PROXY_USER_AGENT,
       Origin: 'https://temp-mail.io',
       Referer: 'https://temp-mail.io/',
+      'Application-Name': 'webmail',
+      'Application-Version': '4.0.0',
     };
 
     const fetchOptions: RequestInit = { method, headers };

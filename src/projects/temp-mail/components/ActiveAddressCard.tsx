@@ -9,6 +9,9 @@ import { getCapabilityBadges } from '../providers';
 export interface ActiveAddressCardProps {
   address: string;
   providerMeta: ProviderMeta;
+  hasScrambledAlias?: boolean;
+  scrambledEnabled?: boolean;
+  onToggleScrambled?: (next: boolean) => void;
   onCopy: (address: string) => void;
   onOpenInbox: () => void;
   onResetSession?: () => void;
@@ -17,6 +20,9 @@ export interface ActiveAddressCardProps {
 export const ActiveAddressCard: React.FC<ActiveAddressCardProps> = ({
   address,
   providerMeta,
+  hasScrambledAlias = false,
+  scrambledEnabled = false,
+  onToggleScrambled,
   onCopy,
   onOpenInbox,
   onResetSession,
@@ -38,6 +44,20 @@ export const ActiveAddressCard: React.FC<ActiveAddressCardProps> = ({
             <span className="ui-section-title">Active {providerMeta.label} Inbox</span>
           </div>
           <div className="provider-cap-strip">
+            {hasScrambledAlias && onToggleScrambled && (
+              <label
+                className="scrambled-toggle"
+                data-enabled={scrambledEnabled}
+                title="Display and copy the scrambled alias while keeping the same inbox session"
+              >
+                <input
+                  type="checkbox"
+                  checked={scrambledEnabled}
+                  onChange={(e) => onToggleScrambled(e.target.checked)}
+                />
+                <span>Scrambled Address</span>
+              </label>
+            )}
             {badges.slice(0, 3).map((b) => (
               <Badge key={b.label} tone={b.tone} pill>
                 {b.label}

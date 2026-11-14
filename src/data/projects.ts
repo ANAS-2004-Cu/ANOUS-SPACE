@@ -31,11 +31,11 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     id: 'temp-mail',
     title: 'Temp-Mail Client',
     description:
-      'Disposable email client across 10 live providers: Mail.tm, GrabMail, Catchmail.io, Temp-Mail.io, Inboxes.com, Tempmail.lol, TempMail.Plus, DropMail.me, Maildrop.cc, and Guerrilla Mail.',
+      'Disposable email client across 9 live providers: Mail.tm, GrabMail, Catchmail.io, Temp-Mail.io, Inboxes.com, Tempmail.lol, TempMail.Plus, DropMail.me, and Guerrilla Mail.',
     category: 'Tools',
     type: 'internal',
     to: '/temp-mail',
-    badge: 'Email · 10 APIs',
+    badge: 'Email · 9 APIs',
     featured: false,
     keywords: [
       'email',
@@ -50,7 +50,6 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
       'tempmail.lol',
       'tempmail.plus',
       'dropmail',
-      'maildrop',
       'guerrilla',
     ],
   },

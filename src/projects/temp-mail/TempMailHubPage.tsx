@@ -10,8 +10,9 @@ import { Badge } from '../../shared/ui/Badge';
 import { useAlert } from '../../shared/context/AlertContext';
 import * as Clipboard from '../../shared/utils/clipboard';
 import { recordRecentProject } from '../../shared/utils/recentTools';
-import { MailProviderId, normalizeProviderId } from './types';
+import { MailProviderId, TempAccount, normalizeProviderId } from './types';
 import {
+  CATCHMAIL_DOMAINS,
   GUERRILLA_DOMAINS,
   PROVIDER_ADAPTERS,
   PROVIDER_ORDER,
@@ -19,7 +20,9 @@ import {
   TEMPMAIL_PLUS_DOMAINS,
   generateRandomUsername,
   getCapabilityBadges,
+  resolveGuerrillaDisplayAddress,
 } from './providers';
+import { writeAccountStorage } from './storage';
 import { ProviderSelector } from './components/ProviderSelector';
 import { ActiveAddressCard } from './components/ActiveAddressCard';
 import { DomainSelectModal } from './components/DomainSelectModal';
@@ -39,11 +42,11 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
 
   const [selectedProvider, setSelectedProvider] = useState<MailProviderId>(initialProvider);
   const [username, setUsername] = useState(() => generateRandomUsername(10));
+  const [preferScrambled, setPreferScrambled] = useState(false);
   const [domainsByProvider, setDomainsByProvider] = useState<
     Partial<Record<MailProviderId, string[]>>
   >({
-    'catchmail.io': ['catchmail.io'],
-    'maildrop.cc': ['maildrop.cc'],
+    'catchmail.io': [...CATCHMAIL_DOMAINS],
     'tempmail.plus': [...TEMPMAIL_PLUS_DOMAINS],
     guerrillamail: [...GUERRILLA_DOMAINS],
   });
@@ -52,8 +55,8 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
 
   const [selectedDomain, setSelectedDomain] = useState<string>('');
   const [domainModalOpen, setDomainModalOpen] = useState(false);
-  const [existingAddresses, setExistingAddresses] = useState<
-    Partial<Record<MailProviderId, string | null>>
+  const [existingAccounts, setExistingAccounts] = useState<
+    Partial<Record<MailProviderId, TempAccount | null>>
   >({});
   const [isInitializing, setIsInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -72,13 +75,13 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       PROVIDER_ORDER.map(async (id) => {
         try {
           const account = await PROVIDER_ADAPTERS[id].getStoredAccount();
-          return [id, account?.address || null] as const;
+          return [id, account] as const;
         } catch {
           return [id, null] as const;
         }
       })
     );
-    setExistingAddresses(Object.fromEntries(entries));
+    setExistingAccounts(Object.fromEntries(entries));
   }, []);
 
   useEffect(() => {
@@ -157,6 +160,17 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     [navigate]
   );
 
+  const handleToggleActiveScrambled = async (next: boolean) => {
+    const current = existingAccounts[selectedProvider];
+    if (!current || selectedProvider !== 'guerrillamail') return;
+    const updated: TempAccount = { ...current, useScrambled: next };
+    await writeAccountStorage(updated);
+    setExistingAccounts((prev) => ({
+      ...prev,
+      [selectedProvider]: updated,
+    }));
+  };
+
   const handleCreateOrActivate = async () => {
     const meta = PROVIDERS_META[selectedProvider];
     const caps = meta.capabilities;
@@ -182,18 +196,26 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     setLoading(true);
     try {
       const adapter = PROVIDER_ADAPTERS[selectedProvider];
-      const account = await adapter.createAccount(
+      let account = await adapter.createAccount(
         caps.supportsCustomUsername ? username : undefined,
         selectedDomain || undefined
       );
-      setExistingAddresses((prev) => ({
+
+      if (selectedProvider === 'guerrillamail' && preferScrambled && account.alias) {
+        account = { ...account, useScrambled: true };
+        await writeAccountStorage(account);
+      }
+
+      setExistingAccounts((prev) => ({
         ...prev,
-        [selectedProvider]: account.address,
+        [selectedProvider]: account,
       }));
+
+      const displayAddr = resolveGuerrillaDisplayAddress(account);
 
       showToast({
         title: caps.mode === 'stateless' ? 'Inbox Activated' : 'Address Created',
-        message: account.address,
+        message: displayAddr,
         type: 'success',
         durationMs: 4500,
         action: {
@@ -222,7 +244,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     if (adapter.resetSession) {
       await adapter.resetSession();
     }
-    setExistingAddresses((prev) => ({ ...prev, [selectedProvider]: null }));
+    setExistingAccounts((prev) => ({ ...prev, [selectedProvider]: null }));
     showToast({
       title: 'Cleared',
       message: `Cleared saved ${PROVIDERS_META[selectedProvider].label} address.`,
@@ -232,7 +254,15 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
 
   const activeMeta = PROVIDERS_META[selectedProvider];
   const caps = activeMeta.capabilities;
-  const activeExistingEmail = existingAddresses[selectedProvider] || null;
+  const activeAccount = existingAccounts[selectedProvider] || null;
+  const activeDisplayAddress = activeAccount ? resolveGuerrillaDisplayAddress(activeAccount) : null;
+  const existingAddressMap: Partial<Record<MailProviderId, string | null>> = Object.fromEntries(
+    PROVIDER_ORDER.map((id) => {
+      const acc = existingAccounts[id];
+      return [id, acc ? resolveGuerrillaDisplayAddress(acc) : null];
+    })
+  );
+
   const activeDomains = domainsByProvider[selectedProvider] || [];
   const capabilityBadges = getCapabilityBadges(selectedProvider);
 
@@ -264,8 +294,15 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       return `<auto-prefix>@${activeDomainDisplay || 'loading...'}`;
     }
 
+    if (selectedProvider === 'guerrillamail' && preferScrambled) {
+      return `<scrambled-alias>@${activeDomainDisplay || GUERRILLA_DOMAINS[0]}`;
+    }
+
     const raw = username.trim() || 'random';
-    const cleanPrefix = selectedProvider === 'catchmail.io' && raw.includes('@') ? raw.split('@')[0] || 'random' : raw;
+    const cleanPrefix =
+      selectedProvider === 'catchmail.io' && raw.includes('@')
+        ? raw.split('@')[0] || 'random'
+        : raw;
     return activeDomainDisplay ? `${cleanPrefix}@${activeDomainDisplay}` : cleanPrefix;
   };
 
@@ -299,15 +336,18 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       <div className="animate-enter" style={{ ['--stagger-index' as string]: 1 }}>
         <ProviderSelector
           selectedProvider={selectedProvider}
-          existingAddresses={existingAddresses}
+          existingAddresses={existingAddressMap}
           onSelect={handleSelectProvider}
         />
       </div>
 
-      {activeExistingEmail && (
+      {activeAccount && activeDisplayAddress && (
         <ActiveAddressCard
-          address={activeExistingEmail}
+          address={activeDisplayAddress}
           providerMeta={activeMeta}
+          hasScrambledAlias={Boolean(selectedProvider === 'guerrillamail' && activeAccount.alias)}
+          scrambledEnabled={Boolean(activeAccount.useScrambled)}
+          onToggleScrambled={handleToggleActiveScrambled}
           onCopy={copyToClipboard}
           onOpenInbox={() => openInboxFor(selectedProvider)}
           onResetSession={handleClearActiveAccount}
@@ -443,6 +483,26 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
               )}
             </div>
 
+            {selectedProvider === 'guerrillamail' && (
+              <div className="ui-row--between">
+                <label
+                  className="scrambled-toggle"
+                  data-enabled={preferScrambled}
+                  title="Display Guerrilla Mail's scrambled alias instead of the readable username"
+                >
+                  <input
+                    type="checkbox"
+                    checked={preferScrambled}
+                    onChange={(e) => setPreferScrambled(e.target.checked)}
+                  />
+                  <span>Scrambled Address</span>
+                </label>
+                <span className="ui-meta-label">
+                  Routes to the same inbox session via your scrambled Guerrilla alias
+                </span>
+              </div>
+            )}
+
             {!caps.supportsCustomUsername && (
               <Surface
                 as="div"
@@ -490,7 +550,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
               {primaryActionLabel}
             </Button>
 
-            {activeExistingEmail && (
+            {activeAccount && (
               <Button
                 type="button"
                 variant="secondary"

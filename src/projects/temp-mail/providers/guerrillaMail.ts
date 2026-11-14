@@ -24,16 +24,26 @@ import {
 } from './http';
 
 export const GUERRILLA_DOMAINS = [
-  'guerrillamailblock.com',
+  'sharklasers.com',
+  'guerrillamail.info',
+  'grr.la',
+  'guerrillamail.biz',
   'guerrillamail.com',
+  'guerrillamail.de',
   'guerrillamail.net',
   'guerrillamail.org',
-  'guerrillamail.biz',
-  'sharklasers.com',
-  'grr.la',
+  'guerrillamailblock.com',
   'pokemail.net',
   'spam4.me',
 ] as const;
+
+export function resolveGuerrillaDisplayAddress(account: TempAccount): string {
+  const domain = account.domain || GUERRILLA_DOMAINS[0];
+  if (account.provider === 'guerrillamail' && account.useScrambled && account.alias) {
+    return `${account.alias}@${domain}`;
+  }
+  return account.address;
+}
 
 const GUERRILLA_CAPABILITIES: ProviderCapabilities = {
   mode: 'session',
@@ -50,6 +60,7 @@ interface GuerrillaSessionResponse {
   email_addr?: string;
   sid_token?: string;
   email_user?: string;
+  alias?: string;
   alias_error?: string;
 }
 
@@ -74,6 +85,12 @@ function summaryFromRaw(msg: GuerrillaMailRaw): EmailSummary {
     receivedAt: safeIsoDate(msg.mail_timestamp ?? msg.mail_date),
     hasAttachments: false,
   };
+}
+
+function extractLocalPart(raw: unknown): string {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  return value.includes('@') ? value.split('@')[0].trim() : value;
 }
 
 export const guerrillaMailAdapter: MailProviderAdapter = {
@@ -111,12 +128,15 @@ export const guerrillaMailAdapter: MailProviderAdapter = {
     sidToken = String(updated?.sid_token || sidToken).trim();
     const returnedLocalPart = updated?.email_addr ? updated.email_addr.split('@')[0] : '';
     const resolvedUser = String(returnedLocalPart || updated?.email_user || cleanUser).trim();
+    const resolvedAlias = extractLocalPart(updated?.alias) || extractLocalPart(initial?.alias);
     const targetDomain = (domain || '').trim() || GUERRILLA_DOMAINS[0];
     const address = `${resolvedUser}@${targetDomain}`;
 
     const account: TempAccount = {
       provider: 'guerrillamail',
       address,
+      alias: resolvedAlias || undefined,
+      useScrambled: false,
       token: sidToken,
       emailUser: resolvedUser,
       domain: targetDomain,

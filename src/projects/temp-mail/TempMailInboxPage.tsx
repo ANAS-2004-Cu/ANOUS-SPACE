@@ -3,8 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { useAlert } from '../../shared/context/AlertContext';
 import * as Clipboard from '../../shared/utils/clipboard';
-import { EmailSummary, normalizeProviderId } from './types';
-import { PROVIDER_ADAPTERS, PROVIDERS_META, getCapabilityBadges } from './providers';
+import { EmailSummary, TempAccount, normalizeProviderId } from './types';
+import {
+  PROVIDER_ADAPTERS,
+  PROVIDERS_META,
+  getCapabilityBadges,
+  resolveGuerrillaDisplayAddress,
+} from './providers';
+import { writeAccountStorage } from './storage';
 import { InboxView } from './components/InboxView';
 
 export interface TempMailInboxPageProps {
@@ -29,7 +35,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [sessionError, setSessionError] = useState(false);
   const [emails, setEmails] = useState<EmailSummary[]>([]);
-  const [address, setAddress] = useState<string | null>(null);
+  const [account, setAccount] = useState<TempAccount | null>(null);
 
   const isSyncingRef = useRef(false);
 
@@ -83,7 +89,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
           if (!adapter.capabilities.supportsCustomUsername) {
             const created = await adapter.createAccount();
             if (!mounted) return;
-            setAddress(created.address);
+            setAccount(created);
             await syncMessages(true);
             return;
           }
@@ -99,7 +105,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
           return;
         }
 
-        setAddress(stored.address);
+        setAccount(stored);
         await syncMessages(false);
       } catch {
         if (!mounted) return;
@@ -120,12 +126,21 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
   }, [activeProvider, adapter, meta.label, navigate, showToast, syncMessages]);
 
   useEffect(() => {
-    if (!autoRefresh || !address || sessionError) return;
+    if (!autoRefresh || !account?.address || sessionError) return;
     const timer = window.setInterval(() => {
       void syncMessages(true);
     }, AUTO_REFRESH_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [autoRefresh, address, sessionError, syncMessages]);
+  }, [autoRefresh, account?.address, sessionError, syncMessages]);
+
+  const displayedAddress = account ? resolveGuerrillaDisplayAddress(account) : null;
+
+  const handleToggleScrambled = async (next: boolean) => {
+    if (!account || activeProvider !== 'guerrillamail') return;
+    const updated: TempAccount = { ...account, useScrambled: next };
+    setAccount(updated);
+    await writeAccountStorage(updated);
+  };
 
   const handleCopyAddress = async (target: string) => {
     try {
@@ -157,7 +172,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
     setCreatingNew(true);
     try {
       const fresh = await adapter.createAccount();
-      setAddress(fresh.address);
+      setAccount(fresh);
       setEmails([]);
       setSessionError(false);
       showToast({
@@ -232,7 +247,10 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
         providerLabel={meta.label}
         capabilityBadges={capabilityBadges}
         supportsDelete={adapter.capabilities.supportsDelete}
-        address={address}
+        address={displayedAddress}
+        hasScrambledAlias={Boolean(activeProvider === 'guerrillamail' && account?.alias)}
+        scrambledEnabled={Boolean(account?.useScrambled)}
+        onToggleScrambled={handleToggleScrambled}
         emails={emails}
         loading={loading}
         refreshing={refreshing}

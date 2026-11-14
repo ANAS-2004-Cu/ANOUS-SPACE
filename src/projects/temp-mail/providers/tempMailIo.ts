@@ -105,6 +105,12 @@ function mapIoDetail(raw: TempMailIoMessageRaw, fallbackTo: string, idx: number)
   };
 }
 
+function encodeEmailForPath(email: string): string {
+  const atIdx = email.indexOf('@');
+  if (atIdx === -1) return encodeURIComponent(email);
+  return `${encodeURIComponent(email.slice(0, atIdx))}@${encodeURIComponent(email.slice(atIdx + 1))}`;
+}
+
 export const tempMailIoAdapter: MailProviderAdapter = {
   id: 'temp-mail.io',
   capabilities: TEMPMAIL_IO_CAPABILITIES,
@@ -179,7 +185,7 @@ export const tempMailIoAdapter: MailProviderAdapter = {
     }
 
     const res = await fetchJson<TempMailIoMessageRaw[] | { messages?: TempMailIoMessageRaw[] }>(
-      proxyUrl(`/email/${encodeURIComponent(account.address)}/messages`)
+      proxyUrl(`/email/${encodeEmailForPath(account.address)}/messages`)
     );
 
     const list = Array.isArray(res) ? res : res?.messages || [];
@@ -223,7 +229,7 @@ export const tempMailIoAdapter: MailProviderAdapter = {
     const account = await readAccountStorage('temp-mail.io');
     if (account?.address && account?.token) {
       try {
-        await fetchJson(proxyUrl(`/email/${encodeURIComponent(account.address)}`), {
+        await fetchJson(proxyUrl(`/email/${encodeEmailForPath(account.address)}`), {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: account.token }),

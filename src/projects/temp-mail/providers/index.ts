@@ -1,18 +1,22 @@
 import { MailProviderAdapter, MailProviderId, ProviderMeta } from '../types';
 import { mailTmAdapter } from './mailTm';
 import { grabMailAdapter } from './grabMail';
-import { catchmailAdapter } from './catchmail';
+import { catchmailAdapter, CATCHMAIL_DOMAINS } from './catchmail';
 import { tempMailIoAdapter } from './tempMailIo';
 import { inboxesAdapter } from './inboxes';
 import { tempMailLolAdapter } from './tempMailLol';
 import { tempmailPlusAdapter, TEMPMAIL_PLUS_DOMAINS } from './tempmailPlus';
 import { dropMailAdapter } from './dropMail';
-import { maildropAdapter } from './maildrop';
-import { guerrillaMailAdapter, GUERRILLA_DOMAINS } from './guerrillaMail';
+import {
+  guerrillaMailAdapter,
+  GUERRILLA_DOMAINS,
+  resolveGuerrillaDisplayAddress,
+} from './guerrillaMail';
 
 export { generateRandomUsername } from './http';
 export { TEMPMAIL_PLUS_DOMAINS } from './tempmailPlus';
-export { GUERRILLA_DOMAINS } from './guerrillaMail';
+export { CATCHMAIL_DOMAINS } from './catchmail';
+export { GUERRILLA_DOMAINS, resolveGuerrillaDisplayAddress } from './guerrillaMail';
 
 export const PROVIDER_ORDER: MailProviderId[] = [
   'mail.tm',
@@ -23,7 +27,6 @@ export const PROVIDER_ORDER: MailProviderId[] = [
   'tempmail.lol',
   'tempmail.plus',
   'dropmail.me',
-  'maildrop.cc',
   'guerrillamail',
 ];
 
@@ -36,7 +39,6 @@ export const PROVIDER_ADAPTERS: Record<MailProviderId, MailProviderAdapter> = {
   'tempmail.lol': tempMailLolAdapter,
   'tempmail.plus': tempmailPlusAdapter,
   'dropmail.me': dropMailAdapter,
-  'maildrop.cc': maildropAdapter,
   guerrillamail: guerrillaMailAdapter,
 };
 
@@ -56,7 +58,7 @@ export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
   'catchmail.io': {
     id: 'catchmail.io',
     label: 'Catchmail.io',
-    shortDescription: 'Zero-signup stateless inbox with @catchmail.io or custom domain routing.',
+    shortDescription: 'Zero-signup stateless inbox with 3 official domains (@catchmail.io, @mailistry.com, @zeppost.com) or custom domain.',
     capabilities: catchmailAdapter.capabilities,
   },
   'temp-mail.io': {
@@ -89,16 +91,10 @@ export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
     shortDescription: 'Ephemeral GraphQL sessions with selectable domains, auto-assigned prefix, and inline delivery.',
     capabilities: dropMailAdapter.capabilities,
   },
-  'maildrop.cc': {
-    id: 'maildrop.cc',
-    label: 'Maildrop.cc',
-    shortDescription: 'Stateless GraphQL inbox on @maildrop.cc with custom alias and delete mutation.',
-    capabilities: maildropAdapter.capabilities,
-  },
   guerrillamail: {
     id: 'guerrillamail',
     label: 'Guerrilla Mail',
-    shortDescription: 'Classic sid_token mailbox supporting custom alias, 9 selectable domains, and message deletion.',
+    shortDescription: 'Classic sid_token mailbox supporting custom alias, 11 selectable domains, scrambled alias toggle, and deletion.',
     capabilities: guerrillaMailAdapter.capabilities,
   },
 };

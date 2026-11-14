@@ -21,10 +21,16 @@ import {
   wrapPlainTextAsHtml,
 } from './http';
 
+export const CATCHMAIL_DOMAINS = [
+  'catchmail.io',
+  'mailistry.com',
+  'zeppost.com',
+] as const;
+
 const CATCHMAIL_CAPABILITIES: ProviderCapabilities = {
   mode: 'stateless',
   supportsDomainList: 'fixed',
-  fixedDomains: ['catchmail.io'],
+  fixedDomains: CATCHMAIL_DOMAINS,
   supportsCustomUsername: true,
   supportsDelete: true,
   inlineMessageBody: false,
@@ -83,6 +89,10 @@ function unwrapCatchmailDetail(raw: unknown): CatchmailMessageRaw {
 export const catchmailAdapter: MailProviderAdapter = {
   id: 'catchmail.io',
   capabilities: CATCHMAIL_CAPABILITIES,
+
+  async getDomains(): Promise<string[]> {
+    return [...CATCHMAIL_DOMAINS];
+  },
 
   async getStoredAccount(): Promise<TempAccount | null> {
     return readAccountStorage('catchmail.io');

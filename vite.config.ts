@@ -24,6 +24,8 @@ function createPathProxyMiddleware(
     forwardAuthorization?: boolean;
     extraHeaders?: Record<string, string>;
     forwardBodyOnDelete?: boolean;
+    preserveAtInPath?: boolean;
+    defaultAccept?: string;
   } = {}
 ) {
   return async (req: any, res: any) => {
@@ -36,15 +38,24 @@ function createPathProxyMiddleware(
     const body = await readRequestBody(req);
     try {
       const urlObj = new URL(req.url || '', 'http://localhost');
-      const rawPath = urlObj.searchParams.get('path') || defaultPath;
+      let rawPath = urlObj.searchParams.get('path') || defaultPath;
+      if (options.preserveAtInPath) {
+        rawPath = rawPath.replace(/%40/gi, '@');
+      }
       const safePath =
         rawPath.startsWith('/') && !rawPath.startsWith('//')
           ? rawPath
           : `/${rawPath.replace(/^\/+/, '')}`;
       const targetUrl = `${upstreamBase}${safePath}`;
 
+      const incomingAccept = String(req.headers?.accept || '').trim();
+      const resolvedAccept =
+        options.defaultAccept && (!incomingAccept || incomingAccept === '*/*')
+          ? options.defaultAccept
+          : incomingAccept || options.defaultAccept || 'application/json, */*';
+
       const headers: Record<string, string> = {
-        Accept: req.headers?.accept || 'application/json, */*',
+        Accept: resolvedAccept,
         'User-Agent': PROXY_USER_AGENT,
         ...(options.extraHeaders || {}),
       };
@@ -137,41 +148,6 @@ function createQueryProxyMiddleware(
   };
 }
 
-function createGraphqlProxyMiddleware(endpoint: string, providerLabel: string) {
-  return async (req: any, res: any) => {
-    if (req.method === 'OPTIONS') {
-      res.statusCode = 200;
-      res.end();
-      return;
-    }
-
-    const body = await readRequestBody(req);
-    try {
-      const upstream = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'User-Agent': PROXY_USER_AGENT,
-        },
-        body: body || '{}',
-      });
-
-      const contentType =
-        upstream.headers.get('content-type') || 'application/json; charset=utf-8';
-      res.statusCode = upstream.status;
-      res.setHeader('Content-Type', contentType);
-
-      const bytes = new Uint8Array(await upstream.arrayBuffer());
-      res.end(bytes);
-    } catch {
-      res.statusCode = 502;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ error: `Failed to reach ${providerLabel} GraphQL API` }));
-    }
-  };
-}
-
 async function mintDropmailToken(): Promise<string> {
   const res = await fetch('https://dropmail.me/api/token/generate', {
     method: 'POST',
@@ -257,6 +233,7 @@ export default defineConfig({
           '/api/mailtm',
           createPathProxyMiddleware('https://api.mail.tm', '/domains', 'Mail.tm', {
             forwardAuthorization: true,
+            defaultAccept: 'application/json',
           })
         );
 
@@ -275,8 +252,12 @@ export default defineConfig({
               extraHeaders: {
                 Origin: 'https://temp-mail.io',
                 Referer: 'https://temp-mail.io/',
+                'Application-Name': 'webmail',
+                'Application-Version': '4.0.0',
               },
               forwardBodyOnDelete: true,
+              preserveAtInPath: true,
+              defaultAccept: 'application/json',
             }
           )
         );
@@ -362,11 +343,6 @@ export default defineConfig({
             res.end(JSON.stringify({ error: 'Failed to reach DropMail.me GraphQL API' }));
           }
         });
-
-        server.middlewares.use(
-          '/api/maildrop',
-          createGraphqlProxyMiddleware('https://api.maildrop.cc/graphql', 'Maildrop.cc')
-        );
 
         server.middlewares.use(
           '/api/guerrilla',

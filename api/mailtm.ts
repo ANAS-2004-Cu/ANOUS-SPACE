@@ -26,8 +26,14 @@ export default async function handler(req: any, res: any) {
     const targetPath = sanitizePath(reqUrl.searchParams.get('path'), '/domains');
     const targetUrl = `https://api.mail.tm${targetPath}`;
 
+    const incomingAccept = String(req.headers?.accept || '').trim();
+    const acceptHeader =
+      !incomingAccept || incomingAccept === '*/*' || incomingAccept.includes('text/html')
+        ? 'application/json'
+        : incomingAccept;
+
     const headers: Record<string, string> = {
-      Accept: req.headers?.accept || 'application/json',
+      Accept: acceptHeader,
       'User-Agent': PROXY_USER_AGENT,
     };
 

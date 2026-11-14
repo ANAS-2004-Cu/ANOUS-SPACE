@@ -263,6 +263,43 @@
   color: var(--tone-sage);
 }
 
+.scrambled-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.scrambled-toggle:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.scrambled-toggle[data-enabled='true'] {
+  background-color: var(--tone-slate-subtle);
+  border-color: var(--tone-slate-border);
+  color: var(--tone-slate);
+}
+
+.scrambled-toggle input[type='checkbox'] {
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .inbox-session-error-btn {
   width: 100%;
   background-color: var(--status-danger-subtle);

@@ -43,11 +43,13 @@ export async function fetchJson<T>(url: string, options: RequestInit = {}): Prom
       (errObj &&
         (typeof errObj.detail === 'string'
           ? errObj.detail
-          : typeof errObj.message === 'string'
-            ? errObj.message
-            : typeof errObj.error === 'string'
-              ? errObj.error
-              : undefined)) ||
+          : typeof errObj['hydra:description'] === 'string'
+            ? String(errObj['hydra:description'])
+            : typeof errObj.message === 'string'
+              ? errObj.message
+              : typeof errObj.error === 'string'
+                ? errObj.error
+                : undefined)) ||
       (response.status === 401 || response.status === 403
         ? 'Session expired or unauthorized.'
         : `Request failed with status ${response.status}`);

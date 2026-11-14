@@ -7,7 +7,6 @@ export type MailProviderId =
   | 'tempmail.lol'
   | 'tempmail.plus'
   | 'dropmail.me'
-  | 'maildrop.cc'
   | 'guerrillamail';
 
 export type ProviderMode = 'stateless' | 'token' | 'session';
@@ -35,6 +34,8 @@ export interface ProviderMeta {
 export interface TempAccount {
   provider: MailProviderId;
   address: string;
+  alias?: string;
+  useScrambled?: boolean;
   token?: string;
   authToken?: string;
   password?: string;
@@ -108,9 +109,6 @@ export const normalizeProviderId = (raw?: string | null): MailProviderId => {
     case 'dropmail.me':
     case 'dropmail':
       return 'dropmail.me';
-    case 'maildrop.cc':
-    case 'maildrop':
-      return 'maildrop.cc';
     case 'guerrillamail':
     case 'guerrilla':
       return 'guerrillamail';

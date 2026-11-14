@@ -127,9 +127,15 @@ export const tempMailLolAdapter: MailProviderAdapter = {
       throw new ProviderHttpError('No active Tempmail.lol inbox token.', 401, 'unauthorized');
     }
 
-    const res = await fetchJson<{ emails?: TempMailLolEmailRaw[] } | TempMailLolEmailRaw[]>(
-      proxyUrl(`/v3/inboxes/${encodeURIComponent(account.token)}/emails`)
-    );
+    const res = await fetchJson<
+      { emails?: TempMailLolEmailRaw[]; inbox?: { expired?: boolean } } | TempMailLolEmailRaw[]
+    >(proxyUrl(`/v3/inboxes/${encodeURIComponent(account.token)}/emails`), {
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!Array.isArray(res) && res?.inbox?.expired) {
+      throw new ProviderHttpError('Tempmail.lol inbox has expired.', 401, 'unauthorized');
+    }
 
     const rawEmails = Array.isArray(res) ? res : res?.emails || [];
     const details = rawEmails.map((raw, idx) => mapLolDetail(raw, account.address, idx));
