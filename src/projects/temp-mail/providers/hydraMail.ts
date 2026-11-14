@@ -43,6 +43,7 @@ interface HydraDomainsResponse {
 
 interface HydraMessageRaw {
   id: string;
+  seen?: boolean;
   from?: unknown;
   to?: unknown;
   subject?: string;
@@ -60,8 +61,52 @@ interface HydraMessageRaw {
   createdAt?: string;
 }
 
+interface HydraSourceRaw {
+  id?: string;
+  downloadUrl?: string;
+  data?: string;
+}
+
+const DOMAIN_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAdapter {
   const proxyUrl = (path: string) => `${config.proxyBase}?path=${encodeURIComponent(path)}`;
+  const domainStorageKey = `anous_tempmail_domains_${config.id}`;
+  let memoryDomains: { list: string[]; cachedAt: number } | null = null;
+
+  const readCachedDomains = (allowStale = false): string[] | null => {
+    const now = Date.now();
+    if (memoryDomains && (allowStale || now - memoryDomains.cachedAt < DOMAIN_CACHE_TTL_MS)) {
+      return memoryDomains.list;
+    }
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem(domainStorageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { list?: string[]; cachedAt?: number };
+      if (Array.isArray(parsed?.list) && parsed.list.length > 0) {
+        if (allowStale || (parsed.cachedAt && now - parsed.cachedAt < DOMAIN_CACHE_TTL_MS)) {
+          memoryDomains = { list: parsed.list, cachedAt: parsed.cachedAt || now };
+          return parsed.list;
+        }
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    return null;
+  };
+
+  const writeCachedDomains = (list: string[]): void => {
+    if (list.length === 0) return;
+    const payload = { list, cachedAt: Date.now() };
+    memoryDomains = payload;
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(domainStorageKey, JSON.stringify(payload));
+    } catch {
+      // Ignore storage quota errors
+    }
+  };
 
   const refreshTokenIfPossible = async (account: TempAccount): Promise<string | null> => {
     if (!account.address || !account.password) return null;
@@ -105,18 +150,50 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
     }
   };
 
+  const markMessageSeen = (id: string, token: string): void => {
+    void fetch(proxyUrl(`/messages/${encodeURIComponent(id)}`), {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/merge-patch+json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ seen: true }),
+    }).catch(() => {
+      // Non-critical seen state update
+    });
+  };
+
   return {
     id: config.id,
     capabilities: config.capabilities,
 
     async getDomains(): Promise<string[]> {
-      const data = await fetchJson<HydraDomainsResponse | HydraDomainItem[]>(proxyUrl('/domains'), {
-        headers: { Accept: 'application/json' },
-      });
-      const list = Array.isArray(data) ? data : data?.['hydra:member'] || [];
-      return list
-        .filter((d) => d && typeof d.domain === 'string' && d.isActive !== false)
-        .map((d) => String(d.domain));
+      const fresh = readCachedDomains(false);
+      if (fresh) return fresh;
+
+      try {
+        const data = await fetchJson<HydraDomainsResponse | HydraDomainItem[]>(
+          proxyUrl('/domains'),
+          {
+            headers: { Accept: 'application/json' },
+          }
+        );
+        const list = Array.isArray(data) ? data : data?.['hydra:member'] || [];
+        const activeDomains = list
+          .filter((d) => d && typeof d.domain === 'string' && d.isActive !== false)
+          .map((d) => String(d.domain));
+        if (activeDomains.length > 0) {
+          writeCachedDomains(activeDomains);
+          return activeDomains;
+        }
+      } catch (err) {
+        const stale = readCachedDomains(true);
+        if (stale) return stale;
+        throw err;
+      }
+
+      return readCachedDomains(true) || [];
     },
 
     async getStoredAccount(): Promise<TempAccount | null> {
@@ -212,6 +289,10 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
           }
         );
 
+        if (msg.seen === false) {
+          markMessageSeen(id, token);
+        }
+
         const sender = parseSender(msg.from);
         const toList = Array.isArray(msg.to)
           ? msg.to.map((item) => parseSender(item).address).filter(Boolean)
@@ -224,13 +305,18 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
             : '';
         const textContent = msg.text || (htmlContent ? stripHtml(htmlContent) : '');
         const attachments: EmailAttachment[] = Array.isArray(msg.attachments)
-          ? msg.attachments.map((att, index) => ({
-              id: String(att.id || index),
-              filename: att.filename || `attachment-${index + 1}`,
-              contentType: att.contentType || 'application/octet-stream',
-              size: Number(att.size || 0),
-              downloadUrl: String(att.downloadUrl || ''),
-            }))
+          ? msg.attachments.map((att, index) => {
+              const attId = String(att.id || index);
+              return {
+                id: attId,
+                filename: att.filename || `attachment-${index + 1}`,
+                contentType: att.contentType || 'application/octet-stream',
+                size: Number(att.size || 0),
+                downloadUrl:
+                  String(att.downloadUrl || '').trim() ||
+                  `/messages/${encodeURIComponent(id)}/attachment/${encodeURIComponent(attId)}`,
+              };
+            })
           : [];
 
         return {
@@ -246,6 +332,21 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
           html: htmlContent || wrapPlainTextAsHtml(textContent),
           attachments,
         };
+      });
+    },
+
+    async fetchRawSource(id: string): Promise<string> {
+      return withAuth(async (token) => {
+        const source = await fetchJson<HydraSourceRaw>(
+          proxyUrl(`/sources/${encodeURIComponent(id)}`),
+          {
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        return String(source?.data || '').trim() || JSON.stringify(source, null, 2);
       });
     },
 
@@ -278,6 +379,17 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
     },
 
     async resetSession(): Promise<void> {
+      const account = await readAccountStorage(config.id);
+      if (account?.accountId && account?.token) {
+        try {
+          await fetchJson(proxyUrl(`/accounts/${encodeURIComponent(account.accountId)}`), {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${account.token}` },
+          });
+        } catch {
+          // Always clear local session even if server deletion fails or rate-limits
+        }
+      }
       await clearAccountStorage(config.id);
     },
   };

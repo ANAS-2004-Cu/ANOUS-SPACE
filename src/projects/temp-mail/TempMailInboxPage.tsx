@@ -10,6 +10,7 @@ import {
   getCapabilityBadges,
   resolveGuerrillaDisplayAddress,
 } from './providers';
+import { ProviderHttpError } from './providers/http';
 import { writeAccountStorage } from './storage';
 import { InboxView } from './components/InboxView';
 
@@ -17,7 +18,8 @@ export interface TempMailInboxPageProps {
   onOpenCommandPalette: () => void;
 }
 
-const AUTO_REFRESH_INTERVAL_MS = 10_000;
+const DEFAULT_AUTO_REFRESH_MS = 10_000;
+const MAILTM_AUTO_REFRESH_MS = 18_000;
 
 export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenCommandPalette }) => {
   const navigate = useNavigate();
@@ -53,6 +55,17 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
         setEmails(messages);
         setSessionError(false);
       } catch (err) {
+        if (err instanceof ProviderHttpError && err.status === 429) {
+          if (!silent) {
+            showToast({
+              title: 'Rate Limit Reached',
+              message: err.message || 'Provider rate limit reached. Retrying shortly.',
+              type: 'warning',
+            });
+          }
+          return;
+        }
+
         setSessionError(true);
         if (!silent) {
           const msg =
@@ -127,11 +140,13 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
 
   useEffect(() => {
     if (!autoRefresh || !account?.address || sessionError) return;
+    const intervalMs =
+      activeProvider === 'mail.tm' ? MAILTM_AUTO_REFRESH_MS : DEFAULT_AUTO_REFRESH_MS;
     const timer = window.setInterval(() => {
       void syncMessages(true);
-    }, AUTO_REFRESH_INTERVAL_MS);
+    }, intervalMs);
     return () => window.clearInterval(timer);
-  }, [autoRefresh, account?.address, sessionError, syncMessages]);
+  }, [activeProvider, autoRefresh, account?.address, sessionError, syncMessages]);
 
   const displayedAddress = account ? resolveGuerrillaDisplayAddress(account) : null;
 

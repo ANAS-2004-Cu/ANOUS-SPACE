@@ -74,7 +74,10 @@ function createPathProxyMiddleware(
         method === 'PATCH' ||
         (options.forwardBodyOnDelete && method === 'DELETE' && body.trim().length > 0)
       ) {
-        headers['Content-Type'] = 'application/json';
+        const incomingContentType = String(req.headers?.['content-type'] || '').trim();
+        headers['Content-Type'] =
+          incomingContentType ||
+          (method === 'PATCH' ? 'application/merge-patch+json' : 'application/json');
         fetchOptions.body = body || '{}';
       }
 
@@ -94,6 +97,15 @@ function createPathProxyMiddleware(
       }
 
       const bytes = new Uint8Array(await upstream.arrayBuffer());
+      if (upstream.status === 429 && bytes.length === 0) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(
+          JSON.stringify({
+            error: `${providerLabel} rate limit reached. Please wait a few seconds and retry.`,
+          })
+        );
+        return;
+      }
       res.end(bytes);
     } catch {
       res.statusCode = 502;

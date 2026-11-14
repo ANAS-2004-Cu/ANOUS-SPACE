@@ -79,6 +79,7 @@ export interface MailProviderAdapter {
   createAccount: (username?: string, domain?: string) => Promise<TempAccount>;
   fetchMessages: () => Promise<EmailSummary[]>;
   fetchMessageDetail: (id: string) => Promise<EmailDetail>;
+  fetchRawSource?: (id: string) => Promise<string>;
   deleteMessage: (id: string) => Promise<void>;
   downloadAttachment?: (downloadUrl: string, filename: string) => Promise<void>;
   resetSession?: () => Promise<void>;
