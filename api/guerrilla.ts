@@ -1,6 +1,7 @@
 declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
 
-const PROXY_USER_AGENT = 'Mozilla/5.0 (compatible; AnousSpace/1.0)';
+const PROXY_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');

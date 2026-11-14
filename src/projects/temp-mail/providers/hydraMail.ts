@@ -8,6 +8,7 @@ import {
   EmailDetail,
   EmailSummary,
   MailProviderAdapter,
+  MailProviderId,
   ProviderCapabilities,
   TempAccount,
 } from '../types';
@@ -26,7 +27,7 @@ import {
 } from './http';
 
 interface HydraMailConfig {
-  id: 'mail.tm' | 'mail.gw';
+  id: MailProviderId;
   proxyBase: string;
   capabilities: ProviderCapabilities;
 }

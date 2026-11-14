@@ -1,8 +1,8 @@
 export type MailProviderId =
   | 'mail.tm'
-  | 'mail.gw'
+  | 'grabmail.io'
   | 'catchmail.io'
-  | '1secmail'
+  | 'temp-mail.io'
   | 'inboxes.com'
   | 'tempmail.lol'
   | 'tempmail.plus'
@@ -36,6 +36,7 @@ export interface TempAccount {
   provider: MailProviderId;
   address: string;
   token?: string;
+  authToken?: string;
   password?: string;
   accountId?: string;
   emailUser?: string;
@@ -85,15 +86,16 @@ export interface MailProviderAdapter {
 export const normalizeProviderId = (raw?: string | null): MailProviderId => {
   const value = (raw || '').trim().toLowerCase();
   switch (value) {
-    case 'mail.gw':
-    case 'mailgw':
-      return 'mail.gw';
+    case 'grabmail.io':
+    case 'grabmail':
+      return 'grabmail.io';
     case 'catchmail.io':
     case 'catchmail':
       return 'catchmail.io';
-    case '1secmail':
-    case 'onesecmail':
-      return '1secmail';
+    case 'temp-mail.io':
+    case 'tempmail.io':
+    case 'tempmail-io':
+      return 'temp-mail.io';
     case 'inboxes.com':
     case 'inboxes':
       return 'inboxes.com';

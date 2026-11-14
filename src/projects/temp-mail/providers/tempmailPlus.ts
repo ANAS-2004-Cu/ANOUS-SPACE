@@ -36,7 +36,7 @@ export const TEMPMAIL_PLUS_DOMAINS = [
 ] as const;
 
 const TEMPMAIL_PLUS_CAPABILITIES: ProviderCapabilities = {
-  mode: 'session',
+  mode: 'stateless',
   supportsDomainList: 'fixed',
   fixedDomains: TEMPMAIL_PLUS_DOMAINS,
   supportsCustomUsername: true,
@@ -92,20 +92,7 @@ export const tempmailPlusAdapter: MailProviderAdapter = {
     const targetDomain = (domain || '').trim() || TEMPMAIL_PLUS_DOMAINS[0];
     const address = `${cleanUser}@${targetDomain}`;
 
-    try {
-      await fetchJson(proxyUrl('/v1/mailbox/create'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: address,
-          mailbox: cleanUser,
-          domain: targetDomain,
-        }),
-      });
-    } catch {
-      // Fallback: verify mailbox accessibility via mails list endpoint if create route rejects/changes
-      await fetchJson(proxyUrl(`/mails/?email=${encodeURIComponent(address)}&limit=1&epin=`));
-    }
+    await fetchJson(proxyUrl(`/mails/?email=${encodeURIComponent(address)}&limit=1&epin=`));
 
     const account: TempAccount = {
       provider: 'tempmail.plus',

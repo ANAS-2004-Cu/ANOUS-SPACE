@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 
 declare const process: { env: Record<string, string | undefined> };
 
-const PROXY_USER_AGENT = 'Mozilla/5.0 (compatible; AnousSpace/1.0)';
+const PROXY_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
 function readRequestBody(req: any): Promise<string> {
   return new Promise((resolve) => {
@@ -19,7 +20,11 @@ function createPathProxyMiddleware(
   upstreamBase: string,
   defaultPath: string,
   providerLabel: string,
-  forwardAuthorization: boolean = false
+  options: {
+    forwardAuthorization?: boolean;
+    extraHeaders?: Record<string, string>;
+    forwardBodyOnDelete?: boolean;
+  } = {}
 ) {
   return async (req: any, res: any) => {
     if (req.method === 'OPTIONS') {
@@ -41,8 +46,9 @@ function createPathProxyMiddleware(
       const headers: Record<string, string> = {
         Accept: req.headers?.accept || 'application/json, */*',
         'User-Agent': PROXY_USER_AGENT,
+        ...(options.extraHeaders || {}),
       };
-      if (forwardAuthorization && req.headers?.authorization) {
+      if (options.forwardAuthorization && req.headers?.authorization) {
         headers['Authorization'] = String(req.headers.authorization);
       }
 
@@ -51,7 +57,12 @@ function createPathProxyMiddleware(
         method,
         headers,
       };
-      if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+      if (
+        method === 'POST' ||
+        method === 'PUT' ||
+        method === 'PATCH' ||
+        (options.forwardBodyOnDelete && method === 'DELETE' && body.trim().length > 0)
+      ) {
         headers['Content-Type'] = 'application/json';
         fetchOptions.body = body || '{}';
       }
@@ -161,6 +172,26 @@ function createGraphqlProxyMiddleware(endpoint: string, providerLabel: string) {
   };
 }
 
+async function mintDropmailToken(): Promise<string> {
+  const res = await fetch('https://dropmail.me/api/token/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'User-Agent': PROXY_USER_AGENT,
+    },
+    body: JSON.stringify({ type: 'af', lifetime: '1d' }),
+  });
+  if (!res.ok) {
+    throw new Error(`Token generation failed (${res.status})`);
+  }
+  const data = (await res.json()) as { token?: string };
+  if (!data?.token) {
+    throw new Error('DropMail token missing in response');
+  }
+  return data.token;
+}
+
 export default defineConfig({
   plugins: [
     react(),
@@ -224,26 +255,35 @@ export default defineConfig({
 
         server.middlewares.use(
           '/api/mailtm',
-          createPathProxyMiddleware('https://api.mail.tm', '/domains', 'Mail.tm', true)
+          createPathProxyMiddleware('https://api.mail.tm', '/domains', 'Mail.tm', {
+            forwardAuthorization: true,
+          })
         );
 
         server.middlewares.use(
-          '/api/mailgw',
-          createPathProxyMiddleware('https://api.mail.gw', '/domains', 'Mail.gw', true)
+          '/api/grabmail',
+          createPathProxyMiddleware('https://grabmail.io/api/v1', '/domains', 'GrabMail')
+        );
+
+        server.middlewares.use(
+          '/api/tempmail-io',
+          createPathProxyMiddleware(
+            'https://api.internal.temp-mail.io/api/v3',
+            '/domains',
+            'Temp-Mail.io',
+            {
+              extraHeaders: {
+                Origin: 'https://temp-mail.io',
+                Referer: 'https://temp-mail.io/',
+              },
+              forwardBodyOnDelete: true,
+            }
+          )
         );
 
         server.middlewares.use(
           '/api/catchmail',
           createPathProxyMiddleware('https://api.catchmail.io/api/v1', '/mailbox', 'Catchmail.io')
-        );
-
-        server.middlewares.use(
-          '/api/onesecmail',
-          createQueryProxyMiddleware(
-            'https://www.1secmail.com/api/v1/',
-            '?action=getDomainList',
-            '1secmail'
-          )
         );
 
         server.middlewares.use(
@@ -261,10 +301,67 @@ export default defineConfig({
           createPathProxyMiddleware('https://tempmail.plus/api', '/mails/', 'TempMail.Plus')
         );
 
-        server.middlewares.use(
-          '/api/dropmail',
-          createGraphqlProxyMiddleware('https://dropmail.me/api/graphql', 'DropMail.me')
-        );
+        server.middlewares.use('/api/dropmail', async (req: any, res: any) => {
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          const body = await readRequestBody(req);
+          try {
+            const urlObj = new URL(req.url || '', 'http://localhost');
+            const providedToken = String(
+              req.headers?.['x-dropmail-token'] || urlObj.searchParams.get('token') || ''
+            ).trim();
+            let authToken = providedToken.startsWith('af_')
+              ? providedToken
+              : await mintDropmailToken();
+
+            let upstream = await fetch(
+              `https://dropmail.me/api/graphql/${encodeURIComponent(authToken)}`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: 'application/json',
+                  'User-Agent': PROXY_USER_AGENT,
+                },
+                body: body || '{}',
+              }
+            );
+
+            if ((upstream.status === 401 || upstream.status === 403) && providedToken) {
+              authToken = await mintDropmailToken();
+              upstream = await fetch(
+                `https://dropmail.me/api/graphql/${encodeURIComponent(authToken)}`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'User-Agent': PROXY_USER_AGENT,
+                  },
+                  body: body || '{}',
+                }
+              );
+            }
+
+            const contentType =
+              upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+            res.statusCode = upstream.status;
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Access-Control-Expose-Headers', 'X-Dropmail-Token');
+            res.setHeader('X-Dropmail-Token', authToken);
+
+            const bytes = new Uint8Array(await upstream.arrayBuffer());
+            res.end(bytes);
+          } catch {
+            res.statusCode = 502;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: 'Failed to reach DropMail.me GraphQL API' }));
+          }
+        });
 
         server.middlewares.use(
           '/api/maildrop',

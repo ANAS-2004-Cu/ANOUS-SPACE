@@ -1,6 +1,7 @@
 declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
 
-const PROXY_USER_AGENT = 'Mozilla/5.0 (compatible; AnousSpace/1.0)';
+const PROXY_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
 function sanitizePath(rawPath: string | null, fallback: string): string {
   const path = rawPath || fallback;
@@ -13,7 +14,7 @@ function sanitizePath(rawPath: string | null, fallback: string): string {
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -23,25 +24,28 @@ export default async function handler(req: any, res: any) {
   try {
     const reqUrl = new URL(req.url || '', 'http://localhost');
     const targetPath = sanitizePath(reqUrl.searchParams.get('path'), '/domains');
-    const targetUrl = `https://api.mail.gw${targetPath}`;
-
-    const headers: Record<string, string> = {
-      Accept: req.headers?.accept || 'application/json',
-      'User-Agent': PROXY_USER_AGENT,
-    };
-
-    const authHeader = req.headers?.authorization || req.headers?.Authorization;
-    if (authHeader) {
-      headers['Authorization'] = String(authHeader);
-    }
+    const targetUrl = `https://api.internal.temp-mail.io/api/v3${targetPath}`;
 
     const method = (req.method || 'GET').toUpperCase();
-    const fetchOptions: RequestInit = { method, headers };
+    const headers: Record<string, string> = {
+      Accept: req.headers?.accept || 'application/json, */*',
+      'User-Agent': PROXY_USER_AGENT,
+      Origin: 'https://temp-mail.io',
+      Referer: 'https://temp-mail.io/',
+    };
 
-    if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-      headers['Content-Type'] = 'application/json';
-      fetchOptions.body =
-        typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
+    const fetchOptions: RequestInit = { method, headers };
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+      const rawBody =
+        typeof req.body === 'string'
+          ? req.body
+          : req.body && Object.keys(req.body).length > 0
+            ? JSON.stringify(req.body)
+            : '';
+      if (rawBody) {
+        headers['Content-Type'] = 'application/json';
+        fetchOptions.body = rawBody;
+      }
     }
 
     const upstream = await fetch(targetUrl, fetchOptions);
@@ -59,7 +63,12 @@ export default async function handler(req: any, res: any) {
 
     const bytes = new Uint8Array(await upstream.arrayBuffer());
     res.status(upstream.status).send(typeof Buffer !== 'undefined' ? Buffer.from(bytes) : bytes);
-  } catch {
-    res.status(502).json({ error: 'Failed to reach Mail.gw upstream API' });
+  } catch (err) {
+    res.status(502).json({
+      error:
+        err instanceof Error
+          ? `Temp-Mail.io upstream error: ${err.message}`
+          : 'Failed to reach Temp-Mail.io upstream API',
+    });
   }
 }

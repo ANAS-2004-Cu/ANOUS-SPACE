@@ -12,6 +12,7 @@ import * as Clipboard from '../../shared/utils/clipboard';
 import { recordRecentProject } from '../../shared/utils/recentTools';
 import { MailProviderId, normalizeProviderId } from './types';
 import {
+  GUERRILLA_DOMAINS,
   PROVIDER_ADAPTERS,
   PROVIDER_ORDER,
   PROVIDERS_META,
@@ -44,6 +45,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     'catchmail.io': ['catchmail.io'],
     'maildrop.cc': ['maildrop.cc'],
     'tempmail.plus': [...TEMPMAIL_PLUS_DOMAINS],
+    guerrillamail: [...GUERRILLA_DOMAINS],
   });
   const domainsRef = useRef(domainsByProvider);
   domainsRef.current = domainsByProvider;
@@ -101,6 +103,10 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
           }
         } else if (caps.supportsDomainList === 'fixed' && caps.fixedDomains?.length) {
           if (active) {
+            setDomainsByProvider((prev) => ({
+              ...prev,
+              [selectedProvider]: [...(caps.fixedDomains || [])],
+            }));
             setSelectedDomain(caps.fixedDomains[0]);
           }
         }
@@ -239,16 +245,28 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
       ? caps.fixedDomains[0]
       : null;
 
+  const catchmailCustomDomain =
+    selectedProvider === 'catchmail.io' && username.includes('@')
+      ? username.split('@')[1]?.trim() || 'catchmail.io'
+      : null;
+
+  const activeDomainDisplay =
+    catchmailCustomDomain ||
+    selectedDomain ||
+    singleFixedDomain ||
+    (caps.supportsDomainList === 'auto' ? 'auto-assigned' : '');
+
   const getPreviewEmail = (): string => {
     if (!caps.supportsCustomUsername) {
-      return 'Generated automatically on server';
+      if (caps.supportsDomainList === 'auto') {
+        return '<auto-prefix>@<auto-domain>';
+      }
+      return `<auto-prefix>@${activeDomainDisplay || 'loading...'}`;
     }
-    const clean = username.trim() || 'random';
-    if (selectedProvider === 'catchmail.io' && clean.includes('@')) {
-      return clean;
-    }
-    const domain = selectedDomain || singleFixedDomain || '';
-    return domain ? `${clean}@${domain}` : clean;
+
+    const raw = username.trim() || 'random';
+    const cleanPrefix = selectedProvider === 'catchmail.io' && raw.includes('@') ? raw.split('@')[0] || 'random' : raw;
+    return activeDomainDisplay ? `${cleanPrefix}@${activeDomainDisplay}` : cleanPrefix;
   };
 
   const primaryActionLabel =
@@ -319,116 +337,145 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
             <p className="ui-section-subtitle">{activeMeta.shortDescription}</p>
           </div>
 
-          {!caps.supportsCustomUsername ? (
-            <Surface
-              as="div"
-              variant="recessed"
-              padded={false}
-              className="provider-auto-notice"
-            >
-              <FiZap size={16} className="provider-auto-notice__icon" />
-              <div className="ui-stack ui-stack--xs">
-                <span>
-                  {activeMeta.label} allocates a randomized address and temporary domain
-                  automatically when creating a session.
-                </span>
-                {caps.inlineMessageBody && (
-                  <span className="ui-meta-label">
-                    Message bodies arrive inline during inbox sync and are cached locally for reading.
-                  </span>
+          <div className="ui-stack ui-stack--md">
+            <div className="ui-field">
+              <div className="ui-field__header">
+                <label htmlFor="tempmail-username" className="ui-field__label">
+                  {caps.supportsCustomUsername
+                    ? selectedProvider === 'catchmail.io'
+                      ? 'Address Alias & Domain'
+                      : 'Username & Target Domain'
+                    : 'Server-Assigned Prefix & Target Domain'}
+                </label>
+                {selectedProvider === 'catchmail.io' && (
+                  <span className="ui-field__hint">Or type user@custom-domain.com directly</span>
                 )}
               </div>
-            </Surface>
-          ) : (
-            <div className="ui-stack ui-stack--md">
-              <div className="ui-field">
-                <label htmlFor="tempmail-username" className="ui-field__label">
-                  {selectedProvider === 'catchmail.io' ? 'Username or Custom Address' : 'Username / Alias'}
-                </label>
-                <div className="ui-row">
-                  <div className="ui-flex-1">
-                    <Input
-                      id="tempmail-username"
-                      type="text"
-                      mono
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={
-                        selectedProvider === 'catchmail.io'
-                          ? 'alias or user@yourdomain.com'
-                          : 'Username'
-                      }
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setUsername(generateRandomUsername(10))}
-                    aria-label="Generate Random Username"
-                    title="Generate Random Username"
-                  >
-                    <FiRefreshCw size={14} />
-                  </Button>
-                </div>
-              </div>
 
-              {showDomainPickerModal && (
-                <div className="ui-field">
-                  <span className="ui-field__label">Select Domain</span>
+              <div className="address-composer-row">
+                <div className="address-composer-prefix">
+                  {caps.supportsCustomUsername ? (
+                    <>
+                      <div className="ui-flex-1">
+                        <Input
+                          id="tempmail-username"
+                          type="text"
+                          mono
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          placeholder={
+                            selectedProvider === 'catchmail.io'
+                              ? 'alias or user@yourdomain.com'
+                              : 'Username'
+                          }
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setUsername(generateRandomUsername(10))}
+                        aria-label="Generate Random Username"
+                        title="Generate Random Username"
+                      >
+                        <FiRefreshCw size={14} />
+                      </Button>
+                    </>
+                  ) : (
+                    <Surface
+                      as="div"
+                      variant="recessed"
+                      padded={false}
+                      className="mono address-auto-prefix"
+                    >
+                      <FiZap size={14} className="provider-auto-notice__icon" />
+                      <span>auto-generated prefix</span>
+                    </Surface>
+                  )}
+                </div>
+
+                <span className="address-at-sep" aria-hidden="true">
+                  @
+                </span>
+
+                {showDomainPickerModal ? (
                   <button
                     type="button"
                     onClick={() => setDomainModalOpen(!domainModalOpen)}
-                    className="ui-input ui-input--mono domain-select-trigger"
+                    className="mono domain-pill-btn"
+                    title="Select domain"
+                    aria-label={`Selected domain ${activeDomainDisplay || 'loading'}. Click to change.`}
                   >
-                    <span>{selectedDomain ? `@${selectedDomain}` : 'Loading domains...'}</span>
+                    <span>
+                      {activeDomainDisplay ? `@${activeDomainDisplay}` : 'Loading domains...'}
+                    </span>
                     {domainModalOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
                   </button>
-
-                  <DomainSelectModal
-                    visible={domainModalOpen}
-                    domains={activeDomains}
-                    selectedDomain={selectedDomain}
-                    onSelect={(domain) => {
-                      setSelectedDomain(domain);
-                      setDomainModalOpen(false);
-                    }}
-                    onClose={() => setDomainModalOpen(false)}
-                  />
-                </div>
-              )}
-
-              {singleFixedDomain && (
-                <div className="ui-field">
-                  <div className="ui-field__header">
-                    <span className="ui-field__label">Domain</span>
-                    {selectedProvider === 'catchmail.io' && (
-                      <span className="ui-field__hint">Or type user@yourdomain.com above</span>
-                    )}
-                  </div>
+                ) : (
                   <Surface
                     as="div"
                     variant="recessed"
                     padded={false}
-                    className="mono fixed-domain-well"
+                    className="mono domain-pill-fixed"
+                    title={
+                      caps.supportsDomainList === 'auto'
+                        ? 'Assigned automatically by server'
+                        : 'Provider fixed domain'
+                    }
                   >
-                    @{singleFixedDomain}
+                    @{activeDomainDisplay || 'catchmail.io'}
                   </Surface>
-                </div>
-              )}
+                )}
+              </div>
 
+              {showDomainPickerModal && (
+                <DomainSelectModal
+                  visible={domainModalOpen}
+                  domains={activeDomains}
+                  selectedDomain={selectedDomain}
+                  onSelect={(domain) => {
+                    setSelectedDomain(domain);
+                    setDomainModalOpen(false);
+                  }}
+                  onClose={() => setDomainModalOpen(false)}
+                />
+              )}
+            </div>
+
+            {!caps.supportsCustomUsername && (
               <Surface
                 as="div"
                 variant="recessed"
                 padded={false}
-                className="address-preview-well"
+                className="provider-auto-notice"
               >
-                <span className="ui-meta-label">Address Preview</span>
-                <span className="mono address-preview-value">{getPreviewEmail()}</span>
+                <FiZap size={16} className="provider-auto-notice__icon" />
+                <div className="ui-stack ui-stack--xs">
+                  <span>
+                    {caps.supportsDomainList === 'auto'
+                      ? `${activeMeta.label} assigns both a random username and a rotating domain server-side upon creation.`
+                      : `${activeMeta.label} assigns a randomized local prefix on the server for your chosen @domain.`}
+                  </span>
+                  {caps.inlineMessageBody && (
+                    <span className="ui-meta-label">
+                      Message bodies arrive inline during inbox sync and are cached locally for reading.
+                    </span>
+                  )}
+                </div>
               </Surface>
-            </div>
-          )}
+            )}
+
+            <Surface
+              as="div"
+              variant="recessed"
+              padded={false}
+              className="address-preview-well"
+            >
+              <span className="ui-meta-label">Full Address Preview</span>
+              <span className="mono address-preview-value">{getPreviewEmail()}</span>
+            </Surface>
+          </div>
 
           <div className="ui-row ui-row--wrap">
             <Button

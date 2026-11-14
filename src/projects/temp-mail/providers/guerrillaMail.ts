@@ -15,16 +15,31 @@ import {
 import {
   ProviderHttpError,
   fetchJson,
+  generateRandomUsername,
   parseSender,
   safeIsoDate,
+  sanitizeUsername,
   stripHtml,
   wrapPlainTextAsHtml,
 } from './http';
 
+export const GUERRILLA_DOMAINS = [
+  'guerrillamailblock.com',
+  'guerrillamail.com',
+  'guerrillamail.net',
+  'guerrillamail.org',
+  'guerrillamail.biz',
+  'sharklasers.com',
+  'grr.la',
+  'pokemail.net',
+  'spam4.me',
+] as const;
+
 const GUERRILLA_CAPABILITIES: ProviderCapabilities = {
   mode: 'session',
-  supportsDomainList: 'auto',
-  supportsCustomUsername: false,
+  supportsDomainList: 'fixed',
+  fixedDomains: GUERRILLA_DOMAINS,
+  supportsCustomUsername: true,
   supportsDelete: true,
   inlineMessageBody: false,
   supportsAttachments: false,
@@ -35,6 +50,7 @@ interface GuerrillaSessionResponse {
   email_addr?: string;
   sid_token?: string;
   email_user?: string;
+  alias_error?: string;
 }
 
 interface GuerrillaMailRaw {
@@ -64,30 +80,46 @@ export const guerrillaMailAdapter: MailProviderAdapter = {
   id: 'guerrillamail',
   capabilities: GUERRILLA_CAPABILITIES,
 
+  async getDomains(): Promise<string[]> {
+    return [...GUERRILLA_DOMAINS];
+  },
+
   async getStoredAccount(): Promise<TempAccount | null> {
     return readAccountStorage('guerrillamail');
   },
 
-  async createAccount(): Promise<TempAccount> {
-    const res = await fetchJson<GuerrillaSessionResponse>('/api/guerrilla?f=get_email_address');
-    const address = String(res?.email_addr || '').trim();
-    const sidToken = String(res?.sid_token || '').trim();
-
-    if (!address || !sidToken) {
+  async createAccount(username?: string, domain?: string): Promise<TempAccount> {
+    const initial = await fetchJson<GuerrillaSessionResponse>('/api/guerrilla?f=get_email_address');
+    let sidToken = String(initial?.sid_token || '').trim();
+    if (!sidToken) {
       throw new ProviderHttpError(
-        'Guerrilla Mail did not return an address and session token.',
+        'Guerrilla Mail did not return a session token.',
         502,
         'upstream'
       );
     }
 
-    const [fallbackUser, domain] = address.split('@');
+    const cleanUser = username ? sanitizeUsername(username) : generateRandomUsername(10);
+    const updated = await fetchJson<GuerrillaSessionResponse>(
+      `/api/guerrilla?f=set_email_user&email_user=${encodeURIComponent(cleanUser)}&lang=en&sid_token=${encodeURIComponent(sidToken)}`
+    );
+
+    if (updated?.alias_error) {
+      throw new ProviderHttpError(updated.alias_error, 400, 'upstream');
+    }
+
+    sidToken = String(updated?.sid_token || sidToken).trim();
+    const returnedLocalPart = updated?.email_addr ? updated.email_addr.split('@')[0] : '';
+    const resolvedUser = String(returnedLocalPart || updated?.email_user || cleanUser).trim();
+    const targetDomain = (domain || '').trim() || GUERRILLA_DOMAINS[0];
+    const address = `${resolvedUser}@${targetDomain}`;
+
     const account: TempAccount = {
       provider: 'guerrillamail',
       address,
       token: sidToken,
-      emailUser: res.email_user || fallbackUser || '',
-      domain: domain || 'guerrillamailblock.com',
+      emailUser: resolvedUser,
+      domain: targetDomain,
     };
 
     await clearAccountStorage('guerrillamail');

@@ -3,9 +3,9 @@ import { EmailDetail, MailProviderId, TempAccount } from './types';
 
 export const TEMPMAIL_STORAGE_KEYS: Record<MailProviderId, string> = {
   'mail.tm': 'anous_tempmail_mailtm',
-  'mail.gw': 'anous_tempmail_mailgw',
+  'grabmail.io': 'anous_tempmail_grabmail',
   'catchmail.io': 'anous_tempmail_catchmail',
-  '1secmail': 'anous_tempmail_1secmail',
+  'temp-mail.io': 'anous_tempmail_tempmail_io',
   'inboxes.com': 'anous_tempmail_inboxes',
   'tempmail.lol': 'anous_tempmail_tempmail_lol',
   'tempmail.plus': 'anous_tempmail_tempmail_plus',
@@ -16,7 +16,6 @@ export const TEMPMAIL_STORAGE_KEYS: Record<MailProviderId, string> = {
 
 const LEGACY_KEYS: Partial<Record<MailProviderId, string[]>> = {
   'mail.tm': ['mailtm_data'],
-  'mail.gw': ['mailgw_data'],
   guerrillamail: ['guerrilla_data'],
   'tempmail.lol': ['tempmail_lol_data'],
   'maildrop.cc': ['maildrop_data'],
@@ -71,6 +70,7 @@ function normalizeStoredAccount(
         : typeof raw.sid_token === 'string'
           ? raw.sid_token
           : undefined,
+    authToken: typeof raw.authToken === 'string' ? raw.authToken : undefined,
     password: typeof raw.password === 'string' ? raw.password : undefined,
     accountId: typeof raw.accountId === 'string' ? raw.accountId : typeof raw.id === 'string' ? raw.id : undefined,
     emailUser:

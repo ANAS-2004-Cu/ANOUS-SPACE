@@ -1,23 +1,24 @@
 import { MailProviderAdapter, MailProviderId, ProviderMeta } from '../types';
 import { mailTmAdapter } from './mailTm';
-import { mailGwAdapter } from './mailGw';
+import { grabMailAdapter } from './grabMail';
 import { catchmailAdapter } from './catchmail';
-import { oneSecMailAdapter } from './oneSecMail';
+import { tempMailIoAdapter } from './tempMailIo';
 import { inboxesAdapter } from './inboxes';
 import { tempMailLolAdapter } from './tempMailLol';
 import { tempmailPlusAdapter, TEMPMAIL_PLUS_DOMAINS } from './tempmailPlus';
 import { dropMailAdapter } from './dropMail';
 import { maildropAdapter } from './maildrop';
-import { guerrillaMailAdapter } from './guerrillaMail';
+import { guerrillaMailAdapter, GUERRILLA_DOMAINS } from './guerrillaMail';
 
 export { generateRandomUsername } from './http';
 export { TEMPMAIL_PLUS_DOMAINS } from './tempmailPlus';
+export { GUERRILLA_DOMAINS } from './guerrillaMail';
 
 export const PROVIDER_ORDER: MailProviderId[] = [
   'mail.tm',
-  'mail.gw',
+  'grabmail.io',
   'catchmail.io',
-  '1secmail',
+  'temp-mail.io',
   'inboxes.com',
   'tempmail.lol',
   'tempmail.plus',
@@ -28,9 +29,9 @@ export const PROVIDER_ORDER: MailProviderId[] = [
 
 export const PROVIDER_ADAPTERS: Record<MailProviderId, MailProviderAdapter> = {
   'mail.tm': mailTmAdapter,
-  'mail.gw': mailGwAdapter,
+  'grabmail.io': grabMailAdapter,
   'catchmail.io': catchmailAdapter,
-  '1secmail': oneSecMailAdapter,
+  'temp-mail.io': tempMailIoAdapter,
   'inboxes.com': inboxesAdapter,
   'tempmail.lol': tempMailLolAdapter,
   'tempmail.plus': tempmailPlusAdapter,
@@ -46,11 +47,11 @@ export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
     shortDescription: 'Authenticated REST inbox with Bearer JWT, attachments, and manual message deletion.',
     capabilities: mailTmAdapter.capabilities,
   },
-  'mail.gw': {
-    id: 'mail.gw',
-    label: 'Mail.gw',
-    shortDescription: 'Sibling Hydra Mail infrastructure with Bearer authentication, attachments, and delete.',
-    capabilities: mailGwAdapter.capabilities,
+  'grabmail.io': {
+    id: 'grabmail.io',
+    label: 'GrabMail',
+    shortDescription: 'Zero-signup stateless REST inbox with live public domains, attachments, and message deletion.',
+    capabilities: grabMailAdapter.capabilities,
   },
   'catchmail.io': {
     id: 'catchmail.io',
@@ -58,46 +59,46 @@ export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
     shortDescription: 'Zero-signup stateless inbox with @catchmail.io or custom domain routing.',
     capabilities: catchmailAdapter.capabilities,
   },
-  '1secmail': {
-    id: '1secmail',
-    label: '1secmail',
-    shortDescription: 'Fast stateless addresses with API-fetched domains and binary attachment downloads.',
-    capabilities: oneSecMailAdapter.capabilities,
+  'temp-mail.io': {
+    id: 'temp-mail.io',
+    label: 'Temp-Mail.io',
+    shortDescription: 'Fast REST inbox with custom alias, live domain list, inline bodies, and message deletion.',
+    capabilities: tempMailIoAdapter.capabilities,
   },
   'inboxes.com': {
     id: 'inboxes.com',
     label: 'Inboxes.com',
-    shortDescription: 'Stateless Public v2 addresses with selectable domains and automatic expiry.',
+    shortDescription: 'Stateless Public v2 addresses with 18+ selectable domains and automatic expiry.',
     capabilities: inboxesAdapter.capabilities,
   },
   'tempmail.lol': {
     id: 'tempmail.lol',
     label: 'Tempmail.lol',
-    shortDescription: 'Dynamic v3 auto-generated addresses with token polling and inline message bodies.',
+    shortDescription: 'Dynamic v3 server-assigned addresses with token polling and inline message bodies.',
     capabilities: tempMailLolAdapter.capabilities,
   },
   'tempmail.plus': {
     id: 'tempmail.plus',
     label: 'TempMail.Plus',
-    shortDescription: 'Custom username across 8 curated domains with attachments and delete support.',
+    shortDescription: 'Stateless custom alias across 8 curated domains with attachments and delete support.',
     capabilities: tempmailPlusAdapter.capabilities,
   },
   'dropmail.me': {
     id: 'dropmail.me',
     label: 'DropMail.me',
-    shortDescription: 'Ephemeral GraphQL sessions with auto-assigned addresses and inline message delivery.',
+    shortDescription: 'Ephemeral GraphQL sessions with selectable domains, auto-assigned prefix, and inline delivery.',
     capabilities: dropMailAdapter.capabilities,
   },
   'maildrop.cc': {
     id: 'maildrop.cc',
     label: 'Maildrop.cc',
-    shortDescription: 'Stateless GraphQL inbox locked to @maildrop.cc with custom alias and delete mutation.',
+    shortDescription: 'Stateless GraphQL inbox on @maildrop.cc with custom alias and delete mutation.',
     capabilities: maildropAdapter.capabilities,
   },
   guerrillamail: {
     id: 'guerrillamail',
     label: 'Guerrilla Mail',
-    shortDescription: 'Classic sid_token session mailbox with auto-assigned address and message deletion.',
+    shortDescription: 'Classic sid_token mailbox supporting custom alias, 9 selectable domains, and message deletion.',
     capabilities: guerrillaMailAdapter.capabilities,
   },
 };
@@ -121,9 +122,9 @@ export function getCapabilityBadges(id: MailProviderId): Array<{
   }
 
   if (cap.supportsCustomUsername) {
-    badges.push({ label: 'Custom Address', tone: 'neutral' });
+    badges.push({ label: 'Custom Alias', tone: 'neutral' });
   } else {
-    badges.push({ label: 'Auto-Generated', tone: 'ochre' });
+    badges.push({ label: 'Auto Prefix', tone: 'ochre' });
   }
 
   if (cap.protocol === 'graphql') {
