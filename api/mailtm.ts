@@ -1,6 +1,8 @@
+import axios from 'axios';
+
 declare const Buffer:
   | {
-      from(data: ArrayBuffer | Uint8Array): unknown;
+      from(data: ArrayBuffer | Uint8Array | string, encoding?: string): { toString(encoding?: string): string; length: number };
       isBuffer(obj: unknown): boolean;
       concat(chunks: unknown[]): { toString(encoding: string): string };
     }
@@ -59,6 +61,26 @@ function sendBytes(res: any, status: number, bytes: Uint8Array) {
   res.status(status).send(Buffer ? Buffer.from(bytes) : bytes);
 }
 
+async function fetchDomainsViaRelay(): Promise<Uint8Array | null> {
+  try {
+    const relayUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.mail.tm/domains')}`;
+    const relayRes = await axios.get<ArrayBuffer>(relayUrl, {
+      responseType: 'arraybuffer',
+      timeout: 8000,
+      validateStatus: () => true,
+    });
+    if (relayRes.status >= 200 && relayRes.status < 300 && relayRes.data) {
+      const bytes = new Uint8Array(relayRes.data);
+      if (bytes.length > 10) {
+        return bytes;
+      }
+    }
+  } catch {
+    // Ignore relay fallback failure
+  }
+  return null;
+}
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
@@ -90,11 +112,14 @@ export default async function handler(req: any, res: any) {
     const incomingAccept = String(req.headers?.accept || '').trim();
     const acceptHeader =
       !incomingAccept || incomingAccept === '*/*' || incomingAccept.includes('text/html')
-        ? 'application/json'
+        ? 'application/json, application/ld+json'
         : incomingAccept;
 
     const headers: Record<string, string> = {
       Accept: acceptHeader,
+      Origin: 'https://mail.tm',
+      Referer: 'https://mail.tm/',
+      'Accept-Language': 'en-US,en;q=0.9',
       'User-Agent': PROXY_USER_AGENT,
     };
 
@@ -103,26 +128,35 @@ export default async function handler(req: any, res: any) {
       headers['Authorization'] = String(authHeader);
     }
 
-    const fetchOptions: RequestInit = { method, headers };
-
+    let requestData: string | undefined;
     if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
       const incomingContentType = String(req.headers?.['content-type'] || '').trim();
       headers['Content-Type'] =
         incomingContentType ||
         (method === 'PATCH' ? 'application/merge-patch+json' : 'application/json');
-      fetchOptions.body = await resolveRequestBody(req);
+      requestData = await resolveRequestBody(req);
     }
 
-    const upstream = await fetch(targetUrl, fetchOptions);
-    const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+    const upstream = await axios.request<ArrayBuffer>({
+      url: targetUrl,
+      method,
+      headers,
+      data: requestData,
+      responseType: 'arraybuffer',
+      timeout: 12000,
+      validateStatus: () => true,
+    });
+
+    const contentType =
+      String(upstream.headers['content-type'] || '') || 'application/json; charset=utf-8';
     res.setHeader('Content-Type', contentType);
-    const disposition = upstream.headers.get('content-disposition');
+    const disposition = upstream.headers['content-disposition'];
     if (disposition) {
-      res.setHeader('Content-Disposition', disposition);
+      res.setHeader('Content-Disposition', String(disposition));
     }
-    const retryAfter = upstream.headers.get('retry-after');
+    const retryAfter = upstream.headers['retry-after'];
     if (retryAfter) {
-      res.setHeader('Retry-After', retryAfter);
+      res.setHeader('Retry-After', String(retryAfter));
     }
 
     if (upstream.status === 204) {
@@ -130,25 +164,47 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const bytes = new Uint8Array(await upstream.arrayBuffer());
+    const bytes = new Uint8Array(upstream.data || new ArrayBuffer(0));
 
-    if (method === 'GET' && targetPath === '/domains' && upstream.ok && bytes.length > 2) {
+    if (
+      method === 'GET' &&
+      targetPath === '/domains' &&
+      upstream.status >= 200 &&
+      upstream.status < 300 &&
+      bytes.length > 2
+    ) {
       cachedDomainsBytes = bytes;
       cachedDomainsContentType = contentType;
       cachedDomainsAt = Date.now();
       res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     }
 
-    if (upstream.status === 429) {
-      if (method === 'GET' && targetPath === '/domains' && cachedDomainsBytes) {
-        res.setHeader('Content-Type', cachedDomainsContentType);
-        sendBytes(res, 200, cachedDomainsBytes);
-        return;
+    if (upstream.status === 403 || upstream.status === 429) {
+      if (method === 'GET' && targetPath === '/domains') {
+        if (cachedDomainsBytes) {
+          res.setHeader('Content-Type', cachedDomainsContentType);
+          sendBytes(res, 200, cachedDomainsBytes);
+          return;
+        }
+        const relayed = await fetchDomainsViaRelay();
+        if (relayed) {
+          cachedDomainsBytes = relayed;
+          cachedDomainsContentType = 'application/json; charset=utf-8';
+          cachedDomainsAt = Date.now();
+          res.setHeader('Content-Type', cachedDomainsContentType);
+          res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+          sendBytes(res, 200, relayed);
+          return;
+        }
       }
+
       if (bytes.length === 0) {
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.status(429).json({
-          error: 'Mail.tm rate limit reached (10 requests/min). Please wait a few seconds and retry.',
+        res.status(upstream.status).json({
+          error:
+            upstream.status === 429
+              ? 'Mail.tm rate limit reached (10 requests/min). Please wait a few seconds and retry.'
+              : 'Mail.tm upstream temporarily rejected the request (HTTP 403). Please retry.',
         });
         return;
       }

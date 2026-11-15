@@ -204,14 +204,20 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
       const fresh = readCachedDomains(false);
       if (fresh) return fresh;
 
+      const extractDomains = (data: HydraDomainsResponse | HydraDomainItem[] | unknown): string[] => {
+        const list = Array.isArray(data)
+          ? data
+          : (data as HydraDomainsResponse | null)?.['hydra:member'] || [];
+        return list
+          .filter((d) => d && typeof d.domain === 'string' && d.isActive !== false)
+          .map((d) => String(d.domain));
+      };
+
       try {
         const data = await requestJson<HydraDomainsResponse | HydraDomainItem[]>('/domains', {
           headers: { Accept: 'application/json' },
         });
-        const list = Array.isArray(data) ? data : data?.['hydra:member'] || [];
-        const activeDomains = list
-          .filter((d) => d && typeof d.domain === 'string' && d.isActive !== false)
-          .map((d) => String(d.domain));
+        const activeDomains = extractDomains(data);
         if (activeDomains.length > 0) {
           writeCachedDomains(activeDomains);
           return activeDomains;
@@ -219,6 +225,22 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
       } catch (err) {
         const stale = readCachedDomains(true);
         if (stale) return stale;
+
+        if (normalizedDirectBase) {
+          try {
+            const relayUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(
+              directUrl('/domains')
+            )}`;
+            const relayData = await fetchJson<HydraDomainsResponse | HydraDomainItem[]>(relayUrl);
+            const relayDomains = extractDomains(relayData);
+            if (relayDomains.length > 0) {
+              writeCachedDomains(relayDomains);
+              return relayDomains;
+            }
+          } catch {
+            // Ignore relay fallback failure and rethrow primary error
+          }
+        }
         throw err;
       }
 

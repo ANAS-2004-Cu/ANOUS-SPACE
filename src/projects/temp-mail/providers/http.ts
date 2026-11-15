@@ -63,9 +63,11 @@ export async function fetchJson<T>(url: string, options: RequestInit = {}): Prom
         : `HTTP ${response.status}: ${extracted}`
       : response.status === 429
         ? 'HTTP 429: Rate limit reached (10 requests/min). Please wait a few seconds and retry.'
-        : response.status === 401 || response.status === 403
-          ? `HTTP ${response.status}: Session expired or unauthorized.`
-          : `Request failed with status ${response.status}`;
+        : response.status === 401
+          ? 'HTTP 401: Session expired or unauthorized.'
+          : response.status === 403
+            ? 'HTTP 403: Upstream server rejected the request.'
+            : `Request failed with status ${response.status}`;
 
     throw new ProviderHttpError(
       message,
