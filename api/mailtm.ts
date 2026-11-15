@@ -102,6 +102,10 @@ async function fetchDomainsViaRelay(): Promise<Uint8Array | null> {
   return null;
 }
 
+export const config = {
+  regions: ['fra1'],
+};
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
