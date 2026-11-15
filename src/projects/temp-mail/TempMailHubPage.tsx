@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FiRefreshCw, FiChevronDown, FiChevronUp, FiZap } from 'react-icons/fi';
+import { FiRefreshCw, FiChevronDown, FiChevronUp, FiZap, FiAlertTriangle } from 'react-icons/fi';
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { ToolBanner } from '../../shared/ui/ToolBanner';
 import { Surface } from '../../shared/ui/Surface';
@@ -60,6 +60,10 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
   >({});
   const [isInitializing, setIsInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [providerError, setProviderError] = useState<{
+    kind: 'domains' | 'create';
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     recordRecentProject('temp-mail');
@@ -67,6 +71,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
 
   const handleSelectProvider = (provider: MailProviderId) => {
     setSelectedProvider(provider);
+    setProviderError(null);
     setSearchParams({ provider }, { replace: true });
   };
 
@@ -84,13 +89,12 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     setExistingAccounts(Object.fromEntries(entries));
   }, []);
 
-  useEffect(() => {
-    let active = true;
-
-    const initProvider = async () => {
+  const loadProvider = useCallback(
+    async (forceRefreshDomains = false, isMounted: () => boolean = () => true) => {
       setIsInitializing(true);
       setDomainModalOpen(false);
       setSelectedDomain('');
+      setProviderError(null);
       try {
         await loadExistingAccounts();
 
@@ -98,14 +102,19 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
         const caps = adapter.capabilities;
 
         if (caps.supportsDomainList === 'api' && adapter.getDomains) {
-          const cached = domainsRef.current[selectedProvider];
+          const cached = forceRefreshDomains ? undefined : domainsRef.current[selectedProvider];
           const domainList = cached && cached.length > 0 ? cached : await adapter.getDomains();
-          if (active && domainList.length > 0) {
-            setDomainsByProvider((prev) => ({ ...prev, [selectedProvider]: domainList }));
-            setSelectedDomain(domainList[0]);
+          if (isMounted()) {
+            if (domainList.length > 0) {
+              setDomainsByProvider((prev) => ({ ...prev, [selectedProvider]: domainList }));
+              setSelectedDomain(domainList[0]);
+            } else {
+              const emptyMsg = `${PROVIDERS_META[selectedProvider].label} returned no active domains.`;
+              setProviderError({ kind: 'domains', message: emptyMsg });
+            }
           }
         } else if (caps.supportsDomainList === 'fixed' && caps.fixedDomains?.length) {
-          if (active) {
+          if (isMounted()) {
             setDomainsByProvider((prev) => ({
               ...prev,
               [selectedProvider]: [...(caps.fixedDomains || [])],
@@ -114,27 +123,36 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
           }
         }
 
-        if (active) {
+        if (isMounted()) {
           setUsername(generateRandomUsername(10));
         }
-      } catch {
-        if (active) {
+      } catch (err) {
+        if (isMounted()) {
+          const message =
+            err instanceof Error && err.message
+              ? err.message
+              : `Failed to load ${PROVIDERS_META[selectedProvider].label} domains.`;
+          setProviderError({ kind: 'domains', message });
           showToast({
             title: 'Provider Load Failed',
-            message: 'Failed to load provider domains. You can retry or pick another provider.',
+            message,
             type: 'error',
           });
         }
       } finally {
-        if (active) setIsInitializing(false);
+        if (isMounted()) setIsInitializing(false);
       }
-    };
+    },
+    [selectedProvider, loadExistingAccounts, showToast]
+  );
 
-    initProvider();
+  useEffect(() => {
+    let active = true;
+    void loadProvider(false, () => active);
     return () => {
       active = false;
     };
-  }, [selectedProvider, loadExistingAccounts, showToast]);
+  }, [loadProvider]);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -194,6 +212,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
     }
 
     setLoading(true);
+    setProviderError(null);
     try {
       const adapter = PROVIDER_ADAPTERS[selectedProvider];
       let account = await adapter.createAccount(
@@ -228,11 +247,12 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
         err instanceof Error && err.message
           ? err.message
           : `Failed to initialize ${meta.label} address. Please try again.`;
+      setProviderError({ kind: 'create', message });
       showToast({
         title: 'Setup Failed',
         message,
         type: 'error',
-        durationMs: 4500,
+        durationMs: 5000,
       });
     } finally {
       setLoading(false);
@@ -448,7 +468,11 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
                     aria-label={`Selected domain ${activeDomainDisplay || 'loading'}. Click to change.`}
                   >
                     <span>
-                      {activeDomainDisplay ? `@${activeDomainDisplay}` : 'Loading domains...'}
+                      {activeDomainDisplay
+                        ? `@${activeDomainDisplay}`
+                        : isInitializing
+                          ? 'Loading domains...'
+                          : 'Domains unavailable'}
                     </span>
                     {domainModalOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
                   </button>
@@ -535,6 +559,31 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
               <span className="ui-meta-label">Full Address Preview</span>
               <span className="mono address-preview-value">{getPreviewEmail()}</span>
             </Surface>
+
+            {providerError && (
+              <div className="provider-diagnostic-banner" role="alert">
+                <div className="provider-diagnostic-banner__body">
+                  <FiAlertTriangle size={16} strokeWidth={1.6} className="inbox-error-icon" />
+                  <span>{providerError.message}</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={loading || isInitializing}
+                  onClick={() => {
+                    if (providerError.kind === 'domains') {
+                      void loadProvider(true);
+                    } else {
+                      void handleCreateOrActivate();
+                    }
+                  }}
+                >
+                  <FiRefreshCw size={13} />
+                  <span>Retry</span>
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="ui-row ui-row--wrap">

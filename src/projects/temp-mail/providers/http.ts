@@ -39,20 +39,33 @@ export async function fetchJson<T>(url: string, options: RequestInit = {}): Prom
 
   if (!response.ok) {
     const errObj = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : null;
-    const message =
-      (errObj &&
-        (typeof errObj.detail === 'string'
-          ? errObj.detail
-          : typeof errObj['hydra:description'] === 'string'
-            ? String(errObj['hydra:description'])
-            : typeof errObj.message === 'string'
-              ? errObj.message
-              : typeof errObj.error === 'string'
-                ? errObj.error
-                : undefined)) ||
-      (response.status === 401 || response.status === 403
-        ? 'Session expired or unauthorized.'
-        : `Request failed with status ${response.status}`);
+    const rawDetail =
+      errObj &&
+      (typeof errObj.detail === 'string'
+        ? errObj.detail
+        : typeof errObj['hydra:description'] === 'string'
+          ? String(errObj['hydra:description'])
+          : typeof errObj.message === 'string'
+            ? errObj.message
+            : typeof errObj.error === 'string'
+              ? errObj.error
+              : undefined);
+
+    const textFallback =
+      !rawDetail && typeof data === 'string' && data.trim() && !data.trim().startsWith('<')
+        ? data.trim().slice(0, 200)
+        : undefined;
+
+    const extracted = rawDetail || textFallback;
+    const message = extracted
+      ? extracted.includes(String(response.status))
+        ? extracted
+        : `HTTP ${response.status}: ${extracted}`
+      : response.status === 429
+        ? 'HTTP 429: Rate limit reached (10 requests/min). Please wait a few seconds and retry.'
+        : response.status === 401 || response.status === 403
+          ? `HTTP ${response.status}: Session expired or unauthorized.`
+          : `Request failed with status ${response.status}`;
 
     throw new ProviderHttpError(
       message,

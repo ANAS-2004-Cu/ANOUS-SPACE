@@ -27,6 +27,7 @@ export interface InboxViewProps {
   loading: boolean;
   refreshing: boolean;
   autoRefresh: boolean;
+  autoRefreshSeconds?: number;
   sessionError?: boolean;
   creatingNew?: boolean;
   emptyDescription?: string;
@@ -52,6 +53,7 @@ export const InboxView: React.FC<InboxViewProps> = ({
   loading,
   refreshing,
   autoRefresh,
+  autoRefreshSeconds = 10,
   sessionError = false,
   creatingNew = false,
   emptyDescription = 'Incoming messages for this disposable address will appear here automatically when auto-refresh is on.',
@@ -105,10 +107,14 @@ export const InboxView: React.FC<InboxViewProps> = ({
               data-enabled={autoRefresh}
               className="auto-refresh-toggle"
               aria-pressed={autoRefresh}
-              title={autoRefresh ? 'Pause 10s auto-refresh' : 'Enable 10s auto-refresh'}
+              title={
+                autoRefresh
+                  ? `Pause ${autoRefreshSeconds}s auto-refresh`
+                  : `Enable ${autoRefreshSeconds}s auto-refresh`
+              }
             >
               <FiClock size={12} />
-              <span>{autoRefresh ? 'Auto 10s: ON' : 'Auto: OFF'}</span>
+              <span>{autoRefresh ? `Auto ${autoRefreshSeconds}s: ON` : 'Auto: OFF'}</span>
             </button>
 
             <Button

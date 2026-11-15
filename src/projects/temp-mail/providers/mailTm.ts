@@ -2,6 +2,7 @@ import { createHydraMailAdapter } from './hydraMail';
 
 export const mailTmAdapter = createHydraMailAdapter({
   id: 'mail.tm',
+  directBase: 'https://api.mail.tm',
   proxyBase: '/api/mailtm',
   capabilities: {
     mode: 'token',

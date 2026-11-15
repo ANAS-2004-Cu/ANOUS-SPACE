@@ -120,13 +120,17 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
 
         setAccount(stored);
         await syncMessages(false);
-      } catch {
+      } catch (err) {
         if (!mounted) return;
         setSessionError(true);
         setLoading(false);
+        const msg =
+          err instanceof Error && err.message
+            ? err.message
+            : 'Failed to load inbox session. Please try again.';
         showToast({
           title: 'Session Error',
-          message: 'Failed to load inbox session. Please try again.',
+          message: msg,
           type: 'error',
         });
       }
@@ -270,6 +274,11 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
         loading={loading}
         refreshing={refreshing}
         autoRefresh={autoRefresh}
+        autoRefreshSeconds={
+          activeProvider === 'mail.tm'
+            ? MAILTM_AUTO_REFRESH_MS / 1000
+            : DEFAULT_AUTO_REFRESH_MS / 1000
+        }
         sessionError={sessionError}
         creatingNew={creatingNew}
         onBack={() => navigate(`/temp-mail?provider=${encodeURIComponent(activeProvider)}`)}

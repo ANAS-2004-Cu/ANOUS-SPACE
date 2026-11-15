@@ -318,6 +318,31 @@
   flex-shrink: 0;
 }
 
+.provider-diagnostic-banner {
+  width: 100%;
+  background-color: var(--status-danger-subtle);
+  border: 1px solid var(--status-danger-border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--status-danger);
+  font-size: 13px;
+}
+
+.provider-diagnostic-banner__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1 1 220px;
+  min-width: 0;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 .inbox-loading-well {
   padding: 48px 20px;
   display: flex;
