@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useAlert } from '../../shared/context/AlertContext';
 import {
+  AiDifficulty,
   CellValue,
   PlayerMarker,
   calculateWinner,
@@ -19,6 +20,7 @@ export function useClassicTicTacToe() {
   const [winner2, setWinner2] = useState<PlayerMarker | null>(null);
   const [winner, setWinner] = useState<PlayerMarker | null>(null);
   const [typeBoard, setTypeBoard] = useState<1 | 2>(2);
+  const [classicDifficulty, setClassicDifficulty] = useState<AiDifficulty>('medium');
   const [board, setBoard] = useState<CellValue[]>(Array(9).fill(null));
   const [isXNext1, setIsXNext1] = useState(true);
   const [count, setCount] = useState(0);
@@ -53,14 +55,20 @@ export function useClassicTicTacToe() {
     setTypeBoard(type);
   };
 
+  const handleClassicDifficultyChange = (nextDifficulty: AiDifficulty) => {
+    setClassicDifficulty(nextDifficulty);
+  };
+
   const runClassicComputerMove = (boardAfterPlayer: CellValue[]) => {
     const newBoard = boardAfterPlayer.slice();
     const availableMoves = newBoard
       .map((val, idx) => (val === null ? idx : null))
       .filter((val): val is number => val !== null);
     if (availableMoves.length > 0) {
-      const move = findBestClassicMove(newBoard);
-      newBoard[move] = 'O';
+      const move = findBestClassicMove(newBoard, classicDifficulty);
+      if (move !== -1) {
+        newBoard[move] = 'O';
+      }
       setIsXNext(true);
       setCurrentPlayer('X');
       setWinner(calculateWinner(newBoard));
@@ -138,12 +146,14 @@ export function useClassicTicTacToe() {
     board,
     winner,
     typeBoard,
+    classicDifficulty,
     currentPlayer,
     isClassicDraw,
     classicWinningLine,
     classicWinningIndices,
     classicPreviewPlayer,
     switchClassicMode,
+    handleClassicDifficultyChange,
     handleClassicSquareClick,
     resetClassicGame,
   };

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
+  AiDifficulty,
   CellValue,
   calculateWinner,
   findBestThreeMarkerMove,
@@ -10,10 +11,11 @@ import {
 export function useThreeMarkerTicTacToe(activeVariant: 'classic' | '3-marker') {
   const [tmBoard, setTmBoard] = useState<CellValue[]>(Array(9).fill(null));
   const [tmIsXNext, setTmIsXNext] = useState(true);
-  const [tmStatus, setTmStatus] = useState("Player X's turn");
+  const [tmStatus, setTmStatus] = useState('Your turn (X)');
   const [xPositions, setXPositions] = useState<number[]>([]);
   const [oPositions, setOPositions] = useState<number[]>([]);
   const [tmMode, setTmMode] = useState<'2-player' | 'vs-computer'>('vs-computer');
+  const [tmDifficulty, setTmDifficulty] = useState<AiDifficulty>('medium');
 
   const executeTmMove = useCallback(
     (index: number, player: 'X' | 'O', currentPositions: number[]) => {
@@ -64,14 +66,29 @@ export function useThreeMarkerTicTacToe(activeVariant: 'classic' | '3-marker') {
       !tmStatus.includes('wins')
     ) {
       const timeout = window.setTimeout(() => {
-        const bestMoveIndex = findBestThreeMarkerMove(tmBoard);
+        const bestMoveIndex = findBestThreeMarkerMove(
+          tmBoard,
+          tmDifficulty,
+          oPositions,
+          xPositions
+        );
         if (bestMoveIndex !== -1) {
           executeTmMove(bestMoveIndex, 'O', oPositions);
         }
       }, 700);
       return () => window.clearTimeout(timeout);
     }
-  }, [activeVariant, tmIsXNext, tmMode, tmStatus, tmBoard, oPositions, executeTmMove]);
+  }, [
+    activeVariant,
+    tmIsXNext,
+    tmMode,
+    tmDifficulty,
+    tmStatus,
+    tmBoard,
+    oPositions,
+    xPositions,
+    executeTmMove,
+  ]);
 
   const handleTmSquareClick = (index: number) => {
     if (tmBoard[index] || tmStatus.includes('wins')) {
@@ -100,6 +117,10 @@ export function useThreeMarkerTicTacToe(activeVariant: 'classic' | '3-marker') {
     resetTmGame(nextMode);
   };
 
+  const handleTmDifficultySelect = (nextDifficulty: AiDifficulty) => {
+    setTmDifficulty(nextDifficulty);
+  };
+
   const tmWinningLine = useMemo(() => getWinningLine(tmBoard), [tmBoard]);
   const tmWinningIndices = useMemo(() => getWinningIndices(tmBoard), [tmBoard]);
   const tmHasWinner = tmStatus.includes('wins');
@@ -124,6 +145,7 @@ export function useThreeMarkerTicTacToe(activeVariant: 'classic' | '3-marker') {
     xPositions,
     oPositions,
     tmMode,
+    tmDifficulty,
     tmWinningLine,
     tmWinningIndices,
     tmHasWinner,
@@ -132,5 +154,6 @@ export function useThreeMarkerTicTacToe(activeVariant: 'classic' | '3-marker') {
     handleTmSquareClick,
     resetTmGame,
     handleTmModeSelect,
+    handleTmDifficultySelect,
   };
 }

@@ -54,8 +54,8 @@ npm run preview
 | :--- | :--- | :--- | :--- | :--- |
 | **Scratchpad** | `/scratchpad` | `terracotta` | Multi-tab local notes workspace with instant auto-save, live word/character/line counters, and `.txt` export. | [`src/projects/scratchpad/README.md`](src/projects/scratchpad/README.md) |
 | **Temp-Mail Client** | `/temp-mail` | `slate` | Unified disposable email hub supporting **9 providers** across REST, Query, and GraphQL protocols with live inbox polling, HTML/plain-text message viewer, and attachment downloads. | [`src/projects/temp-mail/README.md`](src/projects/temp-mail/README.md) |
-| **Tic-Tac-Toe** | `/tic-tac-toe` | `ochre` | Dual-mode tactical grid game featuring **Classic Mode** (`3×3` PvP or Unbeatable Minimax AI) and **3-Marker Mode** (FIFO sliding window where each player holds at most 3 active pieces). | [`src/projects/tic-tac-toe/README.md`](src/projects/tic-tac-toe/README.md) |
-| **Guess The Number** | `/guess-game` | `sage` | Deductive number-guessing challenge (1–100, 10 attempts) with directional proximity hints, attempt history badges, and persistent win/best-score telemetry. | [`src/projects/guess-game/README.md`](src/projects/guess-game/README.md) |
+| **Tic-Tac-Toe** | `/tic-tac-toe` | `ochre` | Dual-mode tactical grid game featuring **Classic Mode** (`3×3`) and **3-Marker Mode** (FIFO sliding window, max 3 pieces per player) with **Easy / Medium / Hard** AI difficulty levels, 2-player mode, and an in-app rules guide. | [`src/projects/tic-tac-toe/README.md`](src/projects/tic-tac-toe/README.md) |
+| **Number Guess (0–99)** | `/guess-game` | `ochre` | Deductive number-guessing puzzle (`0–99`, 10 tries) with directional/proximity hints, live narrowed range tracking, attempt history badges, and an in-app rules guide. | [`src/projects/guess-game/README.md`](src/projects/guess-game/README.md) |
 
 ### 6. External Portfolio Projects Featured on the Hub
 In addition to internal mini-apps, the Hub (`src/data/projects.ts`) indexes external web applications and repositories:
@@ -135,8 +135,8 @@ npm run preview
 | :--- | :--- | :--- | :--- | :--- |
 | **المفكرة السريعة (Scratchpad)** | `/scratchpad` | `terracotta` | مساحة ملاحظات متعددة التبويبات مع حفظ تلقائي فوري، عداد كلمات وأحرف وأسطر، وتصدير ملفات `.txt`. | [`src/projects/scratchpad/README.md`](src/projects/scratchpad/README.md) |
 | **عميل البريد المؤقت (Temp-Mail)** | `/temp-mail` | `slate` | مركز بريد مؤقت موحد يدعم **9 مزودين** عبر بروتوكولات REST وQuery وGraphQL مع تحديث تلقائي لصندوق الوارد، عارض رسائل HTML/نص عادي، وتحميل المرفقات. | [`src/projects/temp-mail/README.md`](src/projects/temp-mail/README.md) |
-| **لعبة إكس-أو (Tic-Tac-Toe)** | `/tic-tac-toe` | `ochre` | لعبة تكتيكية ثنائية الطور تتضمن **الطور الكلاسيكي** (ضد لاعب آخر أو ذكاء اصطناعي لا يُهزم بخوارزمية Minimax) و**طور الثلاث قطع (3-Marker FIFO)** الذي يمنع التعادل تماماً. | [`src/projects/tic-tac-toe/README.md`](src/projects/tic-tac-toe/README.md) |
-| **تخمين الرقم (Guess Game)** | `/guess-game` | `sage` | تحدي استنتاج الرقم السري (بين 1 و100 خلال 10 محاولات) مع تلميحات تقارب ذكية وسجل محاولات وإحصائيات أفضل نتيجة. | [`src/projects/guess-game/README.md`](src/projects/guess-game/README.md) |
+| **لعبة إكس-أو (Tic-Tac-Toe)** | `/tic-tac-toe` | `ochre` | لعبة تكتيكية ثنائية الطور تتضمن **الطور الكلاسيكي** و**طور الثلاث قطع (3-Marker FIFO)** مع 3 مستويات صعوبة للذكاء الاصطناعي (سهل، متوسط، صعب)، وطور لاعبين، ودليل قواعد مدمج. | [`src/projects/tic-tac-toe/README.md`](src/projects/tic-tac-toe/README.md) |
+| **تخمين الرقم (Number Guess 0–99)** | `/guess-game` | `ochre` | تحدي استنتاج الرقم السري (بين 0 و99 خلال 10 محاولات) مع تلميحات تقارب ذكية، وشريط تتبع النطاق المحتمل، ودليل قواعد مدمج. | [`src/projects/guess-game/README.md`](src/projects/guess-game/README.md) |
 
 ### 6. مفاتيح التخزين المحلي العامة (`localStorage`)
 

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FiRotateCcw, FiCpu, FiUsers } from 'react-icons/fi';
+import {
+  FiRotateCcw,
+  FiCpu,
+  FiUsers,
+  FiBookOpen,
+  FiChevronDown,
+  FiChevronUp,
+} from 'react-icons/fi';
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { ToolBanner } from '../../shared/ui/ToolBanner';
 import { Surface } from '../../shared/ui/Surface';
@@ -9,10 +16,53 @@ import { Button } from '../../shared/ui/Button';
 import { Badge } from '../../shared/ui/Badge';
 import { recordRecentProject } from '../../shared/utils/recentTools';
 import { GameBoard } from './GameBoard';
+import { AiDifficulty } from './gameEngine';
 import { useClassicTicTacToe } from './useClassicTicTacToe';
 import { useThreeMarkerTicTacToe } from './useThreeMarkerTicTacToe';
 
 type GameVariant = 'classic' | '3-marker';
+
+const DIFFICULTY_OPTIONS: { value: AiDifficulty; label: string; hint: string }[] = [
+  { value: 'easy', label: 'Easy', hint: 'Casual · Random openings' },
+  { value: 'medium', label: 'Medium', hint: 'Balanced · Tactical blocks' },
+  { value: 'hard', label: 'Hard', hint: 'Master · Deep lookahead AI' },
+];
+
+const CLASSIC_RULES = [
+  {
+    step: '01',
+    title: '3×3 Grid Objective',
+    desc: 'Players take turns placing X and O on the 3×3 grid. The first player to align 3 matching symbols horizontally, vertically, or diagonally wins.',
+  },
+  {
+    step: '02',
+    title: '1P AI & 2P Pass-and-Play',
+    desc: 'Play against the computer in 1 Player mode or locally with a friend in 2 Players mode. Switching between 1P and 2P preserves both boards.',
+  },
+  {
+    step: '03',
+    title: 'AI Difficulty Levels',
+    desc: 'In 1 Player mode, choose Easy (casual moves), Medium (blocks & immediate wins), or Hard (unbeatable full-depth Minimax).',
+  },
+];
+
+const THREE_MARKER_RULES = [
+  {
+    step: '01',
+    title: '3-Piece Limit Per Player',
+    desc: 'Each player can hold at most 3 active markers on the board at any time (tracked by the X: 3/3 and O: 3/3 counters).',
+  },
+  {
+    step: '02',
+    title: '4th Move Removes Oldest (FIFO)',
+    desc: 'Once you have 3 pieces on the grid, your oldest piece is highlighted with a dashed border and NEXT OUT tag. Placing your 4th piece immediately removes that oldest piece.',
+  },
+  {
+    step: '03',
+    title: 'No Draws — Pure Tactics',
+    desc: 'Because the board never fills up, draws are impossible. Plan ahead so removing your oldest marker does not open a winning line for your opponent.',
+  },
+];
 
 export interface TicTacToePageProps {
   onOpenCommandPalette: () => void;
@@ -23,6 +73,7 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
   const initialVariant: GameVariant =
     searchParams.get('variant') === '3-marker' ? '3-marker' : 'classic';
   const [activeVariant, setActiveVariant] = useState<GameVariant>(initialVariant);
+  const [showRules, setShowRules] = useState(false);
 
   useEffect(() => {
     recordRecentProject('tic-tac-toe');
@@ -63,6 +114,14 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
     ? 'ttt-status-banner--x'
     : 'ttt-status-banner--o';
 
+  const activeRules = activeVariant === 'classic' ? CLASSIC_RULES : THREE_MARKER_RULES;
+  const activeClassicDiffMeta =
+    DIFFICULTY_OPTIONS.find((opt) => opt.value === classic.classicDifficulty) ||
+    DIFFICULTY_OPTIONS[1];
+  const activeTmDiffMeta =
+    DIFFICULTY_OPTIONS.find((opt) => opt.value === threeMarker.tmDifficulty) ||
+    DIFFICULTY_OPTIONS[1];
+
   return (
     <WorkspaceLayout
       onOpenCommandPalette={onOpenCommandPalette}
@@ -76,6 +135,17 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
         eyebrow="Board Game · 1 or 2 Players"
         title="Tic-Tac-Toe"
         description="Play Classic 3×3 or 3-Marker mode, where each player keeps at most 3 pieces on the board."
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowRules((prev) => !prev)}
+            aria-expanded={showRules}
+          >
+            <FiBookOpen size={13} />
+            <span>{showRules ? 'Hide Rules' : 'How to Play'}</span>
+          </Button>
+        }
       />
 
       <div className="animate-enter" style={{ ['--stagger-index' as string]: 1 }}>
@@ -90,6 +160,49 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
             { value: '3-marker', label: '3-Marker Mode' },
           ]}
         />
+      </div>
+
+      {/* Collapsible How to Play / Rules Guide */}
+      <div
+        className="game-rules-card animate-enter"
+        data-open={showRules}
+        style={{ ['--stagger-index' as string]: 1 }}
+      >
+        <button
+          type="button"
+          className="game-rules-toggle"
+          onClick={() => setShowRules((prev) => !prev)}
+          aria-expanded={showRules}
+        >
+          <span className="game-rules-toggle__title">
+            <span className="game-rules-toggle__icon">
+              <FiBookOpen size={14} />
+            </span>
+            <span>
+              How to Play · {activeVariant === 'classic' ? 'Classic 3×3 Rules' : '3-Marker FIFO Rules'}
+            </span>
+          </span>
+          <span className="game-rules-toggle__meta">
+            <span>{showRules ? 'Hide' : 'Show guide'}</span>
+            {showRules ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+          </span>
+        </button>
+
+        {showRules && (
+          <div className="game-rules-body">
+            <div className="game-rules-grid">
+              {activeRules.map((rule) => (
+                <div key={rule.step} className="game-rule-item">
+                  <div className="game-rule-item__header">
+                    <span className="game-rule-item__step">{rule.step}</span>
+                    <span>{rule.title}</span>
+                  </div>
+                  <p className="game-rule-item__desc">{rule.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {activeVariant === 'classic' ? (
@@ -132,6 +245,28 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               </div>
             </div>
 
+            {classic.typeBoard === 1 && (
+              <div className="ttt-difficulty-bar" role="group" aria-label="AI Difficulty">
+                <div className="ttt-difficulty-meta">
+                  <span className="ttt-difficulty-label">AI Difficulty</span>
+                  <span className="ttt-difficulty-hint">{activeClassicDiffMeta.hint}</span>
+                </div>
+                <div className="ttt-difficulty-group">
+                  {DIFFICULTY_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className="ttt-difficulty-pill"
+                      data-active={classic.classicDifficulty === opt.value}
+                      onClick={() => classic.handleClassicDifficultyChange(opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Surface
               as="div"
               variant="recessed"
@@ -139,11 +274,15 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
               className={`mono ttt-status-banner ${classicStatusModifier}`}
             >
               {classic.winner
-                ? `Winner: Player ${classic.winner}`
+                ? classic.typeBoard === 1 && classic.winner === 'O'
+                  ? `Winner: Computer (${activeClassicDiffMeta.label})`
+                  : `Winner: Player ${classic.winner}`
                 : classic.isClassicDraw
                 ? 'Draw — No moves remaining'
                 : classic.typeBoard === 1 && classic.currentPlayer === 'O'
                 ? 'Computer thinking...'
+                : classic.typeBoard === 1
+                ? 'Your turn (X)'
                 : `Player ${classic.currentPlayer}'s turn`}
             </Surface>
 
@@ -203,6 +342,28 @@ export const TicTacToePage: React.FC<TicTacToePageProps> = ({ onOpenCommandPalet
                 </Button>
               </div>
             </div>
+
+            {threeMarker.tmMode === 'vs-computer' && (
+              <div className="ttt-difficulty-bar" role="group" aria-label="AI Difficulty">
+                <div className="ttt-difficulty-meta">
+                  <span className="ttt-difficulty-label">AI Difficulty</span>
+                  <span className="ttt-difficulty-hint">{activeTmDiffMeta.hint}</span>
+                </div>
+                <div className="ttt-difficulty-group">
+                  {DIFFICULTY_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className="ttt-difficulty-pill"
+                      data-active={threeMarker.tmDifficulty === opt.value}
+                      onClick={() => threeMarker.handleTmDifficultySelect(opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Surface
               as="div"

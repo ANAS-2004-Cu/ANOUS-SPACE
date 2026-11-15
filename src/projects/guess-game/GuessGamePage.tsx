@@ -1,6 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiRotateCcw, FiCheck, FiArrowUp, FiArrowDown, FiHome, FiHash } from 'react-icons/fi';
+import {
+  FiRotateCcw,
+  FiCheck,
+  FiArrowUp,
+  FiArrowDown,
+  FiHome,
+  FiHash,
+  FiBookOpen,
+  FiChevronDown,
+  FiChevronUp,
+} from 'react-icons/fi';
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { ToolBanner } from '../../shared/ui/ToolBanner';
 import { Surface } from '../../shared/ui/Surface';
@@ -13,6 +23,24 @@ import { GuessFeedback, HintLevel, MAX_TRIES, useGuessGame } from './useGuessGam
 export interface GuessGamePageProps {
   onOpenCommandPalette: () => void;
 }
+
+const GUESS_GAME_RULES = [
+  {
+    step: '01',
+    title: '0–99 Secret Number & 10 Tries',
+    desc: 'A random whole number from 0 to 99 is locked in at the start of each round. You have up to 10 attempts to find it.',
+  },
+  {
+    step: '02',
+    title: 'Directional & Proximity Hints',
+    desc: 'Every guess tells you whether the target is Higher (↑) or Lower (↓), plus how close you are: Very Close (within 10), Getting Close (within 25), or Far (> 25).',
+  },
+  {
+    step: '03',
+    title: 'Live Possible Range Tracker',
+    desc: 'The Possible Range bar automatically narrows the valid 00–99 window based on your previous high and low guesses so you never waste a try.',
+  },
+];
 
 function getFeedbackCopy(
   feedback: GuessFeedback,
@@ -115,6 +143,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState('');
+  const [showRules, setShowRules] = useState(false);
 
   const {
     target,
@@ -183,7 +212,59 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
         eyebrow="Puzzle · 10 Tries"
         title="Number Guess (0–99)"
         description="Guess the hidden number between 0 and 99 within 10 tries using higher/lower hints and narrowed range tracking."
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowRules((prev) => !prev)}
+            aria-expanded={showRules}
+          >
+            <FiBookOpen size={13} />
+            <span>{showRules ? 'Hide Rules' : 'How to Play'}</span>
+          </Button>
+        }
       />
+
+      {/* Collapsible How to Play / Rules Guide */}
+      <div
+        className="game-rules-card animate-enter"
+        data-open={showRules}
+        style={{ ['--stagger-index' as string]: 1 }}
+      >
+        <button
+          type="button"
+          className="game-rules-toggle"
+          onClick={() => setShowRules((prev) => !prev)}
+          aria-expanded={showRules}
+        >
+          <span className="game-rules-toggle__title">
+            <span className="game-rules-toggle__icon">
+              <FiBookOpen size={14} />
+            </span>
+            <span>How to Play · Number Guess (0–99) Rules</span>
+          </span>
+          <span className="game-rules-toggle__meta">
+            <span>{showRules ? 'Hide' : 'Show guide'}</span>
+            {showRules ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
+          </span>
+        </button>
+
+        {showRules && (
+          <div className="game-rules-body">
+            <div className="game-rules-grid">
+              {GUESS_GAME_RULES.map((rule) => (
+                <div key={rule.step} className="game-rule-item">
+                  <div className="game-rule-item__header">
+                    <span className="game-rule-item__step">{rule.step}</span>
+                    <span>{rule.title}</span>
+                  </div>
+                  <p className="game-rule-item__desc">{rule.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Status & Narrowed Range Card */}
       <Surface
@@ -191,7 +272,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
         accent="ochre"
         padded
         className="animate-enter"
-        style={{ ['--stagger-index' as string]: 1 }}
+        style={{ ['--stagger-index' as string]: 2 }}
       >
         <div className="ui-row--between ui-row--lg">
           <div className="ui-stack ui-stack--sm ui-flex-1">
@@ -257,7 +338,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
         accent="ochre"
         padded
         className="animate-enter"
-        style={{ ['--stagger-index' as string]: 2 }}
+        style={{ ['--stagger-index' as string]: 3 }}
       >
         <div className="ui-stack ui-stack--lg">
           <div className="ui-row--between">
@@ -383,7 +464,7 @@ export const GuessGamePage: React.FC<GuessGamePageProps> = ({ onOpenCommandPalet
       {/* Bottom Actions */}
       <div
         className="ui-row--between animate-enter"
-        style={{ ['--stagger-index' as string]: 3 }}
+        style={{ ['--stagger-index' as string]: 4 }}
       >
         <Button variant="secondary" onClick={() => navigate('/')}>
           <FiHome size={14} strokeWidth={1.6} />

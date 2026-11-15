@@ -1,40 +1,40 @@
-# Guess The Number · لعبة تخمين الرقم
+# Number Guess (0–99) · لعبة تخمين الرقم
 
 **Route / المسار:** `/guess-game`  
-**Accent / الهوية اللونية:** `sage`
+**Accent / الهوية اللونية:** `ochre`
 
 ---
 
 ## English Documentation
 
 ### 1. Overview
-**Guess The Number** is a deductive numerical game where players attempt to identify a secret integer between **1 and 100** within **10 attempts**. Each guess produces a directional hint (`↑ Higher` or `↓ Lower`) and a proximity temperature indicator (`Very Close!` when $|\text{guess} - \text{secret}| \le 5$, or `Getting Warm` when $\le 15$).
+**Number Guess (0–99)** is a deductive numerical puzzle where players attempt to discover a hidden whole number between **0 and 99** within **10 tries**. Every guess provides directional feedback (`Too Low ↑` or `Too High ↓`), proximity temperature hints (`Very Close ≤ 10`, `Getting Close ≤ 25`, or `More than 25 away`), and dynamically narrows the visual **Possible Range (`00–99`)** window. It also includes an interactive in-app **"How to Play"** rules guide.
 
 ### 2. File Structure
-- `GuessGamePage.tsx`: View component rendering the telemetry scoreboard, feedback banner, numeric input form, and chronological guess history pills.
-- `useGuessGame.ts`: Custom hook encapsulating secret number generation, input validation, attempt evaluation, and session statistics (`gamesWon`, `bestAttempts`).
-- `../../styles/games.css`: Styles for the feedback banner, input bar, and history chips.
+- `GuessGamePage.tsx`: View component rendering the `WorkspaceLayout`, `ToolBanner`, collapsible **How to Play** rules card, live status & narrowed range card, numeric guess input with remaining-tries progress bar, and color-coded guess history chips.
+- `useGuessGame.ts`: Custom React hook managing secret number generation (`0–99`), attempt validation, directional/proximity feedback calculation, and live `minBound`–`maxBound` range deduction.
+- `../../styles/games.css`: Styles for the large number tile, animated range window track, attempts progress bar, history badges, and collapsible rules card.
 
 ### 3. Inputs, Outputs & Game Rules (`useGuessGame.ts`)
-- **Configuration Constants:**
-  - `MIN_NUMBER = 1`
-  - `MAX_NUMBER = 100`
-  - `MAX_ATTEMPTS = 10`
-- **Validation Rules:**
-  - Non-numeric or out-of-range inputs (`< 1` or `> 100`) trigger a warning toast via `AlertContext` without consuming an attempt.
-  - Duplicate guesses already present in `history` trigger an informational toast (`Already Guessed`) without consuming an attempt.
-- **Outcome & Feedback Logic:**
-  - **Exact Match (`num === secretNumber`):** Sets `gameOver = true`, `won = true`, increments `gamesWon`, updates `bestAttempts` if fewer attempts were used, and displays a celebratory banner.
-  - **Exhausted Attempts (`nextHistory.length >= MAX_ATTEMPTS`):** Sets `gameOver = true`, `won = false`, and reveals the secret number.
-  - **Directional + Proximity Hint:** Appends `{ value, direction: 'higher' | 'lower', distance }` to `history` (newest first).
+- **Range & Attempt Limit:**
+  - Secret target integer: $0 \le \text{target} \le 99$ (`Math.floor(Math.random() * 100)`).
+  - Maximum attempts per round: `MAX_TRIES = 10`.
+- **Input Validation:**
+  - Empty submissions (`feedback = 'empty'`) or numbers outside `0–99` (`feedback = 'out-of-range'`) display helpful guidance without consuming a try.
+- **Directional & Proximity Hints (`HintLevel` & `GuessFeedback`):**
+  - **Solved (`victory` / `won`):** Exact match (`distance === 0`), reveals target in sage green.
+  - **Very Close (`so-higher` / `so-lower` / `very-close`):** Within **10** of the secret number ($1 \le \text{distance} \le 10$).
+  - **Getting Close (`close`):** Within **25** of the secret number ($11 \le \text{distance} \le 25$).
+  - **Far (`far`):** More than **25** away ($\text{distance} > 25$).
+- **Live Narrowed Range (`minBound` – `maxBound`):**
+  - Automatically computes the tightest valid interval $[ \text{minBound}, \text{maxBound} ] \subseteq [0, 99]$ from all previous guesses and renders it on a proportional progress bar.
 
-### 4. State & Storage Persistence
-- Round state (`secretNumber`, `history`, `gameOver`, `won`) and multi-round session telemetry (`gamesWon`, `bestAttempts`) are managed in React state via `useGuessGame`.
-- Visiting `/guess-game` records `'guess-game'` in `localStorage` under `anous_recent_tools`.
+### 4. In-App "How to Play" Guide
+- Clicking **How to Play** in the banner or toggling the `How to Play · Number Guess (0–99) Rules` bar expands a 3-card guide explaining the `0–99` range, `10-try` limit, directional/proximity hints, and live range bar.
 
 ### 5. Customization Guide
-- **Change Number Range or Attempt Limit:** Update `MIN_NUMBER`, `MAX_NUMBER`, or `MAX_ATTEMPTS` at the top of `src/projects/guess-game/useGuessGame.ts`.
-- **Adjust Proximity Thresholds:** Modify the distance checks (`distance <= 5`, `distance <= 15`) inside `submitGuess` in `src/projects/guess-game/useGuessGame.ts`.
+- **Change Attempt Limit:** Update `export const MAX_TRIES = 10;` in `src/projects/guess-game/useGuessGame.ts`.
+- **Adjust Proximity Thresholds:** Update the distance checks (`distance <= 10`, `distance <= 25`) in `src/projects/guess-game/useGuessGame.ts` and `GuessGamePage.tsx`.
 
 ---
 
@@ -43,21 +43,22 @@
 ## التوثيق باللغة العربية (Arabic Documentation)
 
 ### 1. نظرة عامة
-لعبة **تخمين الرقم (Guess The Number)** هي لعبة استنتاجية يحاول فيها اللاعب اكتشاف رقم سري عشوائي بين **1 و 100** خلال **10 محاولات** كحد أقصى، مع الحصول على تلميحات اتجاهية (`أعلى ↑` أو `أقل ↓`) ومؤشر مدى القرب من الرقم الصحيح بعد كل محاولة.
+لعبة **تخمين الرقم (Number Guess 0–99)** هي لعبة ألغاز استنتاجية يحاول فيها اللاعب اكتشاف رقم سري عشوائي بين **0 و 99** خلال **10 محاولات** كحد أقصى. بعد كل تخمين، تقدم اللعبة تلميحاً اتجاهياً (`أعلى ↑` أو `أقل ↓`) ومؤشر تقارب لوني، وتقوم بتضييق شريط **النطاق المحتمل (`Possible Range 00–99`)** تلقائياً، مع توفير دليل قواعد مدمج (**How to Play**) داخل الصفحة.
 
 ### 2. هيكل الملفات
-- `GuessGamePage.tsx`: مكون الواجهة لعرض لوحة الإحصائيات، لافتة التلميحات، حقل الإدخال، وسجل المحاولات السابقة.
-- `useGuessGame.ts`: الخطاف البرمجي الذي يدير توليد الرقم السري، التحقق من المدخلات، وحساب النتائج.
-- `../../styles/games.css`: تنسيقات اللعبة وشرائح سجل التخمينات.
+- `GuessGamePage.tsx`: واجهة المستخدم (دليل طريقة اللعب القابل للطي، بطاقة الحالة والنطاق المحتمل، حقل الإدخال وشريط المحاولات المتبقية، وسجل التخمينات السابقة).
+- `useGuessGame.ts`: الخطاف البرمجي المسؤول عن توليد الرقم السري (`0–99`)، التحقق من المدخلات، حساب المسافة والتلميحات، وتحديث حدود النطاق (`minBound` و`maxBound`).
+- `../../styles/games.css`: تنسيقات اللعبة وشريط النطاق ودليل القواعد.
 
-### 3. قواعد اللعبة والمنطق البرمجي
-- **النطاق والحدود:** الرقم السري بين `1` (`MIN_NUMBER`) و`100` (`MAX_NUMBER`)، والحد الأقصى للمحاولات هو `10` (`MAX_ATTEMPTS`).
-- **التحقق الذكي:** الإدخالات غير الرقمية أو الخارجة عن النطاق أو المكررة لا تستهلك محاولة وتُظهر تنبيهاً للمستخدم.
-- **مؤشرات التقارب:**
-  - إذا كان الفرق $\le 5$: يظهر تلميح `Very Close!` (قريب جداً).
-  - إذا كان الفرق $\le 15$: يظهر تلميح `Getting Warm` (اقتربت).
+### 3. قواعد اللعبة ومؤشرات التقارب
+- **النطاق والحدود:** الرقم السري عدد صحيح من `0` إلى `99`، وعدد المحاولات المسموحة هو `10` محاولات (`MAX_TRIES = 10`).
+- **مستويات التلميح:**
+  - **قريب جداً (`Very Close`):** الفرق بين تخمينك والرقم السري $\le 10$.
+  - **قريب (`Getting Close`):** الفرق بين $11$ و$25$.
+  - **بعيد (`More than 25 away`):** الفرق أكبر من $25$.
+- **تضييق النطاق التلقائي:** يتم تحديث الحد الأدنى (`minBound`) والحد الأقصى (`maxBound`) تلقائياً بعد كل محاولة لمساعدتك على حصر الرقم الصحيح بسرعة.
 
 ### 4. كيفية التخصيص
-- لتغيير مجال الأرقام أو عدد المحاولات المسموحة، عدّل الثوابت `MIN_NUMBER` و`MAX_NUMBER` و`MAX_ATTEMPTS` في بداية الملف `src/projects/guess-game/useGuessGame.ts`.
+- لتغيير عدد المحاولات المسموحة، عدّل الثابت `MAX_TRIES = 10` في الملف `src/projects/guess-game/useGuessGame.ts`.
 
 </div>
