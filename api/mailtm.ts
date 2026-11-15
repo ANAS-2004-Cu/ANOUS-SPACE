@@ -61,22 +61,259 @@ function sendBytes(res: any, status: number, bytes: Uint8Array) {
   res.status(status).send(Buffer ? Buffer.from(bytes) : bytes);
 }
 
-const FALLBACK_DOMAINS_PAYLOAD = JSON.stringify({
-  '@context': '/contexts/Domain',
-  '@id': '/domains',
-  '@type': 'hydra:Collection',
-  'hydra:totalItems': 1,
-  'hydra:member': [
-    {
-      '@id': '/domains/fldubai',
+const FALLBACK_DOMAINS_LIST = ['fldubai.com', 'grabmail.io', 'mixozia.com', 'linqmail.com'];
+
+const buildHydraDomainsPayload = (domains: string[]): string =>
+  JSON.stringify({
+    '@context': '/contexts/Domain',
+    '@id': '/domains',
+    '@type': 'hydra:Collection',
+    'hydra:totalItems': domains.length,
+    'hydra:member': domains.map((domain, idx) => ({
+      '@id': `/domains/fallback-${idx + 1}`,
       '@type': 'Domain',
-      id: 'fldubai',
-      domain: 'fldubai.com',
+      id: `fallback-${idx + 1}`,
+      domain,
       isActive: true,
       isPrivate: false,
-    },
-  ],
-});
+    })),
+  });
+
+const FALLBACK_DOMAINS_PAYLOAD = buildHydraDomainsPayload(FALLBACK_DOMAINS_LIST);
+
+function encodeFallbackToken(address: string): string {
+  const raw = `gmfb:${address.trim().toLowerCase()}`;
+  return Buffer ? Buffer.from(raw, 'utf8').toString('base64') : raw;
+}
+
+function decodeFallbackToken(authHeader: string | undefined): string | null {
+  if (!authHeader) return null;
+  const rawToken = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (!rawToken) return null;
+  if (rawToken.startsWith('gmfb:')) {
+    return rawToken.slice(5);
+  }
+  if (!Buffer) return null;
+  try {
+    const decoded = Buffer.from(rawToken, 'base64').toString('utf8');
+    if (decoded.startsWith('gmfb:')) {
+      return decoded.slice(5);
+    }
+  } catch {
+    // Not a fallback token
+  }
+  return null;
+}
+
+async function resolveFallbackAddress(addressInput: string): Promise<string> {
+  const clean = (addressInput || '').trim().toLowerCase();
+  const [rawUser, rawDomain] = clean.split('@');
+  const user = (rawUser || 'user').replace(/[^a-z0-9._-]/g, '') || 'user';
+  const grabDomains = ['grabmail.io', 'mixozia.com', 'linqmail.com'];
+  const domain = grabDomains.includes(rawDomain || '') ? rawDomain! : 'grabmail.io';
+  return `${user}@${domain}`;
+}
+
+async function handleGrabMailFallback(
+  req: any,
+  res: any,
+  method: string,
+  targetPath: string,
+  requestData: string | undefined,
+  fallbackMailbox: string | null
+): Promise<boolean> {
+  try {
+    if (method === 'POST' && targetPath === '/accounts') {
+      const parsed = JSON.parse(requestData || '{}') as { address?: string };
+      const address = await resolveFallbackAddress(parsed.address || '');
+      const id = `gm-${address}`;
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(201).json({
+        '@context': '/contexts/Account',
+        '@id': `/accounts/${id}`,
+        '@type': 'Account',
+        id,
+        address,
+        isDisabled: false,
+        isDeleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return true;
+    }
+
+    if (method === 'POST' && targetPath === '/token') {
+      const parsed = JSON.parse(requestData || '{}') as { address?: string };
+      const address = await resolveFallbackAddress(parsed.address || '');
+      const id = `gm-${address}`;
+      const token = encodeFallbackToken(address);
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(200).json({ id, token });
+      return true;
+    }
+
+    if (!fallbackMailbox) {
+      return false;
+    }
+
+    if (method === 'GET' && targetPath === '/messages') {
+      const gmRes = await axios.get(
+        `https://grabmail.io/api/v1/mailbox?address=${encodeURIComponent(fallbackMailbox)}`,
+        {
+          headers: { Accept: 'application/json', 'User-Agent': PROXY_USER_AGENT },
+          timeout: 8000,
+          validateStatus: () => true,
+        }
+      );
+      const rawMessages = Array.isArray(gmRes.data)
+        ? gmRes.data
+        : Array.isArray(gmRes.data?.messages)
+          ? gmRes.data.messages
+          : [];
+      const hydraMembers = rawMessages.map((m: any) => ({
+        id: String(m.id ?? ''),
+        from:
+          typeof m.from === 'string'
+            ? { address: m.from, name: m.from.split('@')[0] || m.from }
+            : m.from || { address: '', name: 'Unknown' },
+        to: [{ address: fallbackMailbox, name: fallbackMailbox.split('@')[0] || '' }],
+        subject: m.subject || '(No subject)',
+        intro: m.preview || m.text || '',
+        seen: Boolean(m.seen),
+        hasAttachments: Array.isArray(m.attachments)
+          ? m.attachments.length > 0
+          : Number(m.attachments || 0) > 0 || Boolean(m.hasAttachments),
+        createdAt: m.date || m.created_at || new Date().toISOString(),
+      }));
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(200).json({
+        '@context': '/contexts/Message',
+        '@id': '/messages',
+        '@type': 'hydra:Collection',
+        'hydra:totalItems': hydraMembers.length,
+        'hydra:member': hydraMembers,
+      });
+      return true;
+    }
+
+    const msgMatch = targetPath.match(/^\/messages\/([^/]+)$/);
+    if (msgMatch) {
+      const msgId = decodeURIComponent(msgMatch[1]);
+      if (method === 'PATCH') {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.status(200).json({ id: msgId, seen: true });
+        return true;
+      }
+      if (method === 'DELETE') {
+        await axios.delete(
+          `https://grabmail.io/api/v1/message/${encodeURIComponent(msgId)}?mailbox=${encodeURIComponent(fallbackMailbox)}`,
+          {
+            headers: { Accept: 'application/json', 'User-Agent': PROXY_USER_AGENT },
+            timeout: 8000,
+            validateStatus: () => true,
+          }
+        );
+        res.status(204).end();
+        return true;
+      }
+      if (method === 'GET') {
+        const gmRes = await axios.get(
+          `https://grabmail.io/api/v1/message/${encodeURIComponent(msgId)}?mailbox=${encodeURIComponent(fallbackMailbox)}`,
+          {
+            headers: { Accept: 'application/json', 'User-Agent': PROXY_USER_AGENT },
+            timeout: 8000,
+            validateStatus: () => true,
+          }
+        );
+        const m = gmRes.data || {};
+        const attachments = Array.isArray(m.attachments)
+          ? m.attachments.map((att: any, idx: number) => {
+              const attId = String(att.id ?? idx);
+              return {
+                id: attId,
+                filename: att.filename || att.name || `attachment-${idx + 1}`,
+                contentType: att.content_type || att.contentType || 'application/octet-stream',
+                size: Number(att.size || 0),
+                downloadUrl: `/messages/${encodeURIComponent(msgId)}/attachment/${encodeURIComponent(attId)}`,
+              };
+            })
+          : [];
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.status(200).json({
+          id: String(m.id ?? msgId),
+          from:
+            typeof m.from === 'string'
+              ? { address: m.from, name: m.from.split('@')[0] || m.from }
+              : m.from || { address: '', name: 'Unknown' },
+          to: [{ address: fallbackMailbox, name: fallbackMailbox.split('@')[0] || '' }],
+          subject: m.subject || '(No subject)',
+          intro: m.preview || '',
+          text: m.text || m.preview || '',
+          html: m.html ? [m.html] : [],
+          seen: true,
+          hasAttachments: attachments.length > 0,
+          attachments,
+          createdAt: m.date || m.created_at || new Date().toISOString(),
+        });
+        return true;
+      }
+    }
+
+    const attMatch = targetPath.match(/^\/messages\/([^/]+)\/attachment\/([^/]+)$/);
+    if (attMatch && method === 'GET') {
+      const msgId = decodeURIComponent(attMatch[1]);
+      const attId = decodeURIComponent(attMatch[2]);
+      const gmRes = await axios.get<ArrayBuffer>(
+        `https://grabmail.io/api/v1/attachment/${encodeURIComponent(attId)}?mailbox=${encodeURIComponent(fallbackMailbox)}&message_id=${encodeURIComponent(msgId)}`,
+        {
+          responseType: 'arraybuffer',
+          headers: { 'User-Agent': PROXY_USER_AGENT },
+          timeout: 10000,
+          validateStatus: () => true,
+        }
+      );
+      const ct = String(gmRes.headers['content-type'] || 'application/octet-stream');
+      res.setHeader('Content-Type', ct);
+      sendBytes(res, gmRes.status, new Uint8Array(gmRes.data || new ArrayBuffer(0)));
+      return true;
+    }
+
+    const srcMatch = targetPath.match(/^\/sources\/([^/]+)$/);
+    if (srcMatch && method === 'GET') {
+      const msgId = decodeURIComponent(srcMatch[1]);
+      const gmRes = await axios.get(
+        `https://grabmail.io/api/v1/message/${encodeURIComponent(msgId)}?mailbox=${encodeURIComponent(fallbackMailbox)}`,
+        {
+          headers: { Accept: 'application/json', 'User-Agent': PROXY_USER_AGENT },
+          timeout: 8000,
+          validateStatus: () => true,
+        }
+      );
+      const m = gmRes.data || {};
+      const rawMime = [
+        `From: ${typeof m.from === 'string' ? m.from : m.from?.address || ''}`,
+        `To: ${fallbackMailbox}`,
+        `Subject: ${m.subject || ''}`,
+        `Date: ${m.date || m.created_at || new Date().toUTCString()}`,
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset=utf-8',
+        '',
+        m.text || m.html || '',
+      ].join('\r\n');
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(200).json({ id: msgId, data: rawMime });
+      return true;
+    }
+
+    if (method === 'DELETE' && targetPath.startsWith('/accounts/')) {
+      res.status(204).end();
+      return true;
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
 
 async function fetchDomainsViaRelay(): Promise<Uint8Array | null> {
   try {
@@ -122,6 +359,27 @@ export default async function handler(req: any, res: any) {
     const targetUrl = `https://api.mail.tm${targetPath}`;
     const method = (req.method || 'GET').toUpperCase();
 
+    const authHeader = req.headers?.authorization || req.headers?.Authorization;
+    const fallbackMailbox = decodeFallbackToken(authHeader ? String(authHeader) : undefined);
+
+    let requestData: string | undefined;
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+      requestData = await resolveRequestBody(req);
+    }
+
+    // If this session is already using a fallback token, route directly to GrabMail fallback
+    if (fallbackMailbox) {
+      const handled = await handleGrabMailFallback(
+        req,
+        res,
+        method,
+        targetPath,
+        requestData,
+        fallbackMailbox
+      );
+      if (handled) return;
+    }
+
     if (
       method === 'GET' &&
       targetPath === '/domains' &&
@@ -148,18 +406,15 @@ export default async function handler(req: any, res: any) {
       'User-Agent': PROXY_USER_AGENT,
     };
 
-    const authHeader = req.headers?.authorization || req.headers?.Authorization;
     if (authHeader) {
       headers['Authorization'] = String(authHeader);
     }
 
-    let requestData: string | undefined;
     if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
       const incomingContentType = String(req.headers?.['content-type'] || '').trim();
       headers['Content-Type'] =
         incomingContentType ||
         (method === 'PATCH' ? 'application/merge-patch+json' : 'application/json');
-      requestData = await resolveRequestBody(req);
     }
 
     const upstream = await axios.request<ArrayBuffer>({
@@ -224,6 +479,22 @@ export default async function handler(req: any, res: any) {
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.status(200).send(FALLBACK_DOMAINS_PAYLOAD);
         return;
+      }
+
+      // Automatic fallback to GrabMail on Vercel when api.mail.tm blocks cloud IPs on POST /accounts or POST /token
+      if (
+        (upstream.status === 403 || upstream.status >= 500) &&
+        (targetPath === '/accounts' || targetPath === '/token')
+      ) {
+        const handled = await handleGrabMailFallback(
+          req,
+          res,
+          method,
+          targetPath,
+          requestData,
+          fallbackMailbox
+        );
+        if (handled) return;
       }
 
       if (bytes.length === 0) {

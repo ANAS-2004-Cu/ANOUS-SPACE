@@ -284,13 +284,16 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
         body: JSON.stringify({ address, password }),
       });
 
+      const resolvedAddress = (created?.address || address).trim();
+      const [resolvedUser, resolvedDomain] = resolvedAddress.split('@');
+
       const tokenRes = await requestJson<{ token?: string; id?: string }>('/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-        body: JSON.stringify({ address, password }),
+        body: JSON.stringify({ address: resolvedAddress, password }),
       });
 
       if (!tokenRes?.token) {
@@ -299,12 +302,12 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
 
       const account: TempAccount = {
         provider: config.id,
-        address: created?.address || address,
+        address: resolvedAddress,
         token: tokenRes.token,
         password,
         accountId: created?.id || tokenRes.id,
-        emailUser: cleanUser,
-        domain: targetDomain,
+        emailUser: resolvedUser || cleanUser,
+        domain: resolvedDomain || targetDomain,
       };
       await writeAccountStorage(account);
       return account;
