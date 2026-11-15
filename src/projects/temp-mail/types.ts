@@ -1,5 +1,4 @@
 export type MailProviderId =
-  | 'mail.tm'
   | 'grabmail.io'
   | 'catchmail.io'
   | 'temp-mail.io'
@@ -79,7 +78,6 @@ export interface MailProviderAdapter {
   createAccount: (username?: string, domain?: string) => Promise<TempAccount>;
   fetchMessages: () => Promise<EmailSummary[]>;
   fetchMessageDetail: (id: string) => Promise<EmailDetail>;
-  fetchRawSource?: (id: string) => Promise<string>;
   deleteMessage: (id: string) => Promise<void>;
   downloadAttachment?: (downloadUrl: string, filename: string) => Promise<void>;
   resetSession?: () => Promise<void>;
@@ -88,9 +86,6 @@ export interface MailProviderAdapter {
 export const normalizeProviderId = (raw?: string | null): MailProviderId => {
   const value = (raw || '').trim().toLowerCase();
   switch (value) {
-    case 'grabmail.io':
-    case 'grabmail':
-      return 'grabmail.io';
     case 'catchmail.io':
     case 'catchmail':
       return 'catchmail.io';
@@ -113,9 +108,9 @@ export const normalizeProviderId = (raw?: string | null): MailProviderId => {
     case 'guerrillamail':
     case 'guerrilla':
       return 'guerrillamail';
-    case 'mail.tm':
-    case 'mailtm':
+    case 'grabmail.io':
+    case 'grabmail':
     default:
-      return 'mail.tm';
+      return 'grabmail.io';
   }
 };

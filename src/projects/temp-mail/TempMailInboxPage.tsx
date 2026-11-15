@@ -19,7 +19,6 @@ export interface TempMailInboxPageProps {
 }
 
 const DEFAULT_AUTO_REFRESH_MS = 10_000;
-const MAILTM_AUTO_REFRESH_MS = 18_000;
 
 export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenCommandPalette }) => {
   const navigate = useNavigate();
@@ -144,13 +143,11 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
 
   useEffect(() => {
     if (!autoRefresh || !account?.address || sessionError) return;
-    const intervalMs =
-      activeProvider === 'mail.tm' ? MAILTM_AUTO_REFRESH_MS : DEFAULT_AUTO_REFRESH_MS;
     const timer = window.setInterval(() => {
       void syncMessages(true);
-    }, intervalMs);
+    }, DEFAULT_AUTO_REFRESH_MS);
     return () => window.clearInterval(timer);
-  }, [activeProvider, autoRefresh, account?.address, sessionError, syncMessages]);
+  }, [autoRefresh, account?.address, sessionError, syncMessages]);
 
   const displayedAddress = account ? resolveGuerrillaDisplayAddress(account) : null;
 
@@ -274,11 +271,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
         loading={loading}
         refreshing={refreshing}
         autoRefresh={autoRefresh}
-        autoRefreshSeconds={
-          activeProvider === 'mail.tm'
-            ? MAILTM_AUTO_REFRESH_MS / 1000
-            : DEFAULT_AUTO_REFRESH_MS / 1000
-        }
+        autoRefreshSeconds={DEFAULT_AUTO_REFRESH_MS / 1000}
         sessionError={sessionError}
         creatingNew={creatingNew}
         onBack={() => navigate(`/temp-mail?provider=${encodeURIComponent(activeProvider)}`)}

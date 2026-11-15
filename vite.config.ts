@@ -242,14 +242,6 @@ export default defineConfig({
         });
 
         server.middlewares.use(
-          '/api/mailtm',
-          createPathProxyMiddleware('https://api.mail.tm', '/domains', 'Mail.tm', {
-            forwardAuthorization: true,
-            defaultAccept: 'application/json',
-          })
-        );
-
-        server.middlewares.use(
           '/api/grabmail',
           createPathProxyMiddleware('https://grabmail.io/api/v1', '/domains', 'GrabMail')
         );

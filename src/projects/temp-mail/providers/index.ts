@@ -1,5 +1,4 @@
 import { MailProviderAdapter, MailProviderId, ProviderMeta } from '../types';
-import { mailTmAdapter } from './mailTm';
 import { grabMailAdapter } from './grabMail';
 import { catchmailAdapter, CATCHMAIL_DOMAINS } from './catchmail';
 import { tempMailIoAdapter } from './tempMailIo';
@@ -19,7 +18,6 @@ export { CATCHMAIL_DOMAINS } from './catchmail';
 export { GUERRILLA_DOMAINS, resolveGuerrillaDisplayAddress } from './guerrillaMail';
 
 export const PROVIDER_ORDER: MailProviderId[] = [
-  'mail.tm',
   'grabmail.io',
   'catchmail.io',
   'temp-mail.io',
@@ -31,7 +29,6 @@ export const PROVIDER_ORDER: MailProviderId[] = [
 ];
 
 export const PROVIDER_ADAPTERS: Record<MailProviderId, MailProviderAdapter> = {
-  'mail.tm': mailTmAdapter,
   'grabmail.io': grabMailAdapter,
   'catchmail.io': catchmailAdapter,
   'temp-mail.io': tempMailIoAdapter,
@@ -43,12 +40,6 @@ export const PROVIDER_ADAPTERS: Record<MailProviderId, MailProviderAdapter> = {
 };
 
 export const PROVIDERS_META: Record<MailProviderId, ProviderMeta> = {
-  'mail.tm': {
-    id: 'mail.tm',
-    label: 'Mail.tm',
-    shortDescription: 'Authenticated REST inbox with Bearer JWT, attachments, and manual message deletion.',
-    capabilities: mailTmAdapter.capabilities,
-  },
   'grabmail.io': {
     id: 'grabmail.io',
     label: 'GrabMail',

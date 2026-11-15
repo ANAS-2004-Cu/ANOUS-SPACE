@@ -2,7 +2,6 @@ import * as SecureStore from '../../shared/utils/storage';
 import { EmailDetail, MailProviderId, TempAccount } from './types';
 
 export const TEMPMAIL_STORAGE_KEYS: Record<MailProviderId, string> = {
-  'mail.tm': 'anous_tempmail_mailtm',
   'grabmail.io': 'anous_tempmail_grabmail',
   'catchmail.io': 'anous_tempmail_catchmail',
   'temp-mail.io': 'anous_tempmail_tempmail_io',
@@ -14,7 +13,6 @@ export const TEMPMAIL_STORAGE_KEYS: Record<MailProviderId, string> = {
 };
 
 const LEGACY_KEYS: Partial<Record<MailProviderId, string[]>> = {
-  'mail.tm': ['mailtm_data'],
   guerrillamail: ['guerrilla_data'],
   'tempmail.lol': ['tempmail_lol_data'],
 };

@@ -38,7 +38,7 @@ export const TempMailHubPage: React.FC<TempMailHubPageProps> = ({ onOpenCommandP
 
   const initialProvider = searchParams.get('provider')
     ? normalizeProviderId(searchParams.get('provider'))
-    : 'mail.tm';
+    : 'grabmail.io';
 
   const [selectedProvider, setSelectedProvider] = useState<MailProviderId>(initialProvider);
   const [username, setUsername] = useState(() => generateRandomUsername(10));

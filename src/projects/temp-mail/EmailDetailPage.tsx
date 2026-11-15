@@ -40,15 +40,12 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [email, setEmail] = useState<EmailDetail | null>(null);
-  const [viewMode, setViewMode] = useState<'html' | 'text' | 'raw'>('html');
-  const [rawSource, setRawSource] = useState<string | null>(null);
-  const [loadingRaw, setLoadingRaw] = useState(false);
+  const [showHtml, setShowHtml] = useState(true);
 
   const fetchEmailDetails = useCallback(async () => {
     if (!id) return;
     try {
       setLoading(true);
-      setRawSource(null);
       const detail = await adapter.fetchMessageDetail(id);
       setEmail(detail);
     } catch (err) {
@@ -65,34 +62,6 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
       setLoading(false);
     }
   }, [id, adapter, showToast]);
-
-  const handleToggleRawSource = async () => {
-    if (viewMode === 'raw') {
-      setViewMode('html');
-      return;
-    }
-    if (!id || !adapter.fetchRawSource) return;
-    setViewMode('raw');
-    if (rawSource !== null) return;
-    try {
-      setLoadingRaw(true);
-      const source = await adapter.fetchRawSource(id);
-      setRawSource(source);
-    } catch (err) {
-      const msg =
-        err instanceof Error && err.message
-          ? err.message
-          : 'Failed to fetch raw message source.';
-      showToast({
-        title: 'Raw Source Unavailable',
-        message: msg,
-        type: 'error',
-      });
-      setViewMode('text');
-    } finally {
-      setLoadingRaw(false);
-    }
-  };
 
   useEffect(() => {
     if (!id) {
@@ -237,30 +206,18 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setViewMode(viewMode === 'html' ? 'text' : 'html')}
+              onClick={() => setShowHtml(!showHtml)}
             >
-              {viewMode === 'html' ? <FiFileText size={13} /> : <FiCode size={13} />}
-              <span>View {viewMode === 'html' ? 'Plain Text' : 'HTML'}</span>
+              {showHtml ? <FiFileText size={13} /> : <FiCode size={13} />}
+              <span>View {showHtml ? 'Plain Text' : 'HTML'}</span>
             </Button>
-            {adapter.fetchRawSource && (
-              <Button
-                variant={viewMode === 'raw' ? 'primary' : 'secondary'}
-                size="sm"
-                onClick={handleToggleRawSource}
-              >
-                <FiCode size={13} />
-                <span>{viewMode === 'raw' ? 'Back to Rendered' : 'Raw EML'}</span>
-              </Button>
-            )}
             <Button
               variant="secondary"
               size="sm"
-              onClick={() =>
-                copyToClipboard(viewMode === 'raw' && rawSource ? rawSource : email.text)
-              }
+              onClick={() => copyToClipboard(email.text)}
             >
               <FiCopy size={13} />
-              <span>{viewMode === 'raw' ? 'Copy Raw EML' : 'Copy Content'}</span>
+              <span>Copy Content</span>
             </Button>
             {adapter.capabilities.supportsDelete && (
               <Button variant="danger" size="sm" onClick={handleDeleteEmail}>
@@ -325,17 +282,13 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
           </Surface>
 
           <Surface padded={false} className="email-detail-frame-wrap">
-            {viewMode === 'html' ? (
+            {showHtml ? (
               <iframe
                 title="Email Content"
                 className="email-detail-iframe"
                 srcDoc={htmlWrapper}
                 sandbox="allow-popups allow-popups-to-escape-sandbox"
               />
-            ) : viewMode === 'raw' ? (
-              <div className="mono email-detail-plain">
-                {loadingRaw ? 'Fetching raw MIME source...' : rawSource || 'No raw source returned.'}
-              </div>
             ) : (
               <div
                 className="mono email-detail-plain"
