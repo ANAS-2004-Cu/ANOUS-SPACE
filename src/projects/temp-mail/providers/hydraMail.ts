@@ -30,6 +30,7 @@ interface HydraMailConfig {
   id: MailProviderId;
   proxyBase: string;
   directBase?: string;
+  fallbackDomains?: readonly string[];
   capabilities: ProviderCapabilities;
 }
 
@@ -238,13 +239,22 @@ export function createHydraMailAdapter(config: HydraMailConfig): MailProviderAda
               return relayDomains;
             }
           } catch {
-            // Ignore relay fallback failure and rethrow primary error
+            // Ignore relay fallback failure
           }
+        }
+
+        if (config.fallbackDomains && config.fallbackDomains.length > 0) {
+          return [...config.fallbackDomains];
         }
         throw err;
       }
 
-      return readCachedDomains(true) || [];
+      return (
+        readCachedDomains(true) ||
+        (config.fallbackDomains && config.fallbackDomains.length > 0
+          ? [...config.fallbackDomains]
+          : [])
+      );
     },
 
     async getStoredAccount(): Promise<TempAccount | null> {

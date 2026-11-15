@@ -61,12 +61,33 @@ function sendBytes(res: any, status: number, bytes: Uint8Array) {
   res.status(status).send(Buffer ? Buffer.from(bytes) : bytes);
 }
 
+const FALLBACK_DOMAINS_PAYLOAD = JSON.stringify({
+  '@context': '/contexts/Domain',
+  '@id': '/domains',
+  '@type': 'hydra:Collection',
+  'hydra:totalItems': 1,
+  'hydra:member': [
+    {
+      '@id': '/domains/fldubai',
+      '@type': 'Domain',
+      id: 'fldubai',
+      domain: 'fldubai.com',
+      isActive: true,
+      isPrivate: false,
+    },
+  ],
+});
+
 async function fetchDomainsViaRelay(): Promise<Uint8Array | null> {
   try {
     const relayUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.mail.tm/domains')}`;
     const relayRes = await axios.get<ArrayBuffer>(relayUrl, {
       responseType: 'arraybuffer',
-      timeout: 8000,
+      timeout: 9000,
+      headers: {
+        'User-Agent': PROXY_USER_AGENT,
+        Accept: 'application/json, application/ld+json, */*',
+      },
       validateStatus: () => true,
     });
     if (relayRes.status >= 200 && relayRes.status < 300 && relayRes.data) {
@@ -143,7 +164,7 @@ export default async function handler(req: any, res: any) {
       headers,
       data: requestData,
       responseType: 'arraybuffer',
-      timeout: 12000,
+      timeout: 8000,
       validateStatus: () => true,
     });
 
@@ -179,7 +200,7 @@ export default async function handler(req: any, res: any) {
       res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     }
 
-    if (upstream.status === 403 || upstream.status === 429) {
+    if (upstream.status === 403 || upstream.status === 429 || upstream.status >= 500) {
       if (method === 'GET' && targetPath === '/domains') {
         if (cachedDomainsBytes) {
           res.setHeader('Content-Type', cachedDomainsContentType);
@@ -196,6 +217,9 @@ export default async function handler(req: any, res: any) {
           sendBytes(res, 200, relayed);
           return;
         }
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.status(200).send(FALLBACK_DOMAINS_PAYLOAD);
+        return;
       }
 
       if (bytes.length === 0) {
@@ -204,7 +228,7 @@ export default async function handler(req: any, res: any) {
           error:
             upstream.status === 429
               ? 'Mail.tm rate limit reached (10 requests/min). Please wait a few seconds and retry.'
-              : 'Mail.tm upstream temporarily rejected the request (HTTP 403). Please retry.',
+              : 'Mail.tm blocked shared serverless proxy IP (HTTP 403) and disallowed cross-origin browser requests outside mail.tm.',
         });
         return;
       }
