@@ -79,32 +79,6 @@ export async function fetchJson<T>(url: string, options: RequestInit = {}): Prom
   return data as T;
 }
 
-export async function postGraphQL<T>(
-  proxyUrl: string,
-  query: string,
-  variables?: Record<string, unknown>
-): Promise<T> {
-  const payload = await fetchJson<{ data?: T; errors?: Array<{ message?: string }> }>(proxyUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(variables ? { query, variables } : { query }),
-  });
-
-  if (Array.isArray(payload?.errors) && payload.errors.length > 0 && !payload.data) {
-    const firstMsg = payload.errors[0]?.message || 'GraphQL query failed.';
-    throw new ProviderHttpError(firstMsg, 400, 'upstream');
-  }
-
-  if (!payload || payload.data === undefined) {
-    throw new ProviderHttpError('Malformed GraphQL response from provider.', 502, 'upstream');
-  }
-
-  return payload.data;
-}
-
 export async function fetchBinary(url: string, options: RequestInit = {}): Promise<Blob> {
   let response: Response;
   try {
@@ -137,15 +111,6 @@ export function triggerBlobDownload(blob: Blob, filename: string): void {
 
 export function generateRandomUsername(length = 10): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-export function generateRandomPassword(length = 14): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
   let result = '';
   for (let i = 0; i < length; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));

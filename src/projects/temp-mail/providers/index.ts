@@ -1,16 +1,12 @@
 import { MailProviderAdapter, MailProviderId, ProviderMeta } from '../types';
 import { grabMailAdapter } from './grabMail';
-import { catchmailAdapter, CATCHMAIL_DOMAINS } from './catchmail';
+import { catchmailAdapter } from './catchmail';
 import { tempMailIoAdapter } from './tempMailIo';
 import { inboxesAdapter } from './inboxes';
 import { tempMailLolAdapter } from './tempMailLol';
-import { tempmailPlusAdapter, TEMPMAIL_PLUS_DOMAINS } from './tempmailPlus';
+import { tempmailPlusAdapter } from './tempmailPlus';
 import { dropMailAdapter } from './dropMail';
-import {
-  guerrillaMailAdapter,
-  GUERRILLA_DOMAINS,
-  resolveGuerrillaDisplayAddress,
-} from './guerrillaMail';
+import { guerrillaMailAdapter } from './guerrillaMail';
 
 export { generateRandomUsername } from './http';
 export { TEMPMAIL_PLUS_DOMAINS } from './tempmailPlus';
@@ -128,5 +124,3 @@ export function getCapabilityBadges(id: MailProviderId): Array<{
 
   return badges;
 }
-
-export { TEMPMAIL_PLUS_DOMAINS as PLUS_DOMAINS };

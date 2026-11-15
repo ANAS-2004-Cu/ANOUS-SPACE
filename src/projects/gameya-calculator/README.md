@@ -1,51 +1,84 @@
-# حاسبة استثمار الجمعيات (`Gameya Investment Calculator`)
+# Gameya Investment Calculator · حاسبة استثمار الجمعيات
 
-[![Access](https://img.shields.io/badge/Access-Private_Vault_Guard-F43F5E?style=flat-square)](#routes--endpoints)
-[![Direction](https://img.shields.io/badge/Layout-RTL_Arabic_(Cairo)-10B981?style=flat-square)](#overview)
-[![Engine](https://img.shields.io/badge/Engine-1st--of--Month_Compound_Ledger-3B82F6?style=flat-square)](#overview)
-
-## Overview
-
-**حاسبة استثمار الجمعيات** is a Private-Vault-guarded financial simulation micro-app built in RTL Arabic (`dir="rtl"`, Google Font `Cairo`) with a dedicated **Fintech Ledger** atmosphere (`#111413` deep forest-slate canvas and `#171C1A` cards in Dark Mode; `#F5F7F5` canvas and `#FFFFFF` cards in Light Mode), with sage / ochre / terracotta semantic accents.
-
-It computes the exact real-time net profit (`صافي الربح النهائي في نهاية الجمعية`) of investing a rotating savings association (*Gam'eya* / جمعية) payout into a monthly-compounded yield fund (`AnnualRate / 12`), supporting both **Full Payout (`قبض كامل - 100%`)** and **Split Payout (`قبض مقسم - 50% + 50%`, where second-half months `<= firstHalfMonth` are disabled and auto-adjusted)**.
-
-> [!NOTE]
-> **1st-of-Month Debt-Tracking & Compounding Algorithm (`runGameyaSimulation`)**:
-> For duration $N \in [2, 60]$, monthly installment $I$, and annual rate $R\%$ (monthly rate $r = \frac{R}{100 \times 12}$), the simulation starts with `fund = 0`, `debt = 0`, `totalInterest = 0`, and iterates through each month $m = 1 \dots N$ on Day 1:
-> 1. **Payout Injection**: If a payout is scheduled for month $m$ ($N \times I$ in `'full'` mode, or $\frac{N \times I}{2}$ on `firstHalfMonth` / `secondHalfMonth` in `'split'` mode), add `payoutReceived` to `fund`.
-> 2. **Prior Debt Settlement**: If `debt > 0` and `fund > 0`, settle `debtPaid = Math.min(fund, debt)`, subtracting `debtPaid` from both `fund` and `debt`.
-> 3. **Current Installment Payment**: If `fund >= I`, deduct `I` from `fund`; otherwise consume any remaining `fund` (`fund = 0`) and add the shortfall (`I - remainingFund`) to `debt`. On payout months, `Math.max(0, payoutReceived - debtPaid - I)` is added to `netEnteredFundAtPayout` (`صافي المبلغ الداخل للصندوق عند القبض`).
-> 4. **Monthly Compound Yield**: Compute `monthlyInterest = fund > 0 ? fund * r : 0`, add to `totalInterest`, and carry `endOfMonthBalance = fund + monthlyInterest` forward to month $m + 1$. At the end of month $N$, `netProfit = fund - debt`.
->
-> **Worked Numerical Summary ($N = 10\text{ months}$, $I = 1,000\text{ ج.م}$, $R = 15\%$ / $1.25\%\text{ monthly}$)**:
-> - **Month 1 Full Payout**: Day 1 receives `10,000 ج.م` and pays Month 1's `1,000 ج.م` installment (`9,000 ج.م` net enters the fund). Across Months 2–10, each `1,000 ج.م` installment is deducted from the compounding fund, ending Month 10 with `0 ج.م` debt and **`608.03 ج.م`** net profit.
-> - **Month 5 Full Payout**: Months 1–4 accumulate `4,000 ج.م` in debt (`تراكم القسط كمديونية`). On Month 5 Day 1, the `10,000 ج.م` payout clears the `4,000 ج.م` debt plus Month 5's `1,000 ج.م` installment (`5,000 ج.م` net enters the fund), compounding to **`200.12 ج.م`** net profit by Month 10.
-> - **Month 10 Full Payout**: Months 1–9 accumulate `9,000 ج.م` in debt; Month 10's `10,000 ج.م` payout clears the `9,000 ج.م` debt plus Month 10's `1,000 ج.م` installment (`0 ج.م` net enters the fund), resulting in **`0 ج.م`** net profit.
+**Route / المسار:** `/gameya-calculator` *(Protected by `<VaultGuard>` / محمي بواسطة الخزنة الخاصة)*  
+**Accent / الهوية اللونية:** `sage`
 
 ---
 
-## Files
+## English Documentation
 
-| File | Responsibility |
-| :--- | :--- |
-| `GameyaCalculatorPage.tsx` | Implements `runGameyaSimulation`, the RTL Arabic inputs card (`بداية الجمعية`, `مدة الجمعية بالشهور`, `قيمة القسط الشهري`, `نسبة العائد السنوي`, `نظام القبض`), the Hero net profit summary card, the interactive All-Turns comparison grid (`allTurnsComparison`), and the expandable month-by-month ledger table (`MonthlyLedgerRow[]`). |
-| `README.md` | Module documentation and mathematical specification for the Gam'eya Investment Calculator. |
+### 1. Overview
+**Gameya Investment Calculator** is a private, Vault-gated financial simulation tool designed in RTL Arabic. It calculates the net profit of joining one or more rotating savings and credit associations (**Gameya / ROSCA**) and investing the lump-sum payout(s) into a monthly-compounding investment fund, while deducting monthly installments from the invested balance or out-of-pocket cash flow.
+
+### 2. File Structure
+- `GameyaCalculatorPage.tsx`: Complete RTL simulation interface including preset selector, dynamic multi-slot payout rows, fund return parameters, execution summary cards, and a collapsible month-by-month ledger table.
+- `../../styles/gameya-calculator.css`: Scoped RTL layout, financial summary cards, and ledger table styling.
+
+### 3. Inputs, Presets & Core Financial Model
+- **Built-in Presets (`PRESETS`):**
+  - `12m_first_second`: 12 months, 1,000 EGP/month per slot, 2 slots collected in months 1 & 2.
+  - `10m_first`: 10 months, 1,000 EGP/month, 1 slot collected in month 1.
+  - `6m_first`: 6 months, 2,000 EGP/month, 1 slot collected in month 1.
+  - `custom`: Free-form customization.
+- **Configurable Inputs:**
+  - `durationMonths`: Total duration of the Gameya cycle ($1 \dots 60$ months).
+  - `monthlyInstallmentPerSlot`: Monthly contribution per slot (EGP).
+  - `payouts`: Dynamic list of slots, each with `payoutMonth` ($1 \dots N$) and `adminFeePercent` (deducted from the gross payout).
+  - `returnRate` & `rateType`: Fund return rate specified either as **Annual %** (`annual`, divided by 12 each month) or **Monthly %** (`monthly`).
+  - `installmentSource`:
+    - `'fund'`: Monthly installments are withdrawn directly from the investment fund balance when available (and covered from personal pocket if the fund balance is 0 before payout).
+    - `'pocket'`: All monthly installments are paid from personal pocket, leaving the full Gameya payout compounding untouched inside the fund until the end of the cycle.
+- **Month-by-Month Simulation Loop (`simulation` `useMemo`):**
+  For each month $m \in [1, \text{durationMonths}]$:
+  1. **Payout Injection:** Any slot scheduled for month $m$ adds $\text{Gross} - \text{AdminFee}$ into `fundBalance`.
+  2. **Compound Interest Accrual:** $\text{Interest}_m = \text{fundBalance} \times r_{\text{monthly}}$, added to `fundBalance`.
+  3. **Installment Settlement:** Total due installment ($\text{slots} \times \text{monthlyInstallmentPerSlot}$) is deducted from `fundBalance` (in `'fund'` mode) or added to `paidFromPocket` (in `'pocket'` mode).
+  4. **Final Metrics:** Computes `totalInterestEarned`, `totalAdminFees`, `netProfit = totalInterestEarned - totalAdminFees`, `finalNetPosition`, and `profitPercentOfInstallments`.
+
+### 4. State & Storage Persistence (`localStorage`)
+- Persists user inputs automatically under key `anous_gameya_calc_v2` via `getItem` / `setItem` from `src/shared/utils/storage.ts`.
+- Clicking **إعادة الضبط (Reset)** restores the default preset (`12m_first_second`).
+
+### 5. Access Control & Customization
+- Protected by `<VaultGuard>` in `src/App.tsx` and registered in `api/vault.ts` and `vite.config.ts` (`id: 'gameya-calc'`).
+- To add new presets, append entries to the `PRESETS` array in `src/projects/gameya-calculator/GameyaCalculatorPage.tsx`.
 
 ---
 
-## Routes & Endpoints
+<div dir="rtl">
 
-| Route / Endpoint | Source File | Protection & Behavior |
-| :--- | :--- | :--- |
-| `/gameya-calculator` | `src/App.tsx` (`<VaultGuard>`) | Renders `GameyaCalculatorPage` only when `useVault().isUnlocked === true`; redirects unauthenticated visitors immediately to `/`. |
-| `POST /api/vault` | `api/vault.ts` & `vite.config.ts` | Verifies the Vault password and returns the private module descriptor (`id: "gameya-calc"`, `url: "/gameya-calculator"`) so it appears in the `Private` tab and `CommandPalette` while unlocked. |
+## التوثيق باللغة العربية (Arabic Documentation)
 
----
+### 1. نظرة عامة
+**حاسبة استثمار الجمعيات (Gameya Investment Calculator)** هي أداة مالية خاصة (محمية بكلمة مرور الخزنة `VaultGuard`) تقوم بمحاكاة جدوى الاشتراك في جمعية مالية (سهم أو عدة أسهم) واستثمار مبلغ القبض في صندوق استثماري ذي عائد شهري مركب، مع مقارنة خيار سداد الأقساط الشهرية من رصيد الصندوق مقابل سدادها من الجيب الخاص.
 
-## Storage Keys
+### 2. هيكل الملفات
+- `GameyaCalculatorPage.tsx`: مكون الصفحة الشامل (إدخال المعطيات، القوالب الجاهزة، محرك الحساب الشهري، بطاقات الملخص المالي، والجدول التفصيلي لكل شهر).
+- `../../styles/gameya-calculator.css`: تنسيقات الواجهة العربية (RTL) والبطاقات والجداول المالية.
 
-| Key | Storage Engine | Stored Schema | Purpose |
-| :--- | :--- | :--- | :--- |
-| `anous_gameya_calc_state` | `localStorage` | `{ startMonth, startYear, duration, installment, annualRate, payoutMode, fullPayoutMonth, firstHalfMonth, secondHalfMonth }` | Persists the user's calculator inputs across reloads (excludes `anous_recent_tools` to preserve Vault privacy). |
-| `anous_vault_session` | `sessionStorage` | `{ unlocked: boolean, projects: ProjectItem[] }` | Session-scoped Vault authentication state checked synchronously by `VaultGuard`. |
+### 3. المدخلات والمعادلات المالية الأساسية
+- **القوالب الجاهزة (`PRESETS`):**
+  - جمعية 12 شهر (سهمين - قبض أول وثاني).
+  - جمعية 10 شهور (سهم واحد - قبض أول).
+  - جمعية 6 شهور (سهم واحد - قبض أول).
+  - إعداد مخصص (`custom`).
+- **المعطيات القابلة للتخصيص:**
+  - `durationMonths`: مدة الجمعية بالشهور (من 1 إلى 60 شهراً).
+  - `monthlyInstallmentPerSlot`: قيمة القسط الشهري للسهم الواحد.
+  - `payouts`: قائمة الأسهم المشترك بها، ويتضمن كل سهم **شهر القبض** (`payoutMonth`) و**نسبة المصاريف الإدارية** (`adminFeePercent`).
+  - `returnRate` و `rateType`: معدل عائد الصندوق الاستثماري (سنوي مقسوم على 12 أو شهري مباشر).
+  - `installmentSource`: طريقة سداد القسط الشهري (خصم تلقائي من الصندوق `fund` أو سداد خارجي من الجيب `pocket`).
+- **محرك المحاكاة الشهري:**
+  في كل شهر من شهور الجمعية:
+  1. يُضاف صافي القبض (إجمالي القبض مطروحاً منه الرسوم الإدارية) في حال حلول شهر قبض السهم.
+  2. يُحسب العائد الشهري المركب على الرصيد المتاح في بداية الشهر بعد القبض.
+  3. يُخصم القسط الشهري المستحق من الصندوق (أو يُسجل كمدفوعات من الجيب إذا كان الصندوق فارغاً أو عند اختيار السداد من الجيب).
+  4. في نهاية المدة، تعرض الحاسبة **صافي الربح الحقيقي** (`إجمالي أرباح الصندوق - الرسوم الإدارية`) والرصيد النهائي المتبقي.
+
+### 4. التخزين المحلي (`localStorage`)
+- يتم حفظ جميع المدخلات تلقائياً في المتصفح تحت المفتاح `anous_gameya_calc_v2` بحيث تبقى الإعدادات محفوظة عند العودة للأداة.
+
+### 5. كيفية التخصيص
+- لإضافة قوالب جمعيات جاهزة جديدة، أضف عنصراً جديداً إلى مصفوفة `PRESETS` في الملف `src/projects/gameya-calculator/GameyaCalculatorPage.tsx`.
+
+</div>

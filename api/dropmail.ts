@@ -1,5 +1,21 @@
 declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
 
+interface ApiRequest {
+  method?: string;
+  url?: string;
+  headers?: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+interface ApiResponse {
+  setHeader(name: string, value: string): void;
+  status(code: number): {
+    end(): void;
+    json(payload: unknown): void;
+    send(payload: unknown): void;
+  };
+}
+
 const PROXY_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
@@ -25,7 +41,7 @@ async function mintDropmailToken(): Promise<string> {
   return data.token;
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Dropmail-Token');
@@ -38,9 +54,9 @@ export default async function handler(req: any, res: any) {
 
   try {
     const reqUrl = new URL(req.url || '', 'http://localhost');
-    const providedToken = String(
-      req.headers?.['x-dropmail-token'] || reqUrl.searchParams.get('token') || ''
-    ).trim();
+    const rawHeaderToken = req.headers?.['x-dropmail-token'];
+    const headerToken = Array.isArray(rawHeaderToken) ? rawHeaderToken[0] : rawHeaderToken;
+    const providedToken = String(headerToken || reqUrl.searchParams.get('token') || '').trim();
 
     let authToken = providedToken.startsWith('af_') ? providedToken : await mintDropmailToken();
     const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});

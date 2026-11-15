@@ -1,6 +1,34 @@
 declare const process: { env: Record<string, string | undefined> };
 
-export default async function handler(req: any, res: any) {
+interface ApiRequest {
+  method?: string;
+  url?: string;
+  headers?: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+interface ApiResponse {
+  setHeader(name: string, value: string): void;
+  status(code: number): {
+    end(): void;
+    json(payload: unknown): void;
+    send(payload: unknown): void;
+  };
+}
+
+interface PrivateAppRecord {
+  id?: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  to?: string;
+  href?: string;
+  category?: string;
+  type?: 'internal' | 'external';
+  badge?: string;
+}
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,13 +44,16 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
+    const body = (
+      typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}
+    ) as { password?: unknown };
     const submittedPassword = String(body.password || '');
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (!adminPassword) {
       res.status(503).json({
-        error: 'Vault is not configured on this server (ADMIN_PASSWORD environment variable is not set).',
+        error:
+          'Vault is not configured on this server (ADMIN_PASSWORD environment variable is not set).',
       });
       return;
     }
@@ -32,7 +63,7 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const builtinPrivateApps = [
+    const builtinPrivateApps: PrivateAppRecord[] = [
       {
         id: 'gameya-calc',
         title: 'حاسبة استثمار الجمعيات',
@@ -41,22 +72,28 @@ export default async function handler(req: any, res: any) {
       },
     ];
 
-    let envPrivateApps: any[] = [];
+    let envPrivateApps: PrivateAppRecord[] = [];
     const rawPrivateApps = process.env.PRIVATE_APPS_JSON;
     if (rawPrivateApps) {
       try {
-        const parsed = JSON.parse(rawPrivateApps);
+        const parsed: unknown = JSON.parse(rawPrivateApps);
         if (Array.isArray(parsed)) {
-          envPrivateApps = parsed;
+          envPrivateApps = parsed as PrivateAppRecord[];
         }
       } catch {
         envPrivateApps = [];
       }
     }
 
-    const existingIds = new Set(envPrivateApps.map((app: any) => app?.id || app?.url));
+    const existingIds = new Set(
+      envPrivateApps
+        .map((app) => app?.id || app?.url || app?.to)
+        .filter((val): val is string => Boolean(val))
+    );
     const mergedApps = [
-      ...builtinPrivateApps.filter((b) => !existingIds.has(b.id) && !existingIds.has(b.url)),
+      ...builtinPrivateApps.filter(
+        (b) => (!b.id || !existingIds.has(b.id)) && (!b.url || !existingIds.has(b.url))
+      ),
       ...envPrivateApps,
     ];
 

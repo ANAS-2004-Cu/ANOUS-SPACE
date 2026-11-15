@@ -1,5 +1,21 @@
 declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
 
+interface ApiRequest {
+  method?: string;
+  url?: string;
+  headers?: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+interface ApiResponse {
+  setHeader(name: string, value: string): void;
+  status(code: number): {
+    end(): void;
+    json(payload: unknown): void;
+    send(payload: unknown): void;
+  };
+}
+
 const PROXY_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
@@ -11,7 +27,7 @@ function sanitizePath(rawPath: string | null, fallback: string): string {
   return `/${path.replace(/^\/+/, '')}`;
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -49,8 +65,21 @@ export default async function handler(req: any, res: any) {
     }
 
     const bytes = new Uint8Array(await upstream.arrayBuffer());
+    if (upstream.status === 429 && bytes.length === 0) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(429).json({
+        error: 'Tempmail.lol rate limit reached. Please wait a few seconds and retry.',
+      });
+      return;
+    }
+
     res.status(upstream.status).send(typeof Buffer !== 'undefined' ? Buffer.from(bytes) : bytes);
-  } catch {
-    res.status(502).json({ error: 'Failed to reach Tempmail.lol v3 upstream API' });
+  } catch (err) {
+    res.status(502).json({
+      error:
+        err instanceof Error
+          ? `Tempmail.lol upstream error: ${err.message}`
+          : 'Failed to reach Tempmail.lol v3 upstream API',
+    });
   }
 }

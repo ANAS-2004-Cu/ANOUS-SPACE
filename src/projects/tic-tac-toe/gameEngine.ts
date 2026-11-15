@@ -9,9 +9,10 @@ export const WINNING_LINES: readonly [number, number, number][] = [
   [2, 4, 6],
 ];
 
-export type CellValue = string | null;
+export type PlayerMarker = 'X' | 'O';
+export type CellValue = PlayerMarker | null;
 
-export function calculateWinner(squares: CellValue[]): string | null {
+export function calculateWinner(squares: CellValue[]): PlayerMarker | null {
   for (const [a, b, c] of WINNING_LINES) {
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
       return squares[a];
@@ -54,7 +55,7 @@ export function findBestClassicMove(currentBoard: CellValue[]): number {
   return availableMoves[Math.floor(Math.random() * availableMoves.length)];
 }
 
-function findTwoInRowMove(currentBoard: CellValue[], marker: string): number {
+function findTwoInRowMove(currentBoard: CellValue[], marker: PlayerMarker): number {
   for (const [a, b, c] of WINNING_LINES) {
     const lineMarkers = [currentBoard[a], currentBoard[b], currentBoard[c]];
     const markerCount = lineMarkers.filter((spot) => spot === marker).length;

@@ -1,4 +1,5 @@
 import React from 'react';
+import { BadgeTone } from './Badge';
 
 export type ToolAccent = 'terracotta' | 'slate' | 'ochre' | 'sage';
 
@@ -15,6 +16,20 @@ export function getToolAccent(id: string): ToolAccent {
       return 'sage';
     default:
       return 'terracotta';
+  }
+}
+
+export function getAccentBadgeTone(accent: ToolAccent): BadgeTone {
+  switch (accent) {
+    case 'slate':
+      return 'slate';
+    case 'ochre':
+      return 'ochre';
+    case 'sage':
+      return 'sage';
+    case 'terracotta':
+    default:
+      return 'accent';
   }
 }
 

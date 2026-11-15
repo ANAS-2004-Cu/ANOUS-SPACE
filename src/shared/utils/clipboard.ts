@@ -19,6 +19,4 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export const setStringAsync = copyText;
 export const copyToClipboard = copyText;
-

@@ -1,4 +1,4 @@
-import * as SecureStore from '../../shared/utils/storage';
+import { deleteItemAsync, getItemAsync, removeItem, setItemAsync } from '../../shared/utils/storage';
 import { EmailDetail, MailProviderId, TempAccount } from './types';
 
 export const TEMPMAIL_STORAGE_KEYS: Record<MailProviderId, string> = {
@@ -28,11 +28,7 @@ function cleanupRemovedProviders(): void {
   if (cleanedRemovedKeys || typeof window === 'undefined') return;
   cleanedRemovedKeys = true;
   for (const key of REMOVED_PROVIDER_KEYS) {
-    try {
-      window.localStorage.removeItem(key);
-    } catch {
-      // Ignore storage errors
-    }
+    removeItem(key);
   }
 }
 
@@ -42,7 +38,7 @@ export async function readAccountStorage(provider: MailProviderId): Promise<Temp
   cleanupRemovedProviders();
   const canonicalKey = TEMPMAIL_STORAGE_KEYS[provider];
   try {
-    const raw = await SecureStore.getItemAsync(canonicalKey);
+    const raw = await getItemAsync(canonicalKey);
     if (raw) {
       const parsed = JSON.parse(raw) as Record<string, unknown>;
       const normalized = normalizeStoredAccount(provider, parsed);
@@ -51,12 +47,12 @@ export async function readAccountStorage(provider: MailProviderId): Promise<Temp
 
     const legacyList = LEGACY_KEYS[provider] || [];
     for (const legacyKey of legacyList) {
-      const legacyRaw = await SecureStore.getItemAsync(legacyKey);
+      const legacyRaw = await getItemAsync(legacyKey);
       if (!legacyRaw) continue;
       const parsed = JSON.parse(legacyRaw) as Record<string, unknown>;
       const normalized = normalizeStoredAccount(provider, parsed);
       if (normalized) {
-        await SecureStore.setItemAsync(canonicalKey, JSON.stringify(normalized));
+        await setItemAsync(canonicalKey, JSON.stringify(normalized));
         return normalized;
       }
     }
@@ -105,14 +101,14 @@ function normalizeStoredAccount(
 
 export async function writeAccountStorage(account: TempAccount): Promise<void> {
   const canonicalKey = TEMPMAIL_STORAGE_KEYS[account.provider];
-  await SecureStore.setItemAsync(canonicalKey, JSON.stringify(account));
+  await setItemAsync(canonicalKey, JSON.stringify(account));
 }
 
 export async function clearAccountStorage(provider: MailProviderId): Promise<void> {
   const canonicalKey = TEMPMAIL_STORAGE_KEYS[provider];
-  await SecureStore.deleteItemAsync(canonicalKey);
+  await deleteItemAsync(canonicalKey);
   for (const legacyKey of LEGACY_KEYS[provider] || []) {
-    await SecureStore.deleteItemAsync(legacyKey);
+    await deleteItemAsync(legacyKey);
   }
   clearMessageCache(provider);
 }

@@ -56,10 +56,6 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
-
 .rtl-arabic {
   font-family: var(--font-arabic);
 }

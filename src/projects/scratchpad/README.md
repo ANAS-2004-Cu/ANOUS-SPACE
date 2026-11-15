@@ -1,45 +1,70 @@
-# Quick Scratchpad & File Maker
+# Scratchpad · المفكرة السريعة
 
-[![Category](https://img.shields.io/badge/Category-Tools-3B82F6?style=flat-square)](../../../README.md)
-[![Route](https://img.shields.io/badge/Route-%2Fscratchpad-161B22?style=flat-square)](#routes--endpoints)
-[![Atmosphere](https://img.shields.io/badge/Atmosphere-Code_Studio_IDE-0D1117?style=flat-square)](#overview)
-
-## Overview
-
-**Quick Scratchpad & File Maker** is a persistent, browser-based **Code Studio IDE** (`#111317` graphite canvas in Dark Mode / `#F6F7F8` studio paper in Light Mode) built for inspecting raw API payloads, drafting configuration files, and exporting snippets without spinning up a local project.
-
-The workspace renders an IDE editor window (`#181B21` dark / `#FFFFFF` light) with a recessed editor well (`#0F1115` dark / `#FAF9F6` light) featuring a top window bar with traffic-light indicators and an active filename tab (`resolvedFullFilename`), a scroll-synchronized line-number gutter (`handleScrollSync`), 2-space `Tab` indentation (`handleEditorKeyDown`), drag-and-drop or file-picker text import (`FileReader.readAsText`), a live bottom status bar (`Ln`, `Words`, `Chars`, byte size via `new Blob([content]).size`, `UTF-8`, `Spaces: 2`, `Auto-Saved`), and an instant client-side `Blob` file exporter.
-
-> [!TIP]
-> **Smart JSON Studio & Line/Column Error Diagnostics**:
-> - **Auto-Detection (`looksLikeJson`)**: The `JSON STUDIO` toolbar activates automatically whenever `.json` is selected in the extension dock or when the trimmed buffer begins with `{` or `[`.
-> - **Line & Column Pinpointing (`parseJsonWithDiagnostic`)**: When `JSON.parse` throws a `SyntaxError` containing a character offset (`position <N>`), the parser slices the buffer up to `pos`, splits by newline (`/\r\n|\r|\n/`), and reports the exact `(Line X, Column Y)` in a terracotta diagnostic pill (`#C26A58`), or confirms valid formatting (`2-space indent`) and minification in a sage pill (`#51A37D`).
-> - **Preset & Custom Extensions (`PRESET_EXTENSIONS`)**: Supports one-click pills for `.json`, `.env`, `.txt`, `.md`, `.js`, `.ts`, `.html`, `.css`, plus `Custom...` (defaulting to `.yaml` and automatically prefixing `.` if omitted). When importing a file via drag-and-drop or `Import File`, the filename and extension pill synchronize automatically.
+**Route / المسار:** `/scratchpad`  
+**Accent / الهوية اللونية:** `terracotta`
 
 ---
 
-## Files
+## English Documentation
 
-| File | Responsibility |
-| :--- | :--- |
-| `ScratchpadPage.tsx` | Implements the Code Studio IDE window, scroll-synced line-number gutter, 2-space `Tab` handler, `FileReader` drag-and-drop importer, `parseJsonWithDiagnostic` formatter/minifier/validator, live byte/word/line status bar, and `URL.createObjectURL(new Blob(...))` file downloader. |
-| `README.md` | Module documentation for the Quick Scratchpad & File Maker workspace. |
+### 1. Overview
+**Scratchpad** is a multi-tab local notes workspace designed for rapid drafting, code snippets, and daily scratch text without server round-trips. All content is persisted automatically in browser `localStorage` as you type.
 
----
+### 2. File Structure
+- `ScratchpadPage.tsx`: View component rendering the `WorkspaceLayout`, `ToolBanner`, tab strip, action toolbar, editor `<textarea>`, and bottom telemetry bar.
+- `useScratchpad.ts`: Custom React hook managing tab state, legacy migration, auto-save persistence, text statistics, and `.txt` file downloads.
+- `../../styles/scratchpad.css`: Scoped styles for the tab strip, editor surface, and status bar.
 
-## Routes & Endpoints
+### 3. Inputs, Outputs & Core Features
+- **Multi-Tab Management:**
+  - Create up to **8 tabs** (`MAX_TABS = 8`).
+  - Switch active tabs instantaneously.
+  - Inline tab title input (up to `maxLength={40}`).
+  - Close any tab (`×`); if the last remaining tab is closed, a fresh `Note 1` tab is automatically created.
+- **Editor & Actions:**
+  - Copy current tab content to clipboard (`copyText`).
+  - Download current tab as a sanitized `<tab-title>.txt` file using `Blob` and `URL.createObjectURL`.
+  - Clear current tab content with a confirmation modal (`showAlert`) when content is non-empty.
+- **Live Telemetry (`computeStats`):**
+  - Calculates real-time `words`, `chars`, and `lines` counts plus a relative `Saved HH:MM:SS` timestamp.
 
-| Route | Component | Responsibility |
+### 4. State & Storage Persistence (`localStorage`)
+| Key | Type | Description |
 | :--- | :--- | :--- |
-| `/scratchpad` | `ScratchpadPage` | Renders the persistent Code Studio editor, JSON diagnostic bar, and instant multi-extension file exporter. |
+| `anous_scratchpad_tabs_v2` | `NoteTab[]` (JSON) | Array of `{ id, title, content, updatedAt }` objects. |
+| `anous_scratchpad_active_v2` | `string` | ID of the currently selected tab. |
+| `anous_scratchpad_v1` | `string` (Legacy) | Automatically migrated into the first `v2` tab on initial load and then deleted via `localStorage.removeItem`. |
+
+### 5. Customization Guide
+- **Change Maximum Tabs:** Modify `const MAX_TABS = 8;` in `src/projects/scratchpad/useScratchpad.ts`.
+- **Change Editor Height or Font:** Adjust `.scratchpad-textarea` in `src/styles/scratchpad.css`.
 
 ---
 
-## Storage Keys
+<div dir="rtl">
 
-| Key | Storage Engine | Default Value | Purpose |
-| :--- | :--- | :--- | :--- |
-| `anous_scratchpad_content` | `localStorage` | `''` | Auto-saves the raw editor buffer on every `content` change. |
-| `anous_scratchpad_filename` | `localStorage` | `'untitled'` | Persists the base filename used to construct `resolvedFullFilename`. |
-| `anous_scratchpad_ext` | `localStorage` | `'.txt'` | Persists the selected extension pill (`.json`, `.env`, `.txt`, `.md`, `.js`, `.ts`, `.html`, `.css`, or `'custom'`). |
-| `anous_recent_tools` | `localStorage` | `[]` | Records `'scratchpad'` on mount via `recordRecentProject('scratchpad')`. |
+## التوثيق باللغة العربية (Arabic Documentation)
+
+### 1. نظرة عامة
+أداة **المفكرة السريعة (Scratchpad)** هي مساحة عمل نصية متعددة التبويبات لحفظ الملاحظات السريعة ومسودات النصوص والأكواد مباشرة داخل المتصفح مع حفظ تلقائي فوري دون الحاجة إلى خادم خارجي.
+
+### 2. هيكل الملفات
+- `ScratchpadPage.tsx`: واجهة المستخدم التي تعرض شريط التبويبات، شريط الأدوات، مساحة التحرير النصية، وشريط الإحصائيات السفلي.
+- `useScratchpad.ts`: الخطاف البرمجي المسؤول عن إدارة التبويبات، الحفظ التلقائي، ترحيل البيانات القديمة، وحساب إحصائيات النص.
+- `../../styles/scratchpad.css`: التنسيقات الخاصة بالمفكرة.
+
+### 3. المدخلات والمخرجات والميزات الأساسية
+- **إدارة التبويبات:** إمكانية فتح حتى **8 تبويبات** (`MAX_TABS = 8`)، وتغيير عنوان كل تبويب، وإغلاق أي تبويب (وعند إغلاق التبويب الأخير يتم إنشاء تبويب جديد تلقائياً).
+- **الأدوات السريعة:** نسخ النص إلى الحافظة (`Copy`)، تنزيل الملاحظة كملف نصي (`.txt`)، أو مسح محتوى التبويب الحالي مع نافذة تأكيد.
+- **الإحصائيات الفورية:** حساب عدد الكلمات (`Words`) والأحرف (`Chars`) والأسطر (`Lines`) ووقت آخر حفظ تلقائي.
+
+### 4. التخزين المحلي (`localStorage`)
+- `anous_scratchpad_tabs_v2`: مصفوفة JSON تحتوي على جميع التبويبات المحفوظة.
+- `anous_scratchpad_active_v2`: معرّف التبويب النشط حالياً.
+- `anous_scratchpad_v1`: مفتاح الإصدار الأول القديم (يتم استيراده تلقائياً إلى الإصدار الثاني ثم حذفه).
+
+### 5. كيفية التخصيص
+- لتغيير الحد الأقصى لعدد التبويبات، عدّل قيمة `MAX_TABS` في الملف `src/projects/scratchpad/useScratchpad.ts`.
+- لتعديل تصميم المحرر أو حجم الخط، عدّل الفئة `.scratchpad-textarea` في الملف `src/styles/scratchpad.css`.
+
+</div>

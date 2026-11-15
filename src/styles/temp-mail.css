@@ -486,12 +486,6 @@
   flex-shrink: 0;
 }
 
-.fixed-domain-well {
-  padding: 9px 12px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
 .icon-spin {
   animation: spin 0.8s linear infinite;
 }

@@ -1,9 +1,24 @@
 declare const Buffer: { from(data: ArrayBuffer | Uint8Array): unknown } | undefined;
 
+interface ApiRequest {
+  method?: string;
+  url?: string;
+  headers?: Record<string, string | string[] | undefined>;
+}
+
+interface ApiResponse {
+  setHeader(name: string, value: string): void;
+  status(code: number): {
+    end(): void;
+    json(payload: unknown): void;
+    send(payload: unknown): void;
+  };
+}
+
 const PROXY_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -29,10 +44,19 @@ export default async function handler(req: any, res: any) {
 
     const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
     res.setHeader('Content-Type', contentType);
+    const disposition = upstream.headers.get('content-disposition');
+    if (disposition) {
+      res.setHeader('Content-Disposition', disposition);
+    }
 
     const bytes = new Uint8Array(await upstream.arrayBuffer());
     res.status(upstream.status).send(typeof Buffer !== 'undefined' ? Buffer.from(bytes) : bytes);
-  } catch {
-    res.status(502).json({ error: 'Failed to reach Guerrilla Mail upstream API' });
+  } catch (err) {
+    res.status(502).json({
+      error:
+        err instanceof Error
+          ? `Guerrilla Mail upstream error: ${err.message}`
+          : 'Failed to reach Guerrilla Mail upstream API',
+    });
   }
 }

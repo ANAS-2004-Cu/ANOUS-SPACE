@@ -1,15 +1,20 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiArrowUpRight, FiClock, FiLayers, FiExternalLink } from 'react-icons/fi';
-import { PUBLIC_PROJECTS, ProjectCategory, ProjectItem } from '../data/projects';
+import {
+  PUBLIC_PROJECTS,
+  ProjectCategory,
+  ProjectItem,
+  resolveInternalTarget,
+} from '../data/projects';
 import { WorkspaceLayout } from '../shared/ui/WorkspaceLayout';
 import { SegmentedControl, SegmentedOption } from '../shared/ui/SegmentedControl';
-import { Badge, BadgeTone } from '../shared/ui/Badge';
+import { Badge } from '../shared/ui/Badge';
 import { EmptyState } from '../shared/ui/EmptyState';
 import {
   HeroGeometry,
-  ToolAccent,
   ToolEmblem,
+  getAccentBadgeTone,
   getToolAccent,
 } from '../shared/ui/ToolEmblem';
 import { useVault } from '../shared/context/VaultContext';
@@ -20,20 +25,6 @@ type WorkspaceFilter = 'All' | 'Tools' | 'Games' | 'Private';
 export interface HubHomeProps {
   onOpenCommandPalette: () => void;
   commandPaletteOpen?: boolean;
-}
-
-function accentToBadgeTone(accent: ToolAccent): BadgeTone {
-  switch (accent) {
-    case 'slate':
-      return 'slate';
-    case 'ochre':
-      return 'ochre';
-    case 'sage':
-      return 'sage';
-    case 'terracotta':
-    default:
-      return 'accent';
-  }
 }
 
 export const HubHome: React.FC<HubHomeProps> = ({
@@ -104,9 +95,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
 
   const handleOpenProject = useCallback(
     (item: ProjectItem) => {
-      const internalTarget =
-        item.to ||
-        (item.externalUrl && item.externalUrl.startsWith('/') ? item.externalUrl : undefined);
+      const internalTarget = resolveInternalTarget(item);
       if (item.type === 'internal' || internalTarget) {
         if (item.category !== 'Private') {
           const updated = recordRecentProject(item.id);
@@ -267,7 +256,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
               const isExternal = item.type === 'external';
               const shortcutKey = idx < 9 ? String(idx + 1) : null;
               const accent = getToolAccent(item.id);
-              const badgeTone = accentToBadgeTone(accent);
+              const badgeTone = getAccentBadgeTone(accent);
 
               return (
                 <button
@@ -342,7 +331,7 @@ export const HubHome: React.FC<HubHomeProps> = ({
               const shortcutIndex = filteredTools.length + idx;
               const shortcutKey = shortcutIndex < 9 ? String(shortcutIndex + 1) : null;
               const accent = getToolAccent(project.id);
-              const badgeTone = accentToBadgeTone(accent);
+              const badgeTone = getAccentBadgeTone(accent);
 
               return (
                 <button

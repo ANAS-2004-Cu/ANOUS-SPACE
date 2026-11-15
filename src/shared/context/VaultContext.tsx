@@ -102,9 +102,11 @@ export const VaultProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return { ok: true };
         }
         return { ok: false, error: 'Authentication failed.' };
-      } catch (err: any) {
+      } catch (err: unknown) {
         const message =
-          err?.response?.data?.error || 'Unable to verify credentials with /api/vault.';
+          axios.isAxiosError<{ error?: string }>(err) && err.response?.data?.error
+            ? err.response.data.error
+            : 'Unable to verify credentials with /api/vault.';
         return { ok: false, error: message };
       }
     },

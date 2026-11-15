@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useAlert } from '../../shared/context/AlertContext';
 import {
   CellValue,
+  PlayerMarker,
   calculateWinner,
   findBestClassicMove,
   getWinningIndices,
@@ -14,16 +15,16 @@ export function useClassicTicTacToe() {
   const [board1, setBoard1] = useState<CellValue[]>(Array(9).fill(null));
   const [board2, setBoard2] = useState<CellValue[]>(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true);
-  const [winner1, setWinner1] = useState<string | null>(null);
-  const [winner2, setWinner2] = useState<string | null>(null);
-  const [winner, setWinner] = useState<string | null>(null);
+  const [winner1, setWinner1] = useState<PlayerMarker | null>(null);
+  const [winner2, setWinner2] = useState<PlayerMarker | null>(null);
+  const [winner, setWinner] = useState<PlayerMarker | null>(null);
   const [typeBoard, setTypeBoard] = useState<1 | 2>(2);
   const [board, setBoard] = useState<CellValue[]>(Array(9).fill(null));
   const [isXNext1, setIsXNext1] = useState(true);
   const [count, setCount] = useState(0);
   const [count1, setCount1] = useState(0);
   const [count2, setCount2] = useState(0);
-  const [currentPlayer, setCurrentPlayer] = useState('X');
+  const [currentPlayer, setCurrentPlayer] = useState<PlayerMarker>('X');
 
   const switchClassicMode = (type: 1 | 2) => {
     if (typeBoard === type) return;
@@ -128,9 +129,9 @@ export function useClassicTicTacToe() {
     [winner, board]
   );
 
-  const classicPreviewPlayer: 'X' | 'O' | null =
+  const classicPreviewPlayer: PlayerMarker | null =
     !winner && !isClassicDraw && !(typeBoard === 1 && currentPlayer === 'O')
-      ? (currentPlayer as 'X' | 'O')
+      ? currentPlayer
       : null;
 
   return {

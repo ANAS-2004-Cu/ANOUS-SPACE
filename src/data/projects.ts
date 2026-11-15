@@ -90,3 +90,9 @@ export const PUBLIC_PROJECTS: ProjectItem[] = [
     keywords: ['store', 'shop', 'commerce', 'web', 'portfolio', 'live demo'],
   },
 ];
+
+export function resolveInternalTarget(item: ProjectItem): string | undefined {
+  if (item.to) return item.to;
+  if (item.externalUrl && item.externalUrl.startsWith('/')) return item.externalUrl;
+  return undefined;
+}

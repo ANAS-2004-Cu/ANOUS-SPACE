@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { useAlert } from '../../shared/context/AlertContext';
-import * as Clipboard from '../../shared/utils/clipboard';
+import { copyToClipboard as writeClipboard } from '../../shared/utils/clipboard';
 import { EmailSummary, TempAccount, normalizeProviderId } from './types';
 import {
   PROVIDER_ADAPTERS,
@@ -160,7 +160,7 @@ export const TempMailInboxPage: React.FC<TempMailInboxPageProps> = ({ onOpenComm
 
   const handleCopyAddress = async (target: string) => {
     try {
-      await Clipboard.setStringAsync(target);
+      await writeClipboard(target);
       showToast({
         title: 'Copied',
         message: 'Email address copied to clipboard.',

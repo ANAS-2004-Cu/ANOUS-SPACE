@@ -17,7 +17,7 @@ import { Badge } from '../../shared/ui/Badge';
 import { EmptyState } from '../../shared/ui/EmptyState';
 import { useAlert } from '../../shared/context/AlertContext';
 import { useTheme } from '../../shared/context/ThemeContext';
-import * as Clipboard from '../../shared/utils/clipboard';
+import { copyToClipboard as writeClipboard } from '../../shared/utils/clipboard';
 import { EmailDetail, normalizeProviderId } from './types';
 import { PROVIDER_ADAPTERS, PROVIDERS_META } from './providers';
 
@@ -129,7 +129,7 @@ export const EmailDetailPage: React.FC<EmailDetailPageProps> = ({ onOpenCommandP
 
   const copyToClipboard = async (text: string) => {
     try {
-      await Clipboard.setStringAsync(text);
+      await writeClipboard(text);
       showToast({
         title: 'Copied',
         message: 'Content copied to clipboard.',

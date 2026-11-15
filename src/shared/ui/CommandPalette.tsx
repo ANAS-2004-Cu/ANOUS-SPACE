@@ -1,25 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiSearch, FiArrowUpRight, FiCornerDownLeft, FiLock } from 'react-icons/fi';
-import { PUBLIC_PROJECTS, ProjectItem } from '../../data/projects';
+import { PUBLIC_PROJECTS, ProjectItem, resolveInternalTarget } from '../../data/projects';
 import { useVault } from '../context/VaultContext';
 import { recordRecentProject } from '../utils/recentTools';
 import { Modal } from './Modal';
-import { Badge, BadgeTone } from './Badge';
-import { ToolAccent, ToolEmblem, getToolAccent } from './ToolEmblem';
-
-function accentToTone(accent: ToolAccent): BadgeTone {
-  switch (accent) {
-    case 'slate':
-      return 'slate';
-    case 'ochre':
-      return 'ochre';
-    case 'sage':
-      return 'sage';
-    default:
-      return 'accent';
-  }
-}
+import { Badge } from './Badge';
+import { ToolEmblem, getAccentBadgeTone, getToolAccent } from './ToolEmblem';
 
 export interface CommandPaletteProps {
   open: boolean;
@@ -72,9 +59,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
 
   const handleSelectItem = (item: ProjectItem) => {
     onClose();
-    const internalTarget =
-      item.to ||
-      (item.externalUrl && item.externalUrl.startsWith('/') ? item.externalUrl : undefined);
+    const internalTarget = resolveInternalTarget(item);
     if (item.type === 'internal' || internalTarget) {
       if (item.category !== 'Private') {
         recordRecentProject(item.id);
@@ -184,7 +169,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ open, onClose })
                     <div className="ui-flex-1">
                       <div className="ui-row">
                         <span className="cmd-item__title ui-truncate">{item.title}</span>
-                        <Badge tone={accentToTone(accent)}>{item.category}</Badge>
+                        <Badge tone={getAccentBadgeTone(accent)}>{item.category}</Badge>
                       </div>
                       <div className="cmd-item__desc ui-truncate">{item.description}</div>
                     </div>

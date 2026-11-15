@@ -14,6 +14,14 @@ export function setItem(key: string, value: string): void {
   }
 }
 
+export function removeItem(key: string): void {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Ignore storage removal errors
+  }
+}
+
 export async function getItemAsync(key: string): Promise<string | null> {
   return getItem(key);
 }
@@ -23,9 +31,5 @@ export async function setItemAsync(key: string, value: string): Promise<void> {
 }
 
 export async function deleteItemAsync(key: string): Promise<void> {
-  try {
-    window.localStorage.removeItem(key);
-  } catch {
-    // Ignore storage removal errors
-  }
+  removeItem(key);
 }

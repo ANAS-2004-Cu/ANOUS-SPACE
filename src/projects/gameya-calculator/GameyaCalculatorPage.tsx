@@ -3,7 +3,7 @@ import { FiRotateCcw } from 'react-icons/fi';
 import { WorkspaceLayout } from '../../shared/ui/WorkspaceLayout';
 import { ToolBanner } from '../../shared/ui/ToolBanner';
 import { Button } from '../../shared/ui/Button';
-import * as SecureStore from '../../shared/utils/storage';
+import { getItem, setItem } from '../../shared/utils/storage';
 import {
   DEFAULT_CALC_STATE,
   GAMEYA_STORAGE_KEY,
@@ -28,7 +28,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
 }) => {
   const initialState = useMemo<StoredCalcState>(() => {
     try {
-      const raw = SecureStore.getItem(GAMEYA_STORAGE_KEY);
+      const raw = getItem(GAMEYA_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         const dur = Math.max(2, Math.min(60, Number(parsed.duration) || 10));
@@ -116,7 +116,7 @@ export const GameyaCalculatorPage: React.FC<GameyaCalculatorPageProps> = ({
       firstHalfMonth: safeFirstHalf,
       secondHalfMonth: safeSecondHalf,
     };
-    SecureStore.setItem(GAMEYA_STORAGE_KEY, JSON.stringify(toSave));
+    setItem(GAMEYA_STORAGE_KEY, JSON.stringify(toSave));
   }, [
     startMonth,
     startYear,
