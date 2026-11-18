@@ -11,7 +11,6 @@ import {
   createQuotation,
   emptyItem,
   hasMeaningfulContent,
-  todayISO,
   uid,
 } from './invoiceModel';
 
@@ -86,12 +85,6 @@ function normalizeQuotation(raw: Partial<Quotation>, settings: QuotationSettings
 
   return {
     id: typeof raw.id === 'string' && raw.id ? raw.id : uid(),
-    number:
-      typeof raw.number === 'number' && Number.isFinite(raw.number) && raw.number > 0
-        ? Math.floor(raw.number)
-        : 1,
-    date: typeof raw.date === 'string' && raw.date ? raw.date : todayISO(),
-    customerName: typeof raw.customerName === 'string' ? raw.customerName : '',
     items,
     vatRate:
       typeof raw.vatRate === 'number' && Number.isFinite(raw.vatRate) && raw.vatRate >= 0
@@ -130,14 +123,11 @@ function readDraftFromStorage(settings: QuotationSettings): Quotation {
   } catch {
     // ignore corrupted draft
   }
-  return createQuotation(1, settings);
+  return createQuotation(settings);
 }
 
 function serializeQuotationSnapshot(q: Quotation): string {
   return JSON.stringify({
-    number: q.number,
-    date: q.date,
-    customerName: q.customerName,
     items: q.items,
     vatRate: q.vatRate,
     includeVat: q.includeVat,
@@ -335,14 +325,6 @@ export function useInvoiceStudio() {
     return true;
   }, [commitChange, selectedIds, settings.presetUnits]);
 
-  const getNextNumber = useCallback(
-    (extra?: number) => {
-      const maxInArchive = archive.reduce((max, q) => Math.max(max, q.number), 0);
-      return Math.max(maxInArchive, quotation.number, extra ?? 0) + 1;
-    },
-    [archive, quotation.number]
-  );
-
   const saveToArchive = useCallback(() => {
     const snapshot: Quotation = {
       ...quotation,
@@ -363,14 +345,13 @@ export function useInvoiceStudio() {
   }, [quotation]);
 
   const startNewQuotation = useCallback(() => {
-    const nextNum = getNextNumber();
-    const fresh = createQuotation(nextNum, settings);
+    const fresh = createQuotation(settings);
     setHistory({ past: [], future: [] });
     setSelectedIds([]);
     setQuotation(fresh);
     setLastSavedSnapshot(serializeQuotationSnapshot(fresh));
     return fresh;
-  }, [getNextNumber, settings]);
+  }, [settings]);
 
   const loadFromArchive = useCallback(
     (id: string) => {
@@ -393,15 +374,13 @@ export function useInvoiceStudio() {
       const copy: Quotation = {
         ...found,
         id: uid(),
-        number: getNextNumber(),
-        date: todayISO(),
         items: found.items.map((item) => ({ ...item, id: uid() })),
         updatedAt: new Date().toISOString(),
       };
       setArchive((prev) => [copy, ...prev]);
       return copy;
     },
-    [archive, getNextNumber]
+    [archive]
   );
 
   const deleteFromArchive = useCallback((id: string) => {

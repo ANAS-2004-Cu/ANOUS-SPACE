@@ -60,11 +60,11 @@ export const InvoiceStudioPage: React.FC<InvoiceStudioPageProps> = ({
   ];
 
   const handleSaveArchive = useCallback(() => {
-    const saved = studio.saveToArchive();
+    studio.saveToArchive();
     showToast({
       type: 'success',
       title: 'تم الحفظ في الأرشيف',
-      message: `تم حفظ عرض السعر #${saved.number} بنجاح.`,
+      message: 'تم حفظ عرض السعر في الأرشيف بنجاح.',
     });
   }, [studio, showToast]);
 
@@ -99,12 +99,12 @@ export const InvoiceStudioPage: React.FC<InvoiceStudioPageProps> = ({
       'بدء عرض سعر جديد؟',
       'لديك تعديلات غير محفوظة في العرض الحالي. هل تريد حفظه قبل إنشاء عرض جديد؟',
       () => {
-        const next = studio.startNewQuotation();
+        studio.startNewQuotation();
         setActiveTab('editor');
         showToast({
           type: 'info',
           title: 'عرض سعر جديد',
-          message: `تم تجهيز عرض السعر #${next.number}.`,
+          message: 'تم تجهيز عرض سعر جديد.',
         });
       }
     );
@@ -137,7 +137,7 @@ export const InvoiceStudioPage: React.FC<InvoiceStudioPageProps> = ({
         showToast({
           type: 'success',
           title: 'تم نسخ العرض',
-          message: `تم إنشاء نسخة جديدة برقم #${copy.number}.`,
+          message: 'تم إنشاء نسخة جديدة في الأرشيف.',
         });
       }
     },
@@ -192,7 +192,7 @@ export const InvoiceStudioPage: React.FC<InvoiceStudioPageProps> = ({
       showToast({
         type: 'success',
         title: 'تم تصدير الصورة',
-        message: `تم تنزيل عرض-سعر-${studio.quotation.number}.png`,
+        message: 'تم تنزيل صورة عرض السعر (PNG) بنجاح.',
       });
     } catch {
       showToast({
@@ -213,7 +213,7 @@ export const InvoiceStudioPage: React.FC<InvoiceStudioPageProps> = ({
       showToast({
         type: 'success',
         title: 'تم تصدير PDF',
-        message: `تم تنزيل عرض-سعر-${studio.quotation.number}.pdf`,
+        message: 'تم تنزيل ملف عرض السعر (PDF) بنجاح.',
       });
     } catch {
       showToast({

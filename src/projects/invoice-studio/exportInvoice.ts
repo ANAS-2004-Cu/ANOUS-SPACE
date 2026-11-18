@@ -100,8 +100,9 @@ async function withOffscreenTemplate<T>(
   }
 }
 
-function buildFilename(quotation: Quotation, ext: string): string {
-  return `عرض-سعر-${quotation.number}.${ext}`;
+export function buildQuotationFilename(quotation: Quotation, ext: string): string {
+  const stamp = (quotation.updatedAt || new Date().toISOString()).slice(0, 10);
+  return `عرض-سعر-${stamp}.${ext}`;
 }
 
 export async function exportQuotationImage(
@@ -125,7 +126,7 @@ export async function exportQuotationImage(
   });
 
   const link = document.createElement('a');
-  link.download = buildFilename(quotation, 'png');
+  link.download = buildQuotationFilename(quotation, 'png');
   link.href = canvas.toDataURL('image/png', 1);
   link.click();
 }
@@ -145,7 +146,7 @@ export async function exportQuotationPdf(
 
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.download = buildFilename(quotation, 'pdf');
+  link.download = buildQuotationFilename(quotation, 'pdf');
   link.href = url;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 2500);

@@ -8,8 +8,8 @@ import {
   Quotation,
   QuotationSettings,
   formatCurrency,
-  formatDate,
   formatNumber,
+  formatSavedDateTime,
   quotationTotals,
 } from '../invoiceModel';
 
@@ -36,13 +36,8 @@ export const ArchivePanel: React.FC<ArchivePanelProps> = ({
     const q = query.trim().toLowerCase();
     if (!q) return archive;
     return archive.filter((item) => {
-      const haystack = [
-        String(item.number),
-        item.customerName,
-        item.date,
-        item.notes,
-        ...item.items.map((it) => it.name),
-      ]
+      const savedAt = formatSavedDateTime(item.updatedAt);
+      const haystack = [savedAt, item.notes, ...item.items.map((it) => it.name)]
         .join(' ')
         .toLowerCase();
       return haystack.includes(q);
@@ -69,7 +64,7 @@ export const ArchivePanel: React.FC<ArchivePanelProps> = ({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="ابحث برقم العرض، اسم العميل، أو اسم الصنف..."
+          placeholder="ابحث باسم الصنف أو تاريخ الحفظ أو الملاحظات..."
           className="ui-input qs-archive-search__input"
         />
       </div>
@@ -84,14 +79,20 @@ export const ArchivePanel: React.FC<ArchivePanelProps> = ({
         <EmptyState
           icon={<FiSearch size={18} />}
           title="لا توجد نتائج مطابقة"
-          description="جرّب البحث برقم عرض سعر مختلف أو اسم صنف آخر."
+          description="جرّب البحث باسم صنف مختلف أو كلمة من الملاحظات."
         />
       ) : (
         <div className="qs-archive-list">
           {filtered.map((entry) => {
-            const { grandTotal } = quotationTotals(entry);
+            const { grandTotal, effectiveVatRate } = quotationTotals(entry);
             const isActive = entry.id === activeId;
-            const filledItemsCount = entry.items.filter((i) => i.name.trim()).length;
+            const namedItems = entry.items.map((i) => i.name.trim()).filter(Boolean);
+            const titleLabel =
+              namedItems.length > 0
+                ? namedItems.slice(0, 2).join(' · ') +
+                  (namedItems.length > 2 ? ` (+${formatNumber(namedItems.length - 2)})` : '')
+                : 'عرض سعر بدون أسماء أصناف';
+            const savedAtLabel = formatSavedDateTime(entry.updatedAt);
 
             return (
               <div
@@ -101,21 +102,22 @@ export const ArchivePanel: React.FC<ArchivePanelProps> = ({
               >
                 <div className="qs-archive-card__main">
                   <div className="ui-row ui-row--wrap">
-                    <span className="qs-archive-card__num mono">
-                      #{formatNumber(entry.number)}
-                    </span>
-                    <span className="qs-archive-card__customer">
-                      {entry.customerName.trim() || 'عرض سعر بدون اسم عميل'}
-                    </span>
+                    <span className="qs-archive-card__title">{titleLabel}</span>
                     {isActive && <Badge tone="ochre">مفتوح الآن</Badge>}
                   </div>
 
                   <div className="qs-archive-card__meta">
-                    <span>التاريخ: {formatDate(entry.date)}</span>
-                    <span>·</span>
+                    {savedAtLabel && <span>حُفظ في: {savedAtLabel}</span>}
+                    {savedAtLabel && <span>·</span>}
                     <span>
-                      الأصناف: {formatNumber(filledItemsCount || entry.items.length)}
+                      الأصناف: {formatNumber(namedItems.length || entry.items.length)}
                     </span>
+                    {effectiveVatRate > 0 && (
+                      <>
+                        <span>·</span>
+                        <span>ضريبة %{formatNumber(effectiveVatRate)}</span>
+                      </>
+                    )}
                     <span>·</span>
                     <span className="qs-archive-card__total mono">
                       {formatCurrency(grandTotal, settings.currency)}

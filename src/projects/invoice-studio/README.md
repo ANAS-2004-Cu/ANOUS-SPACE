@@ -19,7 +19,7 @@
 - `InvoiceStudioPage.tsx`: Main `WorkspaceLayout` page (`dir="rtl"`) with three segmented views: **المحرر (Editor)**, **الأرشيف (Archive)**, and **الإعدادات (Settings)**.
 - `components/`:
   - `QuotationToolbar.tsx`: Primary action strip (Add Item, Delete Selected, Save to Archive, New Quotation, Preview, Print, PNG, PDF, Undo/Redo).
-  - `QuotationEditor.tsx`: Company header preview, lightweight quotation metadata (`number`, `date`, optional `customerName`, VAT toggle/rate), keyboard- & touch-friendly line-items grid, notes, and totals table.
+  - `QuotationEditor.tsx`: Company header preview, compact VAT control bar (`ضريبة %` toggle + rate, defaulting to `14%`), keyboard- & touch-friendly line-items grid, notes, and totals table.
   - `PrintTemplate.tsx`: Static A4 paper template (`PrintTemplate`) and body-level print portal (`PrintPortal`).
   - `PdfDocument.tsx`: Vector PDF document matching the exact RTL column order and left-aligned totals layout of `PrintTemplate`.
   - `PreviewModal.tsx`: Responsive A4 preview modal dynamically scaled via `ResizeObserver`.

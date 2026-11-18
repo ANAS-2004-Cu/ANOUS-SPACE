@@ -3,7 +3,6 @@ import {
   Quotation,
   QuotationSettings,
   formatCurrency,
-  formatDate,
   formatMoney,
   formatNumber,
   quotationTotals,
@@ -41,8 +40,8 @@ const styles = StyleSheet.create({
   header: {
     borderBottomWidth: 2,
     borderBottomColor: BLACK,
-    paddingBottom: 14,
-    marginBottom: 12,
+    paddingBottom: 16,
+    marginBottom: 16,
     alignItems: 'center',
   },
   company: {
@@ -62,33 +61,6 @@ const styles = StyleSheet.create({
     fontWeight: 700,
     marginTop: 5,
     color: '#333333',
-  },
-  metaRow: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#cccccc',
-  },
-  metaGroup: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    gap: 10,
-  },
-  badge: {
-    backgroundColor: BLACK,
-    color: '#ffffff',
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    fontSize: 9.5,
-    fontWeight: 700,
-  },
-  metaText: {
-    fontSize: 9.5,
-    color: '#222222',
-    textAlign: 'right',
   },
   table: {
     borderWidth: 2,
@@ -165,11 +137,10 @@ export function PdfDocument({
 }) {
   const { subtotal, vat, grandTotal, effectiveVatRate } = quotationTotals(quotation);
   const heads = ['م', 'الصنف', 'الكمية', 'الوحدة', 'سعر الوحدة', 'الإجمالي'];
-  const hasCustomer = quotation.customerName.trim().length > 0;
   const hasNotes = quotation.notes.trim().length > 0;
 
   return (
-    <Document title={`عرض-سعر-${quotation.number}`} author={settings.companyName}>
+    <Document title="عرض سعر" author={settings.companyName}>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.company}>{settings.companyName}</Text>
@@ -178,19 +149,6 @@ export function PdfDocument({
           ) : null}
           {settings.taxId.trim() ? (
             <Text style={styles.tax}>ت.ض : {settings.taxId.trim()}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.metaRow}>
-          <View style={styles.metaGroup}>
-            <Text style={styles.badge}>عرض سعر</Text>
-            <Text style={styles.metaText}>رقم: #{formatNumber(quotation.number)}</Text>
-            {hasCustomer ? (
-              <Text style={styles.metaText}>العميل: {quotation.customerName.trim()}</Text>
-            ) : null}
-          </View>
-          {quotation.date ? (
-            <Text style={styles.metaText}>التاريخ: {formatDate(quotation.date)}</Text>
           ) : null}
         </View>
 

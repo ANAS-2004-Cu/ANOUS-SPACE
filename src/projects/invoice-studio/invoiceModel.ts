@@ -10,9 +10,6 @@ export interface QuotationItem {
 
 export interface Quotation {
   id: string;
-  number: number;
-  date: string;
-  customerName: string;
   items: QuotationItem[];
   vatRate: number;
   includeVat: boolean;
@@ -60,10 +57,6 @@ export function uid(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
-export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function emptyItem(defaultUnit = DEFAULT_PRESET_UNITS[0]): QuotationItem {
   return {
     id: uid(),
@@ -74,12 +67,9 @@ export function emptyItem(defaultUnit = DEFAULT_PRESET_UNITS[0]): QuotationItem 
   };
 }
 
-export function createQuotation(number: number, settings: QuotationSettings): Quotation {
+export function createQuotation(settings: QuotationSettings): Quotation {
   return {
     id: uid(),
-    number,
-    date: todayISO(),
-    customerName: '',
     items: [emptyItem(settings.presetUnits[0])],
     vatRate: settings.defaultVatRate,
     includeVat: settings.includeVatByDefault,
@@ -107,7 +97,6 @@ export function quotationTotals(
 }
 
 export function hasMeaningfulContent(quotation: Quotation): boolean {
-  if (quotation.customerName.trim().length > 0) return true;
   return quotation.items.some(
     (item) => item.name.trim().length > 0 || toNum(item.price) > 0
   );
@@ -123,6 +112,14 @@ const moneyFormatter = new Intl.NumberFormat('ar-EG-u-nu-latn', {
   maximumFractionDigits: 2,
 });
 
+const dateTimeFormatter = new Intl.DateTimeFormat('ar-EG-u-nu-latn', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 export function formatNumber(value: NumberInput): string {
   return numberFormatter.format(toNum(value));
 }
@@ -136,10 +133,9 @@ export function formatCurrency(value: NumberInput, currency = 'ج.م'): string {
   return trimmed ? `${formatMoney(value)} ${trimmed}` : formatMoney(value);
 }
 
-export function formatDate(iso: string): string {
+export function formatSavedDateTime(iso: string): string {
   if (!iso) return '';
-  const parts = iso.split('-');
-  if (parts.length !== 3) return iso;
-  const [y, m, d] = parts;
-  return `${d}/${m}/${y}`;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return dateTimeFormatter.format(date);
 }

@@ -70,7 +70,7 @@ export const QuotationEditor: React.FC<QuotationEditorProps> = ({
 
   return (
     <Surface accent="ochre" padded className="qs-sheet">
-      {/* Clean Company & Quotation Header */}
+      {/* Clean Company Header */}
       <header className="qs-sheet__header">
         <h2 className="qs-sheet__company">{settings.companyName}</h2>
         {settings.companySubtitle.trim() && (
@@ -81,74 +81,28 @@ export const QuotationEditor: React.FC<QuotationEditorProps> = ({
         )}
       </header>
 
-      {/* Lightweight Quotation Meta Strip */}
-      <div className="qs-meta-strip">
-        <div className="qs-meta-field">
-          <label htmlFor="qs-number" className="qs-meta-field__label">
-            عرض سعر رقم
-          </label>
+      {/* Compact VAT Control Bar */}
+      <div className="qs-vat-bar">
+        <label className="qs-vat-toggle">
           <input
-            id="qs-number"
-            type="number"
-            min={1}
-            value={quotation.number}
-            onChange={(e) => {
-              const next = Math.max(1, Math.floor(Number(e.target.value) || 1));
-              onPatchQuotation({ number: next });
-            }}
-            className="ui-input ui-input--mono qs-meta-field__num"
+            type="checkbox"
+            checked={quotation.includeVat}
+            onChange={(e) => onPatchQuotation({ includeVat: e.target.checked })}
           />
-        </div>
-
-        <div className="qs-meta-field">
-          <label htmlFor="qs-date" className="qs-meta-field__label">
-            التاريخ
-          </label>
-          <input
-            id="qs-date"
-            type="date"
-            value={quotation.date}
-            onChange={(e) => onPatchQuotation({ date: e.target.value })}
-            className="ui-input ui-input--mono qs-meta-field__date"
-          />
-        </div>
-
-        <div className="qs-meta-field qs-meta-field--grow">
-          <label htmlFor="qs-customer" className="qs-meta-field__label">
-            العميل / الجهة (اختياري)
-          </label>
-          <input
-            id="qs-customer"
-            type="text"
-            value={quotation.customerName}
-            onChange={(e) => onPatchQuotation({ customerName: e.target.value })}
-            placeholder="اسم العميل أو الشركة..."
-            className="ui-input"
-          />
-        </div>
-
-        <div className="qs-meta-field qs-meta-field--vat">
-          <label className="qs-vat-toggle">
-            <input
-              type="checkbox"
-              checked={quotation.includeVat}
-              onChange={(e) => onPatchQuotation({ includeVat: e.target.checked })}
-            />
-            <span>ضريبة %</span>
-          </label>
-          <input
-            type="number"
-            min={0}
-            step="any"
-            disabled={!quotation.includeVat}
-            value={quotation.vatRate}
-            onChange={(e) =>
-              onPatchQuotation({ vatRate: Math.max(0, Number(e.target.value) || 0) })
-            }
-            aria-label="نسبة الضريبة"
-            className="ui-input ui-input--mono qs-meta-field__vat-input"
-          />
-        </div>
+          <span>ضريبة %</span>
+        </label>
+        <input
+          type="number"
+          min={0}
+          step="any"
+          disabled={!quotation.includeVat}
+          value={quotation.vatRate}
+          onChange={(e) =>
+            onPatchQuotation({ vatRate: Math.max(0, Number(e.target.value) || 0) })
+          }
+          aria-label="نسبة الضريبة"
+          className="ui-input ui-input--mono qs-vat-bar__input"
+        />
       </div>
 
       {/* Responsive Line-Items Table */}

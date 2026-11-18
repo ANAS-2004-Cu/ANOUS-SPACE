@@ -4,7 +4,6 @@ import {
   Quotation,
   QuotationSettings,
   formatCurrency,
-  formatDate,
   formatMoney,
   formatNumber,
   quotationTotals,
@@ -27,7 +26,6 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ quotation, setting
   const rows = quotation.items.length > 0 ? quotation.items : [];
   const fillerCount = Math.max(0, Math.min(2, 3 - rows.length));
   const hasNotes = quotation.notes.trim().length > 0;
-  const hasCustomer = quotation.customerName.trim().length > 0;
 
   return (
     <div className="quotation-print" dir="rtl" lang="ar">
@@ -40,25 +38,6 @@ export const PrintTemplate: React.FC<PrintTemplateProps> = ({ quotation, setting
           <p className="quotation-print__tax">ت.ض : {settings.taxId.trim()}</p>
         )}
       </header>
-
-      <div className="quotation-print__meta">
-        <div className="quotation-print__meta-group">
-          <span className="quotation-print__badge">عرض سعر</span>
-          <span className="quotation-print__meta-item">
-            <strong>رقم:</strong> #{formatNumber(quotation.number)}
-          </span>
-          {hasCustomer && (
-            <span className="quotation-print__meta-item">
-              <strong>العميل:</strong> {quotation.customerName.trim()}
-            </span>
-          )}
-        </div>
-        {quotation.date && (
-          <span className="quotation-print__meta-item">
-            <strong>التاريخ:</strong> {formatDate(quotation.date)}
-          </span>
-        )}
-      </div>
 
       <table className="quotation-print__table">
         <colgroup>
