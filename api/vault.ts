@@ -70,6 +70,12 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         description: 'حساب صافي ربح استثمار قبض الجمعية في صندوق عائد شهري مركب',
         url: '/gameya-calculator',
       },
+      {
+        id: 'invoice-studio',
+        title: 'استوديو عروض الأسعار',
+        description: 'إنشاء وإدارة عروض الأسعار مع الأرشفة وتصدير PDF و PNG وطباعة A4',
+        url: '/invoice-studio',
+      },
     ];
 
     let envPrivateApps: PrivateAppRecord[] = [];

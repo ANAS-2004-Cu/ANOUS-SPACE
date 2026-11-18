@@ -10,6 +10,7 @@ export function getToolAccent(id: string): ToolAccent {
       return 'slate';
     case 'tic-tac-toe':
     case 'guess-game':
+    case 'invoice-studio':
       return 'ochre';
     case 'gameya-calculator':
     case 'gameya-calc':
@@ -147,6 +148,30 @@ export const ToolEmblem: React.FC<ToolEmblemProps> = ({ id, size = 18 }) => {
             strokeWidth="1.65"
             strokeLinecap="round"
             strokeLinejoin="round"
+          />
+        </svg>
+      );
+
+    case 'invoice-studio':
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M6.5 3.5H15L18.5 7V20.5H6.5C5.67 20.5 5 19.83 5 19V5C5 4.17 5.67 3.5 6.5 3.5Z"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M14.5 3.5V7.5H18.5"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M8.5 11.5H15.5M8.5 14.5H15.5M8.5 17.5H12.5"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
           />
         </svg>
       );

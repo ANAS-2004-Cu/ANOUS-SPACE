@@ -13,6 +13,7 @@ import { EmailDetailPage } from './projects/temp-mail/EmailDetailPage';
 import { TicTacToePage } from './projects/tic-tac-toe/TicTacToePage';
 import { GuessGamePage } from './projects/guess-game/GuessGamePage';
 import { GameyaCalculatorPage } from './projects/gameya-calculator/GameyaCalculatorPage';
+import { InvoiceStudioPage } from './projects/invoice-studio/InvoiceStudioPage';
 
 const VaultGuard: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isUnlocked } = useVault();
@@ -93,6 +94,14 @@ const AppRoutes: React.FC = () => {
           element={
             <VaultGuard>
               <GameyaCalculatorPage onOpenCommandPalette={openCommandPalette} />
+            </VaultGuard>
+          }
+        />
+        <Route
+          path="/invoice-studio"
+          element={
+            <VaultGuard>
+              <InvoiceStudioPage onOpenCommandPalette={openCommandPalette} />
             </VaultGuard>
           }
         />
